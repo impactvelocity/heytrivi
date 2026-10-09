@@ -67,3 +67,13 @@ Entries here count toward the hackathon score. Add one every time a tool, SDK, o
 - Severity: major
 - Workaround: Use the standard engine, with the browser's voice as a fallback
 - Suggestion: Return an error from `DescribeVoices` when the requested engine isn't available in the region, and make the region table for engines easy to find from the API reference
+
+### `pnpm --filter infra deploy` runs pnpm's own deploy command
+- Tool / doc: pnpm 9 (workspaces)
+- Task attempted: Run the `infra` package's `deploy` script (`cdk deploy`) from the root with `pnpm infra:deploy`.
+- Steps taken: The root script was `pnpm --filter infra deploy`.
+- Expected: pnpm runs the package's `deploy` script, as it does for other script names like `test` or `build`.
+- Actual: `ERR_PNPM_INVALID_DEPLOY_TARGET This command requires one parameter`. `deploy` is a built-in pnpm command, so the script never ran, and the root script still exited 0.
+- Severity: minor
+- Workaround: `pnpm --filter infra run deploy` (also used for `destroy`).
+- Suggestion: Warn when a package script shares a name with a built-in command, or fail the parent script with a non-zero exit.
