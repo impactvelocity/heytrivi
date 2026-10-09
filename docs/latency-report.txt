@@ -1,0 +1,14 @@
+Latency test: 50 calls per tool against https://flllwqrrehtnc5ygfpjnq4fn440lkfel.lambda-url.us-east-2.on.aws/mcp
+
+tool               p50 ms   p95 ms   max ms   user-error results
+get_household          94      120      258   0
+show_scoreboard        91      107      139   0
+list_packs             89      117      188   0
+start_round           108      121      159   0
+record_round          114      125      159   0
+transfer_points       109      123      178   0
+spend_points           89      105      175   50
+complete_chore         88      101      103   50
+add_player             88      103      196   50
+
+Worst p95: 125 ms. Budget 500 ms: PASS

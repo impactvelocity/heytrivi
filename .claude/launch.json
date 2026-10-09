@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mcp-server",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:local"],
+      "port": 4787
+    },
+    {
+      "name": "simulator",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "simulator", "dev"],
+      "port": 3000
+    }
+  ]
+}

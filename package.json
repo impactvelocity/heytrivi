@@ -1,0 +1,22 @@
+{
+  "name": "heytrivi",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:local": "pnpm --filter mcp-server dev:local",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build",
+    "infra:deploy": "pnpm --filter infra deploy",
+    "infra:destroy": "pnpm --filter infra destroy",
+    "latency": "tsx scripts/latency.ts"
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3",
+    "@types/node": "^22.0.0"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "simulator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/amazon-bedrock": "^5.0.113",
+    "@aws-sdk/client-polly": "^3.1148.0",
+    "@aws-sdk/credential-providers": "^3.1148.0",
+    "@hey-trivi/replays": "workspace:*",
+    "@modelcontextprotocol/client": "^2.3.1",
+    "ai": "^7.0.136",
+    "next": "15.5.27",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}
