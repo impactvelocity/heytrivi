@@ -116,6 +116,20 @@ export interface LedgerEntry {
   at: string;
 }
 
+export interface RoundHistory {
+  roundId: string;
+  mode: RoundMode;
+  question: string;
+  correctAnswer: string;
+  explanation?: string;
+  stake?: Stake;
+  packId?: string;
+  tiebreakOf?: string;
+  guesses: RoundResult[];
+  outcome: NamedOutcome;
+  at: string;
+}
+
 export interface State {
   meta: HouseholdMeta;
   players: Player[];

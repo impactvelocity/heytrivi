@@ -63,11 +63,11 @@ If scope has to be cut from this milestone, cut in this order: the phrase lockou
 
 ## Milestone 5: parents, signup, and account linking
 
-- [ ] 6.1 Add the Cognito user pool to CDK. Add signup, sign-in, and household creation to the Next.js app. (R11.1)
-- [ ] 6.2 Build the parent page: players, packs, manual questions, build-a-pack form, pack status. (R6.2, R6.3, R7.2, R11.2)
-- [ ] 6.3 Add parent controls to the parent page: parent phrase, what it protects, reset schedule, time zone, and "reset now." (R13.1, R13.7, R13.10)
-- [ ] 6.4 Add token validation, the two metadata documents, and the 401 behaviour to the MCP server. (R9.1 to R9.6)
-- [ ] 6.5 Add "Link account" to the simulator. (R10.9)
+- [x] 6.1 Add the Cognito user pool to CDK. Add signup, sign-in, and household creation to the Next.js app. (R11.1)
+- [ ] 6.2 Build the parent page: players, packs, manual questions, build-a-pack form, pack status. (R6.2, R6.3, R7.2, R11.2) Players, leaderboard, points history, and question history are done; packs are not.
+- [x] 6.3 Add parent controls to the parent page: parent phrase, what it protects, reset schedule, time zone, and "reset now." (R13.1, R13.7, R13.10)
+- [x] 6.4 Add token validation, the two metadata documents, and the 401 behaviour to the MCP server. (R9.1 to R9.6)
+- [x] 6.5 Add "Link account" to the simulator. (R10.9) Done as decisions #21: the simulator plays as the signed-in parent's family.
 
 **CHECKPOINT 5.** I sign up as a new parent, link the simulator, and play as that family.
 

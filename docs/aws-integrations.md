@@ -18,4 +18,6 @@ Evidence for the AWS Builder mini challenge. One row per AWS service.
 
 | AWS Amplify Hosting | Hosts the simulator (Next.js SSR) from the GitHub repo. Its SSR compute role grants the API routes access to Bedrock and Polly. | `amplify.yml`, `.npmrc`, `infra/lib/hey-trivi-stack.ts` (compute role) |
 
+| Amazon Cognito (user pool, managed login, Essentials plan) | Parent signup and sign-in for the parent page (authorization code flow with PKCE on managed login). Its access tokens are the bearer tokens the MCP server accepts: the server verifies them and maps the user to their household (`USER#<sub>`). | `infra/lib/hey-trivi-stack.ts`, `apps/simulator/lib/auth.ts`, `apps/simulator/app/auth/`, `services/mcp-server/src/auth.ts`, `services/mcp-server/src/oauth.ts` |
+
 <!-- Add rows as services are wired up. -->

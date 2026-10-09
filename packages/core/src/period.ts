@@ -53,3 +53,11 @@ export function isValidTimeZone(tz: string): boolean {
     return false;
   }
 }
+
+/** Start date of the period after `periodStart`: when the next reset happens. */
+export function nextPeriodStart(periodStart: string, schedule: ResetSchedule): string | null {
+  if (schedule === "never") return null;
+  const [y, m, d] = periodStart.split("-").map(Number) as [number, number, number];
+  const next = schedule === "weekly" ? new Date(Date.UTC(y, m - 1, d + 7)) : new Date(Date.UTC(y, m, 1));
+  return `${next.getUTCFullYear()}-${pad(next.getUTCMonth() + 1)}-${pad(next.getUTCDate())}`;
+}

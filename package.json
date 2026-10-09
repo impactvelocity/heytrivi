@@ -6,8 +6,8 @@
     "dev:local": "pnpm --filter mcp-server dev:local",
     "test": "pnpm -r test",
     "build": "pnpm -r build",
-    "infra:deploy": "pnpm --filter infra deploy",
-    "infra:destroy": "pnpm --filter infra destroy",
+    "infra:deploy": "pnpm --filter infra run deploy",
+    "infra:destroy": "pnpm --filter infra run destroy",
     "latency": "tsx scripts/latency.ts"
   },
   "engines": {

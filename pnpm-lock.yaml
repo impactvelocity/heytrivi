@@ -151,6 +151,9 @@ importers:
       '@modelcontextprotocol/server':
         specifier: ^2.0.0-beta.5
         version: 2.3.1
+      aws-jwt-verify:
+        specifier: 5.2.1
+        version: 5.2.1
       hono:
         specifier: ^4.7.11
         version: 4.13.13
@@ -1010,6 +1013,10 @@ packages:
     resolution: {integrity: sha512-kV3vJCQX5XvlyVvmRHH79Nn2kOmDicN1WSFGkSaZXsNaDdNj2Re25yehsp+L2ixv0VCm0/HLLmYSoehmVPDkJg==}
     engines: {node: '>= 18.0.0'}
     hasBin: true
+
+  aws-jwt-verify@5.2.1:
+    resolution: {integrity: sha512-J+buA4M+qvQDk58WXFBLkDodkEX3DDL1ac5XFQPW3opxAsaLXYu5hYnlSHsaBRDBUXBAn695kE/cw/mdyJKwJg==}
+    engines: {node: '>=18.0.0'}
 
   aws4fetch@1.0.20:
     resolution: {integrity: sha512-/djoAN709iY65ETD6LKCtyyEI04XIBP5xVvfmNxsEP0uJB5tyaGBztSryRr4HqMStr9R06PisQE7m9zDTXKu6g==}
@@ -2201,6 +2208,8 @@ snapshots:
       constructs: 10.8.1
 
   aws-cdk@2.1145.0: {}
+
+  aws-jwt-verify@5.2.1: {}
 
   aws4fetch@1.0.20: {}
 

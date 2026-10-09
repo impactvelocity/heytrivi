@@ -73,6 +73,31 @@ Both providers run the same model, Amazon Nova 2 Lite, through the AI SDK, so th
 
 With `MOCK_MODEL=1` there is no model. Each replay line carries the host's turn, which runs against the real MCP server, so the whole thing works without an AWS account. In mock mode, whatever you say or type plays the next line of the selected script, and the screen shows which line comes next, so you can play the scripts by voice.
 
+## The parent page
+
+http://localhost:3000/parent is where a parent signs up, sets up the family, and manages it:
+
+- **Family & leaderboard:** balances and all-time totals, chores owed, and adding, renaming, or removing family members.
+- **Points history:** every point earned, spent, traded, or reset, by day and by person.
+- **Question history:** each question, everyone's answer and verdict, and what was at stake.
+- **Settings:** point reset (never, weekly, monthly), time zone, reset now, the parent phrase, and the show name.
+
+The page talks to the MCP server's `/parent` API, so it changes the same household the game plays. While a parent is signed in, the simulator plays as their family.
+
+Every family uses the same MCP server URL. A parent's Cognito access token tells the server which household to load, and the server publishes the OAuth discovery documents (`/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server`) so an MCP client can link an account.
+
+**Locally**, with no Cognito settings, sign-in is simulated: "Sign in as the demo family" or "Start a new family". The MCP server accepts these local sign-ins only when it runs with the in-memory store.
+
+**With Cognito** (after `pnpm infra:deploy`), set these from the stack outputs in `apps/simulator/.env.local` and in the Amplify app's environment variables:
+
+| Variable | Value |
+|---|---|
+| `COGNITO_DOMAIN` | `CognitoDomain` output |
+| `COGNITO_CLIENT_ID` | `CognitoWebClientId` output |
+| `APP_URL` | The app's public URL, for example `https://main.<app-id>.amplifyapp.com` |
+
+The deployed MCP server gets its Cognito settings from CDK. The web client's callback URLs are the Amplify URL (`PARENT_APP_URL` at deploy time) and `http://localhost:3000`.
+
 ## Tests
 
 ```bash
@@ -103,7 +128,7 @@ pnpm latency https://<function-url>/mcp
 pnpm infra:deploy
 ```
 
-The first deploy to an account and region needs a one-time `npx cdk bootstrap` from `infra/`. This deploys a DynamoDB table and the MCP server Lambda with a function URL. The URL is printed as `McpFunctionUrl` and stored in SSM at `/hey-trivi/mcp-function-url`. See `docs/decisions.md` for the deployment region.
+The first deploy to an account and region needs a one-time `npx cdk bootstrap` from `infra/`. This deploys a DynamoDB table, the Cognito user pool for parents, and the MCP server Lambda with a function URL. The URL is printed as `McpFunctionUrl` and stored in SSM at `/hey-trivi/mcp-function-url`. See `docs/decisions.md` for the deployment region.
 
 ## Tear down
 

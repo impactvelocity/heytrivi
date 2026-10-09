@@ -153,6 +153,15 @@ button:disabled {
   border-color: #f5c0c9;
   background: #fdecef;
 }
+.pill-link {
+  color: inherit;
+  text-decoration: none;
+  border-color: #d9cff7;
+  background: #f3effd;
+}
+.pill-link:hover {
+  border-color: var(--lavender);
+}
 
 .grid {
   flex: 1;

@@ -7,7 +7,7 @@
  */
 
 import { AsyncLocalStorage } from "node:async_hooks";
-import { MemoryItemStore, Repo, seedDemo, DEMO_DEV_TOKEN, type ItemStore } from "@hey-trivi/store";
+import { MemoryItemStore, Repo, seedDemo, DEMO_DEV_TOKEN, DEMO_HOUSEHOLD_ID, type ItemStore } from "@hey-trivi/store";
 import { DynamoItemStore } from "@hey-trivi/store/dynamo";
 
 export interface RequestContext {
@@ -25,6 +25,9 @@ export function currentHousehold(): string {
   if (!ctx) throw new Error("No household for this request");
   return ctx.householdId;
 }
+
+/** The local dev user (`dev-user-demo` token) who owns the demo household. */
+export const LOCAL_DEMO_USER = "dev:demo";
 
 let repoPromise: Promise<Repo> | undefined;
 
@@ -44,6 +47,8 @@ export function getRepo(): Promise<Repo> {
       // disturbs the real demo household.
       await seedDemo(repo, { householdId: "bench", devToken: "dev-token-bench" });
     }
+    // Local mode: "Sign in as the demo family" on the parent page.
+    if (!table) await repo.linkUser(LOCAL_DEMO_USER, DEMO_HOUSEHOLD_ID);
     return repo;
   })();
   return repoPromise;

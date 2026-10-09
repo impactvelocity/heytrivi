@@ -17,6 +17,8 @@ import { Speaker, type RingState } from "./Speaker";
 interface Config {
   mcpUrl: string;
   token: string;
+  /** "family" when a parent is signed in on the parent page, else the demo household. */
+  account: "family" | "demo";
   mock: boolean;
 }
 
@@ -220,6 +222,9 @@ export function Simulator() {
         </div>
         <div className="label-badge">Alexa+ simulator. Not an Amazon product.</div>
         <div className="pills">
+          <a className="pill pill-link" href="/parent" title="Scores, history, and settings">
+            {config?.account === "family" ? "Your family · Parent page" : "Demo family · Parent page"}
+          </a>
           <span className={`pill ${config?.mock ? "pill-warn" : ""}`}>{config ? (config.mock ? "Mock model" : "Nova 2 Lite") : "…"}</span>
           <span className={`pill ${status === "error" ? "pill-error" : status === "ready" ? "pill-ok" : ""}`} title={statusText}>
             {status === "ready" ? `MCP: ${statusText}` : status === "connecting" ? "Connecting…" : "Server unreachable"}

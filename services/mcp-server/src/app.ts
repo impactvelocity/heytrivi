@@ -11,6 +11,8 @@ import { cors } from "hono/cors";
 import { createMcpHandler } from "mcp-handler";
 import { householdForRequest, unauthorized } from "./auth.js";
 import { runWithContext } from "./context.js";
+import { oauthMetadata } from "./oauth.js";
+import { parentRoutes } from "./parent.js";
 import { registerTools } from "./tools/index.js";
 
 export function createApp(): Hono {
@@ -32,6 +34,12 @@ export function createApp(): Hono {
 
   // Health check — keeps Lambda warm and lets load balancers verify it.
   app.get("/health", (c) => c.json({ status: "ok", service: "hey-trivi-mcp" }));
+
+  // OAuth discovery for MCP clients that link an account (R9.2, R9.3).
+  oauthMetadata(app);
+
+  // The parent page's API. Same store as the game.
+  app.route("/parent", parentRoutes());
 
   const mcpHandler = createMcpHandler(
     (server) => {

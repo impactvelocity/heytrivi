@@ -9,6 +9,7 @@ import {
   hashPhrase,
   isLockedOut,
   listNames,
+  nextPeriodStart,
   normalizePhrase,
   periodHasEnded,
   periodStartFor,
@@ -255,6 +256,13 @@ describe("resets", () => {
     expect(periodHasEnded("2026-10-05", now, "weekly", "UTC")).toBe(false);
     expect(periodHasEnded("2026-09-28", now, "weekly", "UTC")).toBe(true);
     expect(periodHasEnded("2026-09-01", now, "monthly", "UTC")).toBe(true);
+  });
+
+  it("knows when the next reset happens", () => {
+    expect(nextPeriodStart("2026-10-05", "weekly")).toBe("2026-10-12");
+    expect(nextPeriodStart("2026-12-28", "weekly")).toBe("2027-01-04");
+    expect(nextPeriodStart("2026-12-01", "monthly")).toBe("2027-01-01");
+    expect(nextPeriodStart("2026-10-01", "never")).toBeNull();
   });
 });
 

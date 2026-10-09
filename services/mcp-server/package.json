@@ -10,16 +10,17 @@
     "test:protocol": "vitest run src/__tests__/protocol.test.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0",
+    "@hey-trivi/core": "workspace:*",
+    "@hey-trivi/store": "workspace:*",
     "@hono/aws-lambda": "^1.0.1",
     "@hono/node-server": "^1.13.8",
     "@modelcontextprotocol/server": "^2.0.0-beta.5",
+    "aws-jwt-verify": "5.2.1",
     "hono": "^4.7.11",
     "mcp-handler": "^2.0.0",
-    "zod": "^4.2.0",
-    "@hey-trivi/core": "workspace:*",
-    "@hey-trivi/store": "workspace:*",
-    "@aws-sdk/client-dynamodb": "^3.0.0",
-    "@aws-sdk/lib-dynamodb": "^3.0.0"
+    "zod": "^4.2.0"
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.0.0-beta.5",

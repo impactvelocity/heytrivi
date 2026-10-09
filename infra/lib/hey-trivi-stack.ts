@@ -7,17 +7,22 @@
  *   - Function URL (no auth — the MCP server validates bearer tokens itself)
  *   - SSM parameter storing the function URL (for CI / tests)
  *
- * Milestone 0 ships only the Lambda + table.  Auth (Cognito), the pack worker,
- * and the Amplify app are added in later milestones.
+ *   - Cognito user pool with managed login: parent signup and sign-in, and
+ *     the access tokens the MCP server accepts (R9, R11.1)
+ *
+ * The Amplify app itself is connected to the repo in the console; this stack
+ * provides its compute role.
  */
 
 import * as cdk from "aws-cdk-lib";
+import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as path from "node:path";
+import { createHash } from "node:crypto";
 import { Construct } from "constructs";
 
 export class HeyTriviStack extends cdk.Stack {
@@ -41,6 +46,60 @@ export class HeyTriviStack extends cdk.Stack {
       pointInTimeRecoverySpecification: {
         pointInTimeRecoveryEnabled: true,
       },
+    });
+
+    // -------------------------------------------------------------------------
+    // Cognito — parents sign up and sign in through managed login. The parent
+    // page and MCP clients both get access tokens from this pool, and the MCP
+    // server maps a token's sub to the household (USER#<sub>).
+    // -------------------------------------------------------------------------
+    const userPool = new cognito.UserPool(this, "ParentUserPool", {
+      userPoolName: "hey-trivi-parents",
+      // Managed login needs the Essentials plan or above.
+      featurePlan: cognito.FeaturePlan.ESSENTIALS,
+      selfSignUpEnabled: true,
+      signInAliases: { email: true },
+      autoVerify: { email: true },
+      standardAttributes: { email: { required: true, mutable: true } },
+      passwordPolicy: { minLength: 8, requireLowercase: false, requireUppercase: false, requireDigits: false, requireSymbols: false },
+      accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // Domain prefixes are global. Derive a stable one from the account so two
+    // deployments don't collide, without putting the account id in the URL.
+    const domainPrefix =
+      process.env.COGNITO_DOMAIN_PREFIX ?? `hey-trivi-${createHash("sha256").update(this.account).digest("hex").slice(0, 8)}`;
+    const loginDomain = userPool.addDomain("ParentLoginDomain", {
+      cognitoDomain: { domainPrefix },
+      managedLoginVersion: cognito.ManagedLoginVersion.NEWER_MANAGED_LOGIN,
+    });
+
+    // The parent page (Amplify) and local development.
+    const appUrl = (process.env.PARENT_APP_URL ?? "https://main.d2glgwm5yifu21.amplifyapp.com").replace(/\/$/, "");
+    const webClient = userPool.addClient("ParentWebClient", {
+      userPoolClientName: "parent-web",
+      generateSecret: false,
+      // Sign-in happens on managed login (authorization code + PKCE). Cognito's
+      // default auth flows include ALLOW_REFRESH_TOKEN_AUTH for refreshing.
+      oAuth: {
+        flows: { authorizationCodeGrant: true },
+        scopes: [cognito.OAuthScope.OPENID, cognito.OAuthScope.EMAIL, cognito.OAuthScope.PROFILE],
+        callbackUrls: [`${appUrl}/auth/callback`, "http://localhost:3000/auth/callback"],
+        logoutUrls: [`${appUrl}/parent`, "http://localhost:3000/parent"],
+      },
+      supportedIdentityProviders: [cognito.UserPoolClientIdentityProvider.COGNITO],
+      accessTokenValidity: cdk.Duration.hours(1),
+      idTokenValidity: cdk.Duration.hours(1),
+      refreshTokenValidity: cdk.Duration.days(30),
+      preventUserExistenceErrors: true,
+    });
+
+    // Managed login shows an error page until the client has a style.
+    new cognito.CfnManagedLoginBranding(this, "ParentLoginBranding", {
+      userPoolId: userPool.userPoolId,
+      clientId: webClient.userPoolClientId,
+      useCognitoProvidedValues: true,
     });
 
     // -------------------------------------------------------------------------
@@ -68,6 +127,10 @@ export class HeyTriviStack extends cdk.Stack {
         // Development token for the demo household until account linking
         // (milestone 5). Override with DEV_TOKEN at deploy time.
         DEV_TOKEN: process.env.DEV_TOKEN ?? "dev-token-demo",
+        // Cognito access tokens from these clients are accepted (R9.4).
+        COGNITO_USER_POOL_ID: userPool.userPoolId,
+        COGNITO_CLIENT_IDS: webClient.userPoolClientId,
+        COGNITO_DOMAIN: loginDomain.baseUrl(),
       },
       bundling: {
         // Target Node 22 — keeps modern JS features without transpiling them.
@@ -169,6 +232,16 @@ export class HeyTriviStack extends cdk.Stack {
     new cdk.CfnOutput(this, "SimulatorComputeRoleArn", {
       value: simulatorRole.roleArn,
       description: "Attach to the Amplify app as its SSR compute role",
+    });
+
+    new cdk.CfnOutput(this, "CognitoUserPoolId", { value: userPool.userPoolId });
+    new cdk.CfnOutput(this, "CognitoDomain", {
+      value: loginDomain.baseUrl(),
+      description: "Set as COGNITO_DOMAIN for the parent page",
+    });
+    new cdk.CfnOutput(this, "CognitoWebClientId", {
+      value: webClient.userPoolClientId,
+      description: "Set as COGNITO_CLIENT_ID for the parent page",
     });
 
     new cdk.CfnOutput(this, "DynamoTableName", {

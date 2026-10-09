@@ -338,3 +338,69 @@ describe("packs and news", () => {
     expect(repo.packSummaries(await repo.begin(HH)).find((p) => p.packId === bad.packId)).toMatchObject({ status: "failed", failReason: "That topic isn't right for kids." });
   });
 });
+
+describe("parent page", () => {
+  it("creates a household for a signed-in parent, once", async () => {
+    const sub = `sub-${randomUUID()}`;
+    const hh = await repo.createHousehold({
+      showTitle: "  Kitchen Table Trivia ",
+      ownerSub: sub,
+      players: [
+        { name: "Mom", role: "parent" },
+        { name: "Ava", role: "kid", gradeBand: "K-2" },
+      ],
+    });
+    expect(await repo.householdForUser(sub)).toBe(hh);
+    const s = await repo.begin(hh);
+    expect(s.meta.showTitle).toBe("Kitchen Table Trivia");
+    expect(s.players.map((p) => [p.name, p.role, p.gradeBand, p.balance])).toEqual([
+      ["Ava", "kid", "K-2", 0],
+      ["Mom", "parent", undefined, 0],
+    ]);
+    await expect(repo.createHousehold({ showTitle: "Again", ownerSub: sub })).rejects.toThrow("already has a family");
+  });
+
+  it("refuses bad names and duplicates when creating a household", async () => {
+    await expect(repo.createHousehold({ showTitle: "X", players: [{ name: "Mary Jane", role: "kid" }] })).rejects.toBeInstanceOf(UserError);
+    await expect(
+      repo.createHousehold({ showTitle: "X", players: [{ name: "Mom", role: "parent" }, { name: "mom", role: "parent" }] }),
+    ).rejects.toThrow("twice");
+    await expect(repo.createHousehold({ showTitle: "  " })).rejects.toThrow("name");
+  });
+
+  it("refuses renaming a player to a name already in use", async () => {
+    await expect(repo.updatePlayer(HH, "sally", { name: "john" })).rejects.toThrow("already playing");
+    await repo.updatePlayer(HH, "sally", { name: "Sal" });
+    expect((await repo.load(HH)).players.map((p) => p.name)).toContain("Sal");
+  });
+
+  it("lists finished rounds newest first, with guesses and outcome", async () => {
+    await repo.recordRound(HH, await repo.begin(HH), {
+      question: "How many hearts does an octopus have?",
+      correctAnswer: "three",
+      guesses: [
+        { player: "Mom", guess: "three", verdict: "correct" },
+        { player: "John", guess: "two", verdict: "wrong" },
+      ],
+    });
+    now = new Date("2026-10-07T18:05:00Z");
+    await repo.recordRound(HH, await repo.begin(HH), {
+      question: "What is the largest ocean?",
+      correctAnswer: "Pacific",
+      stake: { type: "chore", label: "take out the garbage" },
+      guesses: [
+        { player: "Mom", guess: "Pacific", verdict: "correct" },
+        { player: "John", guess: "Atlantic", verdict: "wrong" },
+      ],
+    });
+    const rounds = await repo.roundsFor(HH);
+    expect(rounds.map((r) => r.question)).toEqual(["What is the largest ocean?", "How many hearts does an octopus have?"]);
+    expect(rounds[0]).toMatchObject({ outcome: { type: "settled", loser: "John", label: "take out the garbage" }, at: "2026-10-07T18:05:00.000Z" });
+    expect(rounds[1]!.guesses).toEqual([
+      { player: "Mom", guess: "three", verdict: "correct", points: 1 },
+      { player: "John", guess: "two", verdict: "wrong", points: 0 },
+    ]);
+    const ledger = await repo.ledgerFor(HH);
+    expect(ledger[0]).toMatchObject({ playerId: "mom", change: 1, reason: "round", roundId: rounds[0]!.roundId });
+  });
+});

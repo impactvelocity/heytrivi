@@ -43,6 +43,7 @@ import type {
   Difficulty,
   HouseholdMeta,
   LastRound,
+  LedgerEntry,
   NamedOutcome,
   NewPlayer,
   NewsItem,
@@ -50,6 +51,7 @@ import type {
   Pack,
   PackKind,
   PackQuestion,
+  RoundHistory,
   RoundMode,
   RoundResult,
   Scoreboard,
@@ -243,12 +245,21 @@ export class Repo {
     ownerSub?: string;
   }): Promise<string> {
     const hh = input.householdId ?? `hh_${shortId()}`;
+    const showTitle = input.showTitle.trim().slice(0, 60);
+    if (!showTitle) throw new UserError("Give your show a name.");
+    const seen = new Set<string>();
+    for (const p of input.players ?? []) {
+      if (!isValidFirstName(p.name)) throw new UserError(`${p.name.trim() || "That"} isn't a first name. Use one word, like Grandma.`);
+      if (seen.has(normalizeName(p.name))) throw new UserError(`${p.name.trim()} is in the list twice.`);
+      seen.add(normalizeName(p.name));
+    }
+    if (seen.size > 12) throw new UserError("A household can have up to twelve players.");
     const timeZone = input.timeZone ?? "America/New_York";
     if (!isValidTimeZone(timeZone)) throw new UserError(`Unknown time zone ${timeZone}.`);
     const resetSchedule = input.resetSchedule ?? "weekly";
     const meta: HouseholdMeta = clean({
       householdId: hh,
-      showTitle: input.showTitle,
+      showTitle,
       pointSettings: input.pointSettings ?? DEFAULT_POINT_SETTINGS,
       timeZone,
       resetSchedule,
@@ -263,7 +274,7 @@ export class Repo {
         item: {
           ...keys.player(hh, playerId),
           type: "player",
-          ...clean({ playerId, name: p.name, role: p.role, gradeBand: p.gradeBand }),
+          ...clean({ playerId, name: p.name.trim(), role: p.role, gradeBand: p.role === "kid" ? p.gradeBand : undefined }),
           balance: p.balance ?? 0,
           lifetime: p.lifetime ?? 0,
           streak: p.streak ?? 0,
@@ -273,7 +284,14 @@ export class Repo {
     if (input.ownerSub) {
       writes.push({ kind: "put", item: { ...keys.user(input.ownerSub), type: "user", householdId: hh }, conditions: [{ attr: "PK", op: "notExists" }] });
     }
-    await this.db.transact(writes);
+    try {
+      await this.db.transact(writes);
+    } catch (err) {
+      if (err instanceof ConditionFailedError && input.ownerSub && err.failedIndexes.includes(writes.length - 1)) {
+        throw new UserError("This account already has a family.", "household_exists");
+      }
+      throw err;
+    }
     return hh;
   }
 
@@ -362,6 +380,8 @@ export class Repo {
     const set: Record<string, unknown> = {};
     if (p.name !== undefined) {
       if (!isValidFirstName(p.name)) throw new UserError("Just a first name, please.");
+      const others = (await this.db.query(pk(hh), { skPrefix: "PLAYER#" })).filter((i) => i.playerId !== playerId);
+      if (findPlayer(others as unknown as Player[], p.name)) throw new UserError(`${p.name.trim()} is already playing.`);
       set.name = p.name.trim();
     }
     if (p.role !== undefined) set.role = p.role;
@@ -842,9 +862,33 @@ export class Repo {
     });
   }
 
-  async ledgerFor(hh: string, limit = 50): Promise<Array<{ playerId: string; change: number; reason: string; at: string }>> {
+  /** Newest first. */
+  async ledgerFor(hh: string, limit = 50): Promise<LedgerEntry[]> {
     const items = await this.db.query(pk(hh), { skPrefix: "LEDGER#" });
-    return items.slice(-limit).reverse().map((i) => strip(i));
+    return items.slice(-limit).reverse().map((i) => strip<LedgerEntry>(i));
+  }
+
+  /** Finished rounds, newest first (question history on the parent page). */
+  async roundsFor(hh: string, limit = 100): Promise<RoundHistory[]> {
+    const items = await this.db.query(pk(hh), { skPrefix: "ROUND#", filters: [{ attr: "status", op: "=", value: "closed" }] });
+    return items
+      .slice(-limit)
+      .reverse()
+      .map((i) =>
+        clean({
+          roundId: i.roundId as string,
+          mode: i.mode as RoundMode,
+          question: i.question as string,
+          correctAnswer: i.correctAnswer as string,
+          explanation: i.explanation as string | undefined,
+          stake: i.stake as Stake | undefined,
+          packId: i.packId as string | undefined,
+          tiebreakOf: i.tiebreakOf as string | undefined,
+          guesses: (i.guesses as RoundResult[] | undefined) ?? [],
+          outcome: (i.outcome as NamedOutcome | undefined) ?? { type: "none" },
+          at: (i.closedAt as string | undefined) ?? (i.startedAt as string),
+        }),
+      );
   }
 
   private ledger(hh: string, e: { playerId: string; change: number; reason: string; roundId?: string; at: string }): Write {
@@ -1004,6 +1048,11 @@ export class Repo {
 
   async householdForUser(sub: string): Promise<string | undefined> {
     return (await this.db.get(keys.user(sub)))?.householdId as string | undefined;
+  }
+
+  /** Link a signed-in user to an existing household (local dev sign-in). */
+  async linkUser(sub: string, hh: string): Promise<void> {
+    await this.db.transact([{ kind: "put", item: { ...keys.user(sub), type: "user", householdId: hh } }]);
   }
 
   // ---------------------------------------------------------------------------
