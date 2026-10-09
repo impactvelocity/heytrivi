@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { REPLAYS, isNewSession } from "@hey-trivi/replays";
+import { REPLAYS, isNewSession, type ReplayLine } from "@hey-trivi/replays";
 import { Host } from "../host";
 import type { LoggedMcpClient, ToolResult } from "../mcp";
 
@@ -26,14 +26,14 @@ describe("mock host turns", () => {
     });
     const host = new Host(mcp);
     const script = REPLAYS.find((r) => r.id === "chore-tiebreak")!;
-    const lines = script.steps.filter((s) => !isNewSession(s));
-    const say1 = await host.mockTurn((lines[0] as { mock: never }).mock);
+    const lines = script.steps.filter((s): s is ReplayLine => !isNewSession(s));
+    const say1 = await host.mockTurn(lines[0]!.mock);
     expect(say1).toContain("Dad and John are tied");
     expect(calls[2]).toEqual({ name: "start_round", args: { mode: "family", tiebreakOf: "r_123" } });
     const idem = calls[1]!.args.idempotencyKey as string;
     expect(idem).toMatch(/^[0-9a-f-]{36}$/);
 
-    const say2 = await host.mockTurn((lines[1] as { mock: never }).mock);
+    const say2 = await host.mockTurn(lines[1]!.mock);
     expect(calls[3]!.args.roundId).toBe("r_456");
     expect(say2).toBe("Honey it is. Dad's off the hook. John, the garbage is yours. Mom gets 1 point.");
   });

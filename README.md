@@ -56,9 +56,16 @@ Settings go in `apps/simulator/.env.local`:
 | `MCP_SERVER_URL` | `http://localhost:4787/mcp` | The MCP server to talk to |
 | `MCP_DEV_TOKEN` | `dev-token-demo` | Bearer token for the demo household |
 | `MOCK_MODEL` | unset | `1` runs with no model and no AWS account (see below) |
-| `BEDROCK_MODEL_ID` | `us.amazon.nova-2-lite-v1:0` | Host model |
+| `MODEL_PROVIDER` | `gateway` | Where the host model runs: `gateway` (Vercel AI Gateway) or `bedrock` (Amazon Bedrock directly) |
+| `AI_GATEWAY_API_KEY` | unset | Key for the AI Gateway (from the Vercel dashboard, AI Gateway → API Keys) |
+| `GATEWAY_MODEL_ID` | `amazon/nova-2-lite` | Host model on the gateway |
+| `BEDROCK_MODEL_ID` | `us.amazon.nova-2-lite-v1:0` | Host model on Bedrock |
 | `AWS_REGION` | `us-east-2` | Region for Bedrock and Polly |
 | `POLLY_VOICE_ID`, `POLLY_ENGINE` | `Joanna`, `standard` | The speaker's voice |
+
+### The host model
+
+Both providers run the same model, Amazon Nova 2 Lite, through the AI SDK, so the prompt and tools don't change. The default is the Vercel AI Gateway because new AWS accounts get a Bedrock daily token quota of 0 for every Nova model, and that quota can't be raised from the console. The Bedrock path is still complete (the route, the IAM role in CDK, and the Amplify compute role). Set `MODEL_PROVIDER=bedrock` on an account that has Bedrock quota. See [docs/decisions.md](docs/decisions.md) #16.
 
 ### Replay scripts and mock mode
 

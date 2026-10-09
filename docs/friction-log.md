@@ -52,7 +52,7 @@ Entries here count toward the hackathon score. Add one every time a tool, SDK, o
 - Expected: A successful call, or an error saying the account has no quota for the model
 - Actual: `ThrottlingException: Too many tokens per day, please wait before trying again.` on the very first call. Service Quotas shows "Model invocation max tokens per day for Amazon Nova 2 Lite" = 0. Waiting never helps
 - Severity: blocker
-- Workaround: Built and tested the simulator in mock mode; requested a quota increase
+- Workaround: Built and tested the simulator in mock mode; requested a quota increase. The quotas are marked "not adjustable", so Service Quotas can't raise them. Other entrants with new accounts report the same block (Devpost forum topics 45416 and 45474, one showing `ValidationException: Access to Bedrock models is not allowed for this account`), and the organizers can't escalate it. The simulator now calls the same Nova 2 Lite model through the Vercel AI Gateway by default; direct Bedrock stays behind `MODEL_PROVIDER=bedrock`
 - Suggestion: When the applied quota is 0, say so ("This account has no daily token quota for this model. Request an increase in Service Quotas.") instead of a retryable throttling message
 
 ---

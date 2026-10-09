@@ -20,7 +20,7 @@
 | Database | DynamoDB, one table, on-demand |
 | Signup and login | Amazon Cognito user pool with managed login |
 | Simulator | Next.js 15 (App Router) on AWS Amplify Hosting. Pin to 15. |
-| Simulator model | Amazon Bedrock, Nova 2 Lite, through the AI SDK Bedrock provider |
+| Simulator model | Nova 2 Lite through the AI SDK: Vercel AI Gateway by default, Amazon Bedrock with `MODEL_PROVIDER=bedrock` (see decisions #16) |
 | Simulator MCP client | The official MCP SDK client, used directly so every JSON-RPC message can be logged |
 | Speech in | Browser speech recognition (Chrome), with a text box fallback |
 | Speech out | Amazon Polly, neural voice, through a server route |

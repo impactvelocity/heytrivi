@@ -2,7 +2,7 @@
  * The host loop, in the browser.
  *
  * Real model: the conversation lives here. Each step posts it to /api/model
- * (Bedrock), which returns either speech or tool calls. Tool calls run here
+ * (Nova 2 Lite via the AI Gateway or Bedrock), which returns either speech or tool calls. Tool calls run here
  * through the MCP client, so the protocol panel shows them, and the results go
  * back to the model until it answers (R10.3).
  *

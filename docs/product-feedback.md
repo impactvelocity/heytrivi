@@ -36,6 +36,14 @@ For each tool, SDK, and API used: what it was used for, what worked, what needs 
 - **Onboarding:** Blocked on the quota.
 - **Would use again:** Yes, once the quota is raised.
 
+## Vercel AI Gateway
+
+- **Used for:** The default route to the host model (`amazon/nova-2-lite`) while this account's Bedrock quota is 0.
+- **What worked:** The `gateway` provider ships inside the `ai` package, so switching was one model line. The same Nova model is offered, so the prompt and tools didn't change.
+- **What needs work:** (fill in after the first live run)
+- **Onboarding:** One API key.
+- **Would use again:** Yes.
+
 ## Amazon Polly
 
 - **Used for:** The speaker's voice.

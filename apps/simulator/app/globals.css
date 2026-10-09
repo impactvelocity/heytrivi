@@ -549,15 +549,21 @@ button:disabled {
   .panel {
     max-height: 60vh;
   }
+  .device {
+    overflow: visible;
+  }
   .kitchen {
+    flex: none;
     flex-direction: column;
     align-items: center;
+    min-height: 0;
+    background: linear-gradient(180deg, transparent 0%, transparent 85%, #f3dfca 85%, #ead2bb 100%);
   }
   .speaker {
-    width: 180px;
+    width: 160px;
   }
   .display-frame {
-    width: 100%;
+    width: min(480px, 100%);
   }
 }
 
