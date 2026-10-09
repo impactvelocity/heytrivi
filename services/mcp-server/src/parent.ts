@@ -12,7 +12,7 @@
 
 import { Hono, type Context } from "hono";
 import { GRADE_BANDS, nextPeriodStart, type GradeBand, type PhraseScope, type ResetSchedule, type Role } from "@hey-trivi/core";
-import { UserError, type NewPlayer } from "@hey-trivi/store";
+import { UserError, createFamily, type NewPlayer } from "@hey-trivi/store";
 import { z } from "zod";
 import { userForRequest } from "./auth.js";
 import { getRepo } from "./context.js";
@@ -24,6 +24,16 @@ const gradeBand = z.enum(GRADE_BANDS);
 const schedule = z.enum(["never", "weekly", "monthly"]);
 const scope = z.enum(["spend", "spend_and_trade"]);
 const newPlayer = z.object({ name: z.string().max(40), role, gradeBand: gradeBand.optional() });
+const packKind = z.enum(["trivia", "riddle", "mixed"]);
+const question = z.object({
+  question: z.string().trim().min(1).max(400),
+  answer: z.string().trim().min(1).max(120),
+  accept: z.array(z.string().trim().min(1).max(120)).max(10).default([]),
+  explanation: z.string().trim().max(400).default(""),
+  difficulty: z.enum(["easy", "medium", "hard"]).default("easy"),
+  kind: z.enum(["trivia", "riddle"]).optional(),
+});
+const MAX_QUESTIONS = 50;
 
 const schemas = {
   household: z.object({
@@ -36,6 +46,16 @@ const schemas = {
   phrase: z.object({ phrase: z.string().max(120).optional(), requiredFor: scope }),
   player: newPlayer,
   playerEdit: z.object({ name: z.string().max(40).optional(), role: role.optional(), gradeBand: gradeBand.optional() }),
+  pack: z.object({
+    title: z.string().max(80),
+    topic: z.string().max(200).default(""),
+    kind: packKind,
+    forPlayerId: z.string().max(60).optional(),
+    questions: z.array(question).min(1).max(MAX_QUESTIONS),
+  }),
+  packEdit: z.object({ title: z.string().max(80).optional(), kind: packKind.optional(), forPlayerId: z.string().max(60).nullable().optional() }),
+  questions: z.object({ questions: z.array(question).min(1).max(MAX_QUESTIONS) }),
+  question,
 };
 
 async function body<T>(c: Context, schema: z.ZodType<T>): Promise<T> {
@@ -81,6 +101,45 @@ export async function dashboard(hh: string) {
     openChores: state.chores.map((c) => ({ choreId: c.choreId, label: c.label, owedBy: c.owedBy })),
     ledger: ledger.map((e) => ({ playerId: e.playerId, change: e.change, reason: e.reason, roundId: e.roundId ?? null, at: e.at })),
     rounds: rounds.map((r) => ({ ...r, packTitle: packTitle(r.packId) ?? null })),
+    packs: [...state.packs]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map((p) => ({
+        packId: p.packId,
+        title: p.title,
+        topic: p.topic,
+        kind: p.kind,
+        status: p.status,
+        failReason: p.failReason ?? null,
+        questionCount: p.questionCount,
+        remaining: Math.max(0, p.questionCount - p.usedCount),
+        forPlayerId: p.forPlayerId ?? null,
+        createdAt: p.createdAt,
+      })),
+  };
+}
+
+/** One pack with its questions, in order. */
+async function packDetail(hh: string, packId: string) {
+  const found = await (await getRepo()).getPack(hh, packId);
+  if (!found) throw new UserError("That pack doesn't exist.", "unknown_pack");
+  return {
+    packId: found.pack.packId,
+    title: found.pack.title,
+    topic: found.pack.topic,
+    kind: found.pack.kind,
+    forPlayerId: found.pack.forPlayerId ?? null,
+    questions: found.questions
+      .sort((a, b) => a.n - b.n)
+      .map((q) => ({
+        n: q.n,
+        question: q.question,
+        answer: q.answer,
+        accept: q.accept ?? [],
+        explanation: q.explanation ?? "",
+        difficulty: q.difficulty,
+        kind: q.kind ?? (found.pack.kind === "riddle" ? "riddle" : "trivia"),
+        used: !!q.usedAt,
+      })),
   };
 }
 
@@ -115,7 +174,7 @@ export function parentRoutes(): Hono<Env> {
   app.post("/household", async (c) => {
     const b = await body(c, schemas.household);
     const repo = await getRepo();
-    const hh = await repo.createHousehold({
+    const hh = await createFamily(repo, {
       showTitle: b.showTitle,
       timeZone: b.timeZone,
       resetSchedule: b.resetSchedule as ResetSchedule | undefined,
@@ -177,6 +236,91 @@ export function parentRoutes(): Hono<Env> {
     if (!state.players.some((p) => p.playerId === c.req.param("id"))) throw new UserError("That player isn't in your family.", "unknown_player");
     await repo.removePlayer(hh, c.req.param("id"));
     return c.json(await dashboard(hh));
+  });
+
+  /** Cheap check that the token is good (the pack helper uses it before calling the model). */
+  app.get("/session", (c) => c.json({ ok: true }));
+
+  // ---------------------------------------------------------------------------
+  // Question packs (R6.2, R6.3). Pack routes return the dashboard plus `pack`.
+  // ---------------------------------------------------------------------------
+
+  async function ownPack(c: Context<Env>): Promise<{ hh: string; packId: string; questionCount: number }> {
+    const hh = await household(c);
+    const found = await (await getRepo()).getPack(hh, c.req.param("id")!);
+    if (!found) throw new UserError("That pack doesn't exist.", "unknown_pack");
+    return { hh, packId: found.pack.packId, questionCount: found.questions.length };
+  }
+
+  const kindFor = (packKind: "trivia" | "riddle" | "mixed", q: { kind?: "trivia" | "riddle" }) =>
+    packKind === "mixed" ? (q.kind ?? "trivia") : packKind;
+
+  app.get("/packs/:id", async (c) => {
+    const { hh, packId } = await ownPack(c);
+    return c.json({ pack: await packDetail(hh, packId) });
+  });
+
+  app.post("/packs", async (c) => {
+    const hh = await household(c);
+    const b = await body(c, schemas.pack);
+    const repo = await getRepo();
+    if (!b.title.trim()) throw new UserError("Give the pack a name.");
+    if (b.forPlayerId && !(await repo.load(hh)).players.some((p) => p.playerId === b.forPlayerId)) {
+      throw new UserError("That player isn't in your family.", "unknown_player");
+    }
+    const pack = await repo.createPack(hh, { title: b.title, topic: b.topic || b.title, kind: b.kind, forPlayerId: b.forPlayerId });
+    const questions = b.questions.map((q) => ({ ...q, kind: kindFor(b.kind, q) }));
+    const title = pack.title;
+    await repo.addPackQuestions(hh, pack.packId, questions, {
+      finish: true,
+      newsText: `A new question pack is ready: ${title}. Say "play the ${title} pack" to try it.`,
+    });
+    return c.json({ ...(await dashboard(hh)), pack: await packDetail(hh, pack.packId) });
+  });
+
+  app.post("/packs/:id", async (c) => {
+    const { hh, packId } = await ownPack(c);
+    const b = await body(c, schemas.packEdit);
+    await (await getRepo()).updatePack(hh, packId, b);
+    return c.json({ ...(await dashboard(hh)), pack: await packDetail(hh, packId) });
+  });
+
+  app.delete("/packs/:id", async (c) => {
+    const { hh, packId } = await ownPack(c);
+    await (await getRepo()).deletePack(hh, packId);
+    return c.json(await dashboard(hh));
+  });
+
+  app.post("/packs/:id/replay", async (c) => {
+    const { hh, packId } = await ownPack(c);
+    await (await getRepo()).resetPackUsage(hh, packId);
+    return c.json({ ...(await dashboard(hh)), pack: await packDetail(hh, packId) });
+  });
+
+  app.post("/packs/:id/questions", async (c) => {
+    const { hh, packId, questionCount } = await ownPack(c);
+    const b = await body(c, schemas.questions);
+    if (questionCount + b.questions.length > MAX_QUESTIONS) throw new UserError(`A pack can hold up to ${MAX_QUESTIONS} questions.`);
+    const repo = await getRepo();
+    const detail = await packDetail(hh, packId);
+    await repo.addPackQuestions(hh, packId, b.questions.map((q) => ({ ...q, kind: kindFor(detail.kind, q) })), { announce: false });
+    return c.json({ ...(await dashboard(hh)), pack: await packDetail(hh, packId) });
+  });
+
+  app.post("/packs/:id/questions/:n", async (c) => {
+    const { hh, packId } = await ownPack(c);
+    const b = await body(c, schemas.question);
+    const detail = await packDetail(hh, packId);
+    const n = Number(c.req.param("n"));
+    if (!detail.questions.some((q) => q.n === n)) throw new UserError("That question isn't in this pack.", "unknown_question");
+    await (await getRepo()).updatePackQuestion(hh, packId, n, { ...b, kind: kindFor(detail.kind, b) });
+    return c.json({ ...(await dashboard(hh)), pack: await packDetail(hh, packId) });
+  });
+
+  app.delete("/packs/:id/questions/:n", async (c) => {
+    const { hh, packId } = await ownPack(c);
+    await (await getRepo()).deletePackQuestion(hh, packId, Number(c.req.param("n")));
+    return c.json({ ...(await dashboard(hh)), pack: await packDetail(hh, packId) });
   });
 
   app.post("/reset", async (c) => {

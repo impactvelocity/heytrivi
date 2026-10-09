@@ -77,3 +77,13 @@ Entries here count toward the hackathon score. Add one every time a tool, SDK, o
 - Severity: minor
 - Workaround: `pnpm --filter infra run deploy` (also used for `destroy`).
 - Suggestion: Warn when a package script shares a name with a built-in command, or fail the parent script with a non-zero exit.
+
+### Alexa+ MCP docs disagree on account linking details
+- Tool / doc: Alexa+ MCP QuickStart and Account Linking for MCP Add-ons (developer.amazon.com)
+- Task attempted: Write the account linking setup for Hey Trivi without access to Alexa+.
+- Steps taken: Read the QuickStart, the account linking page, the client lifecycle page, and "Choose the Proper Alexa+ Integration Approach".
+- Expected: One answer for each requirement.
+- Actual: The account linking page calls the client secret optional in one place and lists it as the developer's to provide in another, while its sample token request sends only `client_id`. Only one of Alexa's several redirect URLs is shown ("the CLI output provides the list"). The QuickStart says `alexa-ai new` sets `accountLinking.enabled: true`, but the published `addon.json` example has no `accountLinking` key. The lifecycle page shows Alexa+ sending `protocolVersion: "2025-03-26"` while the overview says 2025-11-25. The testing and lifecycle links on the integration-approach page go to `/en-US/docs/alexa/add-ons/...` URLs that return 404; the working pages are under `/docs/alexaplus/add-ons/`.
+- Severity: minor
+- Workaround: Support both (a confidential client by default, `ALEXA_PUBLIC_CLIENT=1` for a public one), take redirect URLs from configuration, accept both protocol versions, and document the open questions in docs/alexa-plus.md.
+- Suggestion: List every regional redirect URL on the page, state the token endpoint's client authentication method, and show `accountLinking` in the full `addon.json` example.

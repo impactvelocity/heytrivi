@@ -1,0 +1,75 @@
+{
+  "manifestVersion": "1.0",
+  "storeListing": {
+    "distributionCountries": ["US"],
+    "locales": {
+      "en-US": {
+        "default": "DEFAULT",
+        "name": {
+          "value": "Hey Trivi",
+          "spokenForm": { "format": "ipa", "value": "heɪ ˈtrɪvi" }
+        },
+        "shortDescription": "Family trivia that settles who's right, who takes out the garbage, and who picks the movie.",
+        "fullDescription": "Hey Trivi turns family arguments into a quick trivia round. Say the question and everyone's answers in one breath, and Alexa decides who's right and keeps score. Play for a chore and the loser owes it, or for a pick and the winner gets it. Ties go to a tiebreak. Points carry over from day to day: spend them on treats, trade them for chores, and see who leads the week. Parents set a spoken parent phrase that's needed before points are spent, and choose whether points reset weekly, monthly, or never. Riddles and starter trivia packs are included. On the parent page, see the leaderboard, every question and answer, and the points history. Hey Trivi keeps only first names and an optional school grade band for kids.",
+        "examplePhrases": [
+          "Let's play Hey Trivi",
+          "Let's play Hey Trivi for the garbage",
+          "Hey Trivi, riddles",
+          "Hey Trivi, what's the score?"
+        ],
+        "privacyAndCompliance": {
+          "privacyPolicyUrl": "https://main.d2glgwm5yifu21.amplifyapp.com/privacy",
+          "termsOfUseUrl": "https://main.d2glgwm5yifu21.amplifyapp.com/terms"
+        },
+        "mediaAssets": {
+          "icons": {
+            "light": [
+              { "size": "72x72", "uri": "https://main.d2glgwm5yifu21.amplifyapp.com/alexa-assets/icon-72.png" },
+              { "size": "64x64", "uri": "https://main.d2glgwm5yifu21.amplifyapp.com/alexa-assets/icon-64.png" },
+              { "size": "88x88", "uri": "https://main.d2glgwm5yifu21.amplifyapp.com/alexa-assets/icon-88.png" },
+              { "size": "126x126", "uri": "https://main.d2glgwm5yifu21.amplifyapp.com/alexa-assets/icon-126.png" },
+              { "size": "180x180", "uri": "https://main.d2glgwm5yifu21.amplifyapp.com/alexa-assets/icon-180.png" },
+              { "size": "241x241", "uri": "https://main.d2glgwm5yifu21.amplifyapp.com/alexa-assets/icon-241.png" }
+            ],
+            "dark": [
+              { "size": "72x72", "uri": "https://main.d2glgwm5yifu21.amplifyapp.com/alexa-assets/icon-dark-72.png" },
+              { "size": "64x64", "uri": "https://main.d2glgwm5yifu21.amplifyapp.com/alexa-assets/icon-dark-64.png" },
+              { "size": "88x88", "uri": "https://main.d2glgwm5yifu21.amplifyapp.com/alexa-assets/icon-dark-88.png" },
+              { "size": "126x126", "uri": "https://main.d2glgwm5yifu21.amplifyapp.com/alexa-assets/icon-dark-126.png" },
+              { "size": "180x180", "uri": "https://main.d2glgwm5yifu21.amplifyapp.com/alexa-assets/icon-dark-180.png" },
+              { "size": "241x241", "uri": "https://main.d2glgwm5yifu21.amplifyapp.com/alexa-assets/icon-dark-241.png" }
+            ]
+          },
+          "carouselImages": [
+            {
+              "uri": "https://main.d2glgwm5yifu21.amplifyapp.com/alexa-assets/carousel.png",
+              "altText": "A soft round speaker with a glowing ring beside the words Hey Trivi and a family scoreboard: Mom 7, Sally 5, John 3.",
+              "size": "600x900"
+            }
+          ],
+          "bannerImages": [
+            {
+              "uri": "https://main.d2glgwm5yifu21.amplifyapp.com/alexa-assets/banner.png",
+              "altText": "Hey Trivi: family trivia that settles who takes out the garbage, with a family scoreboard.",
+              "size": "1200x600"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "integrations": [
+    {
+      "type": "MCP",
+      "config": {
+        "endpoints": {
+          "default": {
+            "type": "HTTPS",
+            "uri": "https://flllwqrrehtnc5ygfpjnq4fn440lkfel.lambda-url.us-east-2.on.aws/mcp"
+          }
+        }
+      }
+    }
+  ],
+  "accountLinking": { "enabled": true }
+}

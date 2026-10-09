@@ -102,6 +102,48 @@ export class HeyTriviStack extends cdk.Stack {
       useCognitoProvidedValues: true,
     });
 
+    // Alexa+ account linking: a second client whose callback URLs are Alexa's.
+    // Alexa+ uses several region-specific redirect URLs that include your
+    // Amazon vendor id; `alexa-ai configure-account-linking` prints the exact
+    // list. Set ALEXA_REDIRECT_URIS (comma-separated) to that list, or set
+    // ALEXA_VENDOR_ID to use the usual four. Without either, no client is made.
+    // See docs/alexa-plus.md.
+    const alexaRedirects = (process.env.ALEXA_REDIRECT_URIS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+    const vendorId = process.env.ALEXA_VENDOR_ID;
+    if (!alexaRedirects.length && vendorId) {
+      for (const host of ["alexa.amazon.com", "pitangui.amazon.com", "layla.amazon.com", "alexa.amazon.co.jp"]) {
+        alexaRedirects.push(`https://${host}/api/skill/link/${vendorId}`);
+      }
+    }
+    const alexaClient = alexaRedirects.length
+      ? userPool.addClient("AlexaClient", {
+          userPoolClientName: "alexa-plus",
+          // Alexa+ asks for a client id and secret (masked CLI prompt, or the
+          // ALEXA_CLIENT_SECRET variable for the CLI). PKCE is used as well.
+          // ALEXA_PUBLIC_CLIENT=1 makes a public client instead.
+          generateSecret: process.env.ALEXA_PUBLIC_CLIENT !== "1",
+          oAuth: {
+            flows: { authorizationCodeGrant: true },
+            scopes: [cognito.OAuthScope.OPENID, cognito.OAuthScope.EMAIL, cognito.OAuthScope.PROFILE],
+            callbackUrls: alexaRedirects,
+          },
+          supportedIdentityProviders: [cognito.UserPoolClientIdentityProvider.COGNITO],
+          accessTokenValidity: cdk.Duration.hours(1),
+          idTokenValidity: cdk.Duration.hours(1),
+          // Alexa+ refreshes silently; when the refresh token expires the
+          // customer has to link again, so make it long.
+          refreshTokenValidity: cdk.Duration.days(365),
+          preventUserExistenceErrors: true,
+        })
+      : undefined;
+    if (alexaClient) {
+      new cognito.CfnManagedLoginBranding(this, "AlexaLoginBranding", {
+        userPoolId: userPool.userPoolId,
+        clientId: alexaClient.userPoolClientId,
+        useCognitoProvidedValues: true,
+      });
+    }
+
     // -------------------------------------------------------------------------
     // Lambda — bundles services/mcp-server/src/lambda.ts with esbuild.
     // The handler file re-exports the Hono app wrapped in @hono/aws-lambda.
@@ -129,7 +171,9 @@ export class HeyTriviStack extends cdk.Stack {
         DEV_TOKEN: process.env.DEV_TOKEN ?? "dev-token-demo",
         // Cognito access tokens from these clients are accepted (R9.4).
         COGNITO_USER_POOL_ID: userPool.userPoolId,
-        COGNITO_CLIENT_IDS: webClient.userPoolClientId,
+        COGNITO_CLIENT_IDS: alexaClient
+          ? cdk.Fn.join(",", [webClient.userPoolClientId, alexaClient.userPoolClientId])
+          : webClient.userPoolClientId,
         COGNITO_DOMAIN: loginDomain.baseUrl(),
       },
       bundling: {
@@ -243,6 +287,13 @@ export class HeyTriviStack extends cdk.Stack {
       value: webClient.userPoolClientId,
       description: "Set as COGNITO_CLIENT_ID for the parent page",
     });
+
+    if (alexaClient) {
+      new cdk.CfnOutput(this, "CognitoAlexaClientId", {
+        value: alexaClient.userPoolClientId,
+        description: "Give to: alexa-ai configure-account-linking --client-id",
+      });
+    }
 
     new cdk.CfnOutput(this, "DynamoTableName", {
       value: table.tableName,

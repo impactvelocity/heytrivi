@@ -4,6 +4,9 @@
  * Called at the start of every session. Returns players, scores, open chores,
  * the open round if any, ready packs, and unseen news (R2.1). News is marked
  * seen once returned, so the host announces it once.
+ *
+ * A family that just linked Hey Trivi in Alexa+ has no players yet. Then
+ * `needsPlayers` is true and the text tells the host to ask who's playing.
  */
 
 import type { McpServer } from "@modelcontextprotocol/server";
@@ -26,8 +29,10 @@ export function registerGetHousehold(server: McpServer): void {
       withHousehold(async ({ repo, hh, state }) => {
         const name = (id: string) => state.players.find((p) => p.playerId === id)?.name ?? id;
         const open = state.meta.openRound;
+        const needsPlayers = state.players.length === 0;
         const structured = {
           showTitle: state.meta.showTitle,
+          needsPlayers,
           players: state.players.map((p) => ({
             name: p.name,
             role: p.role,
@@ -62,6 +67,14 @@ export function registerGetHousehold(server: McpServer): void {
           resetSchedule: state.meta.resetSchedule,
         };
         await repo.markNewsSeen(hh, state.news);
+
+        if (needsPlayers) {
+          return ok(
+            structured,
+            `${state.meta.showTitle}. This family has no players yet. Welcome them to Hey Trivi, ask who's playing, ` +
+              "and call add_player for each person: a first name, parent or kid, and a grade band for kids if they say it. Then start a game.",
+          );
+        }
 
         const ranked = [...state.players].sort((a, b) => b.balance - a.balance);
         const parts = [

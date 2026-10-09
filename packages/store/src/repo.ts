@@ -492,30 +492,48 @@ export class Repo {
     mode: RoundMode,
     packId?: string,
   ): Promise<{ pack: Pack; q: PackQuestion } | undefined> {
+    const want: PackKind = mode === "riddle" ? "riddle" : "trivia";
+    const kindOf = (q: PackQuestion, pack: Pack) => q.kind ?? (pack.kind === "riddle" ? "riddle" : "trivia");
     let candidates: Pack[];
     if (packId) {
-      const pack = state.packs.find((p) => p.packId === packId || normalizeName(p.title) === normalizeName(packId));
-      if (!pack) throw new UserError(`I can't find that pack. You have ${listNames(state.packs.map((p) => p.title))}.`, "unknown_pack");
+      const pack = this.findPack(state, packId);
       if (pack.status !== "ready") throw new UserError(`The ${pack.title} pack isn't ready yet.`, "pack_not_ready");
       candidates = [pack];
     } else {
-      const kind: PackKind = mode === "riddle" ? "riddle" : "trivia";
-      candidates = state.packs.filter((p) => p.status === "ready" && p.kind === kind);
+      candidates = state.packs.filter((p) => p.status === "ready" && (p.kind === want || p.kind === "mixed"));
     }
     candidates = candidates.filter((p) => p.questionCount - p.usedCount > 0);
     // Newest packs first, so a freshly built pack gets played.
     candidates.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     for (const pack of candidates) {
-      const qs = await this.db.query(pk(hh), {
-        skPrefix: `PACK#${pack.packId}#Q#`,
-        filters: [{ attr: "usedAt", op: "notExists" }],
-      });
-      if (qs.length) {
-        const q = strip<PackQuestion>(qs[Math.floor(Math.random() * qs.length)]!);
-        return { pack, q };
-      }
+      const all = (
+        await this.db.query(pk(hh), {
+          skPrefix: `PACK#${pack.packId}#Q#`,
+          filters: [{ attr: "usedAt", op: "notExists" }],
+        })
+      ).map((i) => strip<PackQuestion>(i));
+      // A named pack plays whatever it has left, riddles first if they asked for one.
+      const matching = all.filter((q) => kindOf(q, pack) === want);
+      const qs = matching.length || !packId ? matching : all;
+      if (qs.length) return { pack, q: qs[Math.floor(Math.random() * qs.length)]! };
     }
     return undefined;
+  }
+
+  /** A pack by id or by what the family calls it: "dinosaurs", "the dinosaur pack". */
+  findPack(state: State, ref: string): Pack {
+    const want = normalizeName(ref).replace(/^the /, "").replace(/ pack$/, "").replace(/s$/, "");
+    const exact = state.packs.find((p) => p.packId === ref || normalizeName(p.title) === normalizeName(ref));
+    const loose = state.packs.filter((p) => {
+      const title = normalizeName(p.title);
+      return want.length >= 3 && (title.includes(want) || normalizeName(p.topic).includes(want));
+    });
+    const pack = exact ?? (loose.length === 1 ? loose[0] : undefined);
+    if (!pack) {
+      const which = loose.length > 1 ? loose : state.packs;
+      throw new UserError(`Which pack? You have ${listNames(which.map((p) => p.title))}.`, "unknown_pack");
+    }
+    return pack;
   }
 
   async recordRound(hh: string, state: State, input: RecordRoundInput): Promise<RecordRoundResult> {
@@ -944,7 +962,7 @@ export class Repo {
     const items = questions.map((q) => ({
       ...keys.question(hh, packId, next),
       type: "question",
-      ...clean({ packId, n: next++, question: q.question, answer: q.answer, accept: q.accept, explanation: q.explanation, difficulty: q.difficulty }),
+      ...clean({ packId, n: next++, question: q.question, answer: q.answer, accept: q.accept, explanation: q.explanation, difficulty: q.difficulty, kind: q.kind }),
     }));
     const chunks: (typeof items)[] = [];
     for (let i = 0; i < items.length; i += 90) chunks.push(items.slice(i, i + 90));
@@ -972,7 +990,7 @@ export class Repo {
     hh: string,
     packId: string,
     n: number,
-    q: Partial<Pick<PackQuestion, "question" | "answer" | "accept" | "explanation" | "difficulty">>,
+    q: Partial<Pick<PackQuestion, "question" | "answer" | "accept" | "explanation" | "difficulty" | "kind">>,
   ): Promise<void> {
     await this.db.transact([{ kind: "update", key: keys.question(hh, packId, n), set: clean(q), conditions: [{ attr: "PK", op: "exists" }] }]);
   }
@@ -984,6 +1002,31 @@ export class Repo {
       { kind: "delete", key: keys.question(hh, packId, n) },
       { kind: "update", key: keys.pack(hh, packId), add: { questionCount: -1, usedCount: q.usedAt ? -1 : 0 } },
     ]);
+  }
+
+  async updatePack(hh: string, packId: string, p: { title?: string; forPlayerId?: string | null; kind?: PackKind }): Promise<void> {
+    const set: Record<string, unknown> = {};
+    const remove: string[] = [];
+    if (p.title !== undefined) {
+      const title = p.title.trim().slice(0, 60);
+      if (!title) throw new UserError("Give the pack a name.");
+      set.title = title;
+    }
+    if (p.kind) set.kind = p.kind;
+    if (p.forPlayerId === null) remove.push("forPlayerId");
+    else if (p.forPlayerId) set.forPlayerId = p.forPlayerId;
+    if (!Object.keys(set).length && !remove.length) return;
+    await this.db.transact([{ kind: "update", key: keys.pack(hh, packId), set, remove, conditions: [{ attr: "PK", op: "exists" }] }]);
+  }
+
+  /** "Play them again": every question in the pack counts as unasked. */
+  async resetPackUsage(hh: string, packId: string): Promise<void> {
+    const existing = await this.getPack(hh, packId);
+    if (!existing) throw new UserError("That pack doesn't exist.", "unknown_pack");
+    const used = existing.questions.filter((q) => q.usedAt);
+    const writes: Write[] = used.map((q) => ({ kind: "update", key: keys.question(hh, packId, q.n), remove: ["usedAt"] }));
+    for (let i = 0; i < writes.length; i += 90) await this.db.transact(writes.slice(i, i + 90));
+    await this.db.transact([{ kind: "update", key: keys.pack(hh, packId), set: { usedCount: 0 } }]);
   }
 
   async deletePack(hh: string, packId: string): Promise<void> {

@@ -98,6 +98,10 @@ Every family uses the same MCP server URL. A parent's Cognito access token tells
 
 The deployed MCP server gets its Cognito settings from CDK. The web client's callback URLs are the Amplify URL (`PARENT_APP_URL` at deploy time) and `http://localhost:3000`.
 
+## Alexa+
+
+The same server is meant to be an Alexa+ MCP add-on: Alexa+ links a parent's Cognito account, and the family plays by voice. [docs/alexa-plus.md](docs/alexa-plus.md) maps the setup, linking, and conversation flows, lists how each Alexa+ requirement is met, and has the `alexa-ai` steps to register it. The store listing is in `alexa/addon-package/addon.json`. It isn't tested against real Alexa+, which hackathon entrants can't reach.
+
 ## Tests
 
 ```bash

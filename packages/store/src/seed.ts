@@ -48,6 +48,27 @@ export const RIDDLE_PACK: Q[] = [
   { question: "I'm full of holes but I still hold water. What am I?", answer: "a sponge", accept: ["sponge"], explanation: "A sponge's tiny holes soak up and hold water.", difficulty: "easy" },
 ];
 
+/**
+ * Give a household the two starter packs, so "quiz us" and "riddles" work
+ * from the first game. Every new family gets them.
+ */
+export async function addStarterPacks(repo: Repo, hh: string): Promise<void> {
+  const trivia = await repo.createPack(hh, { packId: "starter-trivia", title: "Starter Trivia", topic: "general knowledge", kind: "trivia", status: "building" });
+  await repo.addPackQuestions(hh, trivia.packId, TRIVIA_PACK, { finish: true, announce: false });
+  const riddles = await repo.createPack(hh, { packId: "starter-riddles", title: "Starter Riddles", topic: "riddles", kind: "riddle", status: "building" });
+  await repo.addPackQuestions(hh, riddles.packId, RIDDLE_PACK, { finish: true, announce: false });
+}
+
+/** The show title a family gets when they start by voice, before naming it. */
+export const DEFAULT_SHOW_TITLE = "Family Trivia Night";
+
+/** A new family: the household, then the starter packs. */
+export async function createFamily(repo: Repo, input: Parameters<Repo["createHousehold"]>[0]): Promise<string> {
+  const hh = await repo.createHousehold(input);
+  await addStarterPacks(repo, hh);
+  return hh;
+}
+
 /** Create the demo household if it doesn't exist. Safe to call repeatedly. */
 export async function seedDemo(repo: Repo, opts: { householdId?: string; devToken?: string } = {}): Promise<string> {
   const hh = opts.householdId ?? DEMO_HOUSEHOLD_ID;
@@ -64,10 +85,7 @@ export async function seedDemo(repo: Repo, opts: { householdId?: string; devToke
       { playerId: "john", name: "John", role: "kid", gradeBand: "6-8", balance: 5, lifetime: 8 },
     ],
   });
-  const trivia = await repo.createPack(hh, { packId: "starter-trivia", title: "Starter Trivia", topic: "general knowledge", kind: "trivia", status: "building" });
-  await repo.addPackQuestions(hh, trivia.packId, TRIVIA_PACK, { finish: true, announce: false });
-  const riddles = await repo.createPack(hh, { packId: "starter-riddles", title: "Starter Riddles", topic: "riddles", kind: "riddle", status: "building" });
-  await repo.addPackQuestions(hh, riddles.packId, RIDDLE_PACK, { finish: true, announce: false });
+  await addStarterPacks(repo, hh);
   await repo.setPhrase(hh, DEMO_PARENT_PHRASE, "spend");
   if (opts.devToken) await repo.addDevToken(opts.devToken, hh);
   return hh;

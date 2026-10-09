@@ -5,9 +5,21 @@
  * document points at the Cognito user pool's managed login endpoints, so an
  * assistant that links an account signs the parent in with the same account
  * they use on the parent page. Only served when Cognito is configured.
+ *
+ * Alexa+ reads these once, at `alexa-ai configure-account-linking` and
+ * `alexa-ai deploy`, and uses only the first authorization server. The
+ * `resource` value must match the add-on manifest's MCP URL exactly.
  */
 
 import type { Hono } from "hono";
+
+/**
+ * This server's canonical MCP URL: MCP_RESOURCE_URL when set (a custom
+ * domain), otherwise this request's origin plus /mcp.
+ */
+export function resourceUrl(req: Request): string {
+  return process.env.MCP_RESOURCE_URL?.replace(/\/$/, "") ?? `${new URL(req.url).origin}/mcp`;
+}
 
 export function oauthMetadata(app: Hono): void {
   const domain = process.env.COGNITO_DOMAIN?.replace(/\/$/, "");
@@ -20,7 +32,7 @@ export function oauthMetadata(app: Hono): void {
 
   app.get("/.well-known/oauth-protected-resource", (c) =>
     c.json({
-      resource: `${origin(c.req.url)}/mcp`,
+      resource: resourceUrl(c.req.raw),
       authorization_servers: [origin(c.req.url)],
       bearer_methods_supported: ["header"],
       scopes_supported: scopes,

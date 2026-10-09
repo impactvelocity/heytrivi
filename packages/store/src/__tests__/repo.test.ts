@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
-import { DEMO_PARENT_PHRASE, MemoryItemStore, PHRASE_LOCKED, PHRASE_NEEDED, Repo, UserError, seedDemo, type ItemStore } from "../index.js";
+import { DEMO_PARENT_PHRASE, MemoryItemStore, createFamily, PHRASE_LOCKED, PHRASE_NEEDED, Repo, UserError, seedDemo, type ItemStore } from "../index.js";
 import { DynamoItemStore } from "../dynamo-store.js";
 
 // Set TEST_DYNAMO_TABLE to run the same tests against a real DynamoDB table.
@@ -402,5 +402,57 @@ describe("parent page", () => {
     ]);
     const ledger = await repo.ledgerFor(HH);
     expect(ledger[0]).toMatchObject({ playerId: "mom", change: 1, reason: "round", roundId: rounds[0]!.roundId });
+  });
+});
+
+describe("new families", () => {
+  it("get the starter packs", async () => {
+    const hh = await createFamily(repo, { showTitle: "Starters", ownerSub: `sub-${randomUUID()}` });
+    const s = await repo.load(hh);
+    expect(s.packs.map((p) => [p.title, p.status, p.questionCount]).sort()).toEqual([
+      ["Starter Riddles", "ready", 12],
+      ["Starter Trivia", "ready", 15],
+    ]);
+    expect(s.players).toEqual([]);
+  });
+});
+
+describe("parent-made packs", () => {
+  const dino = [
+    { question: "Which dinosaur had three horns on its face?", answer: "Triceratops", accept: [], explanation: "Its name means three-horned face.", difficulty: "easy" as const, kind: "trivia" as const },
+    { question: "I'm a dinosaur with a long neck. I eat leaves from the treetops. What kind of dinosaur am I?", answer: "a sauropod", accept: ["brachiosaurus", "brontosaurus", "long neck"], explanation: "Sauropods were the long-necked plant eaters.", difficulty: "easy" as const, kind: "riddle" as const },
+  ];
+
+  it("a mixed pack plays riddles for 'riddles', trivia for 'quiz us', and anything when named loosely", async () => {
+    const pack = await repo.createPack(HH, { title: "Dinosaur Discoveries", topic: "dinosaurs", kind: "mixed" });
+    await repo.addPackQuestions(HH, pack.packId, dino, { finish: true });
+    expect((await repo.load(HH)).news.map((n) => n.text)).toContain("A new pack is ready: Dinosaur Discoveries.");
+
+    const riddle = await repo.startRound(HH, await repo.begin(HH), { mode: "riddle", packId: "the dinosaur pack" });
+    expect(riddle.question).toContain("long neck");
+    const trivia = await repo.startRound(HH, await repo.begin(HH), { mode: "hosted", packId: "dinosaurs" });
+    expect(trivia.question).toContain("three horns");
+  });
+
+  it("asks which pack when a name matches more than one", async () => {
+    await repo.createPack(HH, { title: "Dinosaurs for Sally", topic: "dinosaurs", status: "ready" });
+    await repo.createPack(HH, { title: "Dinosaurs for John", topic: "dinosaurs", status: "ready" });
+    await expect(repo.startRound(HH, await repo.begin(HH), { mode: "hosted", packId: "dinosaur" })).rejects.toThrow(/Which pack\? You have Dinosaurs for Sally and Dinosaurs for John/);
+  });
+
+  it("plays a used-up pack again after a reset, and renames it", async () => {
+    const pack = await repo.createPack(HH, { title: "Dinos", topic: "dinosaurs", kind: "mixed" });
+    await repo.addPackQuestions(HH, pack.packId, dino, { finish: true });
+    for (let i = 0; i < 2; i++) {
+      const r = await repo.startRound(HH, await repo.begin(HH), { mode: "hosted", packId: pack.packId });
+      await repo.recordRound(HH, await repo.begin(HH), { roundId: r.roundId, guesses: [{ player: "Mom", guess: "x", verdict: "wrong" }] });
+    }
+    expect((await repo.getPack(HH, pack.packId))!.pack.usedCount).toBe(2);
+    await repo.resetPackUsage(HH, pack.packId);
+    const after = (await repo.getPack(HH, pack.packId))!;
+    expect(after.pack.usedCount).toBe(0);
+    expect(after.questions.every((q) => !q.usedAt)).toBe(true);
+    await repo.updatePack(HH, pack.packId, { title: "Dino Days" });
+    expect((await repo.getPack(HH, pack.packId))!.pack.title).toBe("Dino Days");
   });
 });

@@ -94,6 +94,19 @@ describe("R1.1 — initialize", () => {
   });
 });
 
+describe("Alexa+ handshake", () => {
+  it("accepts the initialize Alexa+ documents (protocolVersion 2025-03-26, roots capability)", async () => {
+    const body = await rpc(
+      "initialize",
+      { protocolVersion: "2025-03-26", capabilities: { roots: { listChanged: true } }, clientInfo: { name: "Alexa+ MCP Client", version: "1.0.0" } },
+      "4e3bdaee-0",
+    );
+    expect(body.error).toBeUndefined();
+    expect(body.id).toBe("4e3bdaee-0");
+    expect((body.result as Record<string, unknown>).protocolVersion).toBe("2025-03-26");
+  });
+});
+
 describe("R1.2 — no session required", () => {
   it("answers tools/list without any session header or prior initialize", async () => {
     const res = await post({ jsonrpc: "2.0", id: 9, method: "tools/list", params: {} });

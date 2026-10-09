@@ -72,7 +72,9 @@ export interface HouseholdMeta {
   createdAt: string;
 }
 
-export type PackKind = "trivia" | "riddle";
+/** "mixed" packs hold both; each question then says which it is. */
+export type PackKind = "trivia" | "riddle" | "mixed";
+export type QuestionKind = "trivia" | "riddle";
 export type PackStatus = "building" | "ready" | "failed";
 
 export interface Pack {
@@ -98,6 +100,8 @@ export interface PackQuestion {
   accept: string[];
   explanation: string;
   difficulty: Difficulty;
+  /** Set in mixed packs. Otherwise the pack's kind. */
+  kind?: QuestionKind;
   usedAt?: string;
 }
 

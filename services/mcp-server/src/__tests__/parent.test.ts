@@ -124,6 +124,56 @@ describe("parent API", () => {
   });
 });
 
+describe("question packs", () => {
+  const dino = { question: "Which dinosaur had three horns?", answer: "Triceratops", accept: ["tricerotops"], explanation: "Tri means three.", difficulty: "easy", kind: "trivia" };
+  const riddle = { question: "I have a long neck and eat treetops. What dinosaur am I?", answer: "a sauropod", kind: "riddle" };
+
+  it("a parent writes a mixed pack, edits it, and the game plays it by name", async () => {
+    let r = await api("/packs", { body: { title: "Dinosaur Discoveries", topic: "dinosaurs for 6 and 8", kind: "mixed", forPlayerId: "sally", questions: [dino, riddle] } });
+    expect(r.status).toBe(200);
+    expect(r.json.pack).toMatchObject({ title: "Dinosaur Discoveries", kind: "mixed", forPlayerId: "sally" });
+    expect(r.json.pack.questions.map((q: Json) => [q.n, q.kind, q.difficulty, q.explanation])).toEqual([
+      [1, "trivia", "easy", "Tri means three."],
+      [2, "riddle", "easy", ""],
+    ]);
+    expect(r.json.packs[0]).toMatchObject({ title: "Dinosaur Discoveries", questionCount: 2, remaining: 2 });
+    const id = r.json.pack.packId;
+
+    r = await api(`/packs/${id}/questions`, { body: { questions: [{ question: "Did T. rex have big arms or small arms?", answer: "small arms", kind: "trivia" }] } });
+    expect(r.json.pack.questions).toHaveLength(3);
+    r = await api(`/packs/${id}/questions/3`, { body: { question: "Did T. rex have big arms or tiny arms?", answer: "tiny arms", kind: "trivia" } });
+    expect(r.json.pack.questions[2].answer).toBe("tiny arms");
+    r = await api(`/packs/${id}/questions/1`, { method: "DELETE" });
+    expect(r.json.pack.questions.map((q: Json) => q.n)).toEqual([2, 3]);
+    r = await api(`/packs/${id}`, { body: { title: "Dino Days", forPlayerId: null } });
+    expect(r.json.pack).toMatchObject({ title: "Dino Days", forPlayerId: null });
+
+    // Alexa: "play the dino pack, riddles"
+    const res = await app.request("/mcp", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json, text/event-stream", authorization: "Bearer dev-token-demo" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "start_round", arguments: { mode: "riddle", pack: "dino pack" } } }),
+    });
+    expect(await res.text()).toContain("long neck");
+
+    expect((await api(`/packs/${id}/replay`, { body: {} })).json.pack.questions.every((q: Json) => !q.used)).toBe(true);
+    r = await api(`/packs/${id}`, { method: "DELETE" });
+    expect(r.json.packs.map((p: Json) => p.title)).not.toContain("Dino Days");
+  });
+
+  it("refuses empty packs, bad questions, and other families' packs", async () => {
+    expect((await api("/packs", { body: { title: "Empty", kind: "trivia", questions: [] } })).status).toBe(400);
+    expect((await api("/packs", { body: { title: "Bad", kind: "trivia", questions: [{ question: " ", answer: "x" }] } })).status).toBe(400);
+    expect((await api("/packs", { body: { title: "  ", kind: "trivia", questions: [dino] } })).json.error).toMatch(/name/);
+
+    const other = await api("/household", { token: "dev-user-other", body: { showTitle: "Other", players: [{ name: "Pat", role: "parent" }] } });
+    const theirPack = other.json.packs[0].packId;
+    expect((await api(`/packs/${theirPack}`, { method: "DELETE" })).status).toBe(200); // starter-trivia exists in the demo family too
+    const custom = await api("/packs", { token: "dev-user-other", body: { title: "Secret", kind: "trivia", questions: [dino] } });
+    expect((await api(`/packs/${custom.json.pack.packId}`)).json.error).toMatch(/doesn't exist/);
+  });
+});
+
 describe("Cognito access tokens", () => {
   it("map to the user's household on /parent and /mcp, and bad tokens are refused", async () => {
     const jwt = "aaa.bbb.ccc";
@@ -146,5 +196,48 @@ describe("Cognito access tokens", () => {
       });
     expect((await mcp(jwt)).status).toBe(200);
     expect((await mcp("aaa.bbb.ddd")).status).toBe(401);
+  });
+});
+
+describe("Alexa+ account linking", () => {
+  const mcpCall = (token: string, name: string, args: Record<string, unknown> = {}) =>
+    app.request("/mcp", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json, text/event-stream", authorization: `Bearer ${token}` },
+      body: JSON.stringify({ jsonrpc: "2.0", id: "a-1", method: "tools/call", params: { name, arguments: args } }),
+    });
+  const result = async (res: Response) => {
+    const line = (await res.text()).split("\n").find((l) => l.startsWith("data: "))!;
+    return JSON.parse(line.slice(6)).result as { isError?: boolean; structuredContent: Json; content: Array<{ text: string }> };
+  };
+
+  beforeEach(() => {
+    // Tokens Alexa+ gets carry aud = this server's /mcp URL (Cognito resource binding).
+    setVerifier({
+      verify: async (t) => {
+        const [sub, aud] = t.split(".");
+        return { sub: sub!, exp: Math.floor(Date.now() / 1000) + 3600, aud: aud === "here" ? "http://localhost/mcp" : aud === "none" ? undefined : `https://${aud}/mcp` };
+      },
+    });
+  });
+
+  it("a parent who links by voice first gets a new family with the starter packs, and the host asks who's playing", async () => {
+    const token = "voicefirst.here.sig";
+    const first = await result(await mcpCall(token, "get_household"));
+    expect(first.structuredContent).toMatchObject({ showTitle: "Family Trivia Night", needsPlayers: true, players: [] });
+    expect(first.structuredContent.packs.map((p: Json) => p.title).sort()).toEqual(["Starter Riddles", "Starter Trivia"]);
+    expect(first.content[0]!.text).toMatch(/ask who's playing/);
+
+    expect((await result(await mcpCall(token, "add_player", { name: "Mom", role: "parent" }))).isError).toBeFalsy();
+    const round = await result(await mcpCall(token, "start_round", { mode: "riddle" }));
+    expect(round.structuredContent.needsHostQuestion).toBe(false);
+
+    // The same account on the parent page sees that family.
+    expect((await api("/me", { token })).json.household.showTitle).toBe("Family Trivia Night");
+  });
+
+  it("refuses a token bound to a different resource", async () => {
+    expect((await mcpCall("someone.elsewhere.sig", "get_household")).status).toBe(401);
+    expect((await mcpCall("someone.none.sig", "get_household")).status).toBe(200);
   });
 });

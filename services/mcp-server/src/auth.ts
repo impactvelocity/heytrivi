@@ -5,7 +5,10 @@
  * exactly one household (R9.6). Three kinds of token:
  *
  *   - Cognito access tokens (R9.4). The signature, issuer, expiry, and client
- *     id are checked, then USER#<sub> names the household.
+ *     id are checked, then USER#<sub> names the household. Alexa+ sends the
+ *     `resource` parameter when it links an account, and Cognito binds the
+ *     token to it in `aud` (RFC 8707). A token bound to another resource is
+ *     refused. Parent page tokens carry no `aud`.
  *   - Development tokens (R9.7): TOKEN# items in the store. The demo seed adds
  *     `dev-token-demo` for the demo family.
  *   - Local dev sign-in, local mode only: `dev-user-<name>` stands in for a
@@ -14,7 +17,9 @@
  */
 
 import { CognitoJwtVerifier } from "aws-jwt-verify";
+import { DEFAULT_SHOW_TITLE, UserError, createFamily, type Repo } from "@hey-trivi/store";
 import { getRepo } from "./context.js";
+import { resourceUrl } from "./oauth.js";
 
 const cache = new Map<string, { hh: string; until: number }>();
 const CACHE_MS = 60_000;
@@ -22,7 +27,7 @@ const CACHE_MS = 60_000;
 /** Local mode: the in-memory store, no AWS account (R12.1). */
 export const isLocalMode = () => !process.env.DYNAMODB_TABLE;
 
-type Verifier = { verify(token: string): Promise<{ sub: string; exp: number }> };
+type Verifier = { verify(token: string): Promise<{ sub: string; exp: number; aud?: string | string[] }> };
 let verifier: Verifier | null | undefined;
 
 function getVerifier(): Verifier | null {
@@ -47,8 +52,8 @@ export function bearerToken(req: Request): string | undefined {
 
 const looksLikeJwt = (t: string) => /^[\w-]+\.[\w-]+\.[\w-]+$/.test(t);
 
-/** The signed-in user's id for a token, or undefined if it isn't a valid user token. */
-async function userForToken(token: string): Promise<{ sub: string; exp?: number } | undefined> {
+/** The signed-in user's id for a token, or undefined if it isn't a valid user token for this server. */
+async function userForToken(token: string, req: Request): Promise<{ sub: string; exp?: number } | undefined> {
   if (isLocalMode()) {
     const m = token.match(/^dev-user-([a-z0-9-]{1,40})$/);
     if (m) return { sub: `dev:${m[1]}` };
@@ -57,6 +62,10 @@ async function userForToken(token: string): Promise<{ sub: string; exp?: number 
   if (!v || !looksLikeJwt(token)) return undefined;
   try {
     const payload = await v.verify(token);
+    if (payload.aud !== undefined) {
+      const auds = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+      if (!auds.includes(resourceUrl(req))) return undefined;
+    }
     return { sub: payload.sub, exp: payload.exp };
   } catch {
     return undefined;
@@ -66,7 +75,7 @@ async function userForToken(token: string): Promise<{ sub: string; exp?: number 
 /** The signed-in user (parent page), or undefined. Dev household tokens are not users. */
 export async function userForRequest(req: Request): Promise<string | undefined> {
   const token = bearerToken(req);
-  return token ? (await userForToken(token))?.sub : undefined;
+  return token ? (await userForToken(token, req))?.sub : undefined;
 }
 
 /** Resolve a request to its household, or undefined if unauthenticated. */
@@ -78,9 +87,9 @@ export async function householdForRequest(req: Request): Promise<string | undefi
   const repo = await getRepo();
   let hh: string | undefined;
   let until = Date.now() + CACHE_MS;
-  const user = await userForToken(token);
+  const user = await userForToken(token, req);
   if (user) {
-    hh = await repo.householdForUser(user.sub);
+    hh = await householdForLinkedUser(repo, user.sub);
     // Never cache a token past its expiry.
     if (user.exp) until = Math.min(until, user.exp * 1000);
   } else if (!looksLikeJwt(token)) {
@@ -90,7 +99,25 @@ export async function householdForRequest(req: Request): Promise<string | undefi
   return hh;
 }
 
-/** 401 with no WWW-Authenticate header (R9.1). */
+/**
+ * The household for a signed-in user on /mcp. Someone who links Hey Trivi in
+ * Alexa+ may never have opened the parent page, so their first call creates
+ * an empty family with the starter packs, and the host asks who's playing.
+ * Answering 401 instead would send Alexa+ back into account linking forever.
+ */
+async function householdForLinkedUser(repo: Repo, sub: string): Promise<string | undefined> {
+  const hh = await repo.householdForUser(sub);
+  if (hh) return hh;
+  try {
+    return await createFamily(repo, { showTitle: DEFAULT_SHOW_TITLE, ownerSub: sub });
+  } catch (err) {
+    // Two first calls at once: the other one created it.
+    if (err instanceof UserError && err.code === "household_exists") return repo.householdForUser(sub);
+    throw err;
+  }
+}
+
+/** 401 with no WWW-Authenticate header (R9.1, and Alexa+ doesn't support the header yet). */
 export function unauthorized(): Response {
   return new Response(
     JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32001, message: "Unauthorized: a valid bearer token is required" } }),

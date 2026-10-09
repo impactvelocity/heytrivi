@@ -49,6 +49,7 @@ export function createApp(): Hono {
       serverInfo: { name: "hey-trivi", version: "0.1.0" },
       instructions:
         "Hey Trivi keeps a family's trivia scoreboard, chores, and points. Call get_household at the start of every conversation. " +
+        "If it says the family has no players yet, ask who's playing and add each person with add_player before the first question. " +
         "You judge answers; the server keeps the record. Keep spoken replies short. Never reveal an answer key before guesses are recorded, " +
         "and never repeat a parent phrase.",
     },
