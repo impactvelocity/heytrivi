@@ -15,6 +15,7 @@ import * as cdk from "aws-cdk-lib";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as path from "node:path";
 import { Construct } from "constructs";
@@ -136,12 +137,38 @@ export class HeyTriviStack extends cdk.Stack {
     });
 
     // -------------------------------------------------------------------------
+    // Simulator compute role — Amplify Hosting runs the simulator's API routes
+    // (the model step and speech) with this role, so no keys are stored.
+    // Only Nova 2 Lite and Polly speech are allowed.
+    // -------------------------------------------------------------------------
+    const simulatorRole = new iam.Role(this, "SimulatorComputeRole", {
+      roleName: "hey-trivi-simulator-compute",
+      assumedBy: new iam.ServicePrincipal("amplify.amazonaws.com"),
+      description: "Amplify SSR compute role for the Hey Trivi simulator",
+    });
+    simulatorRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
+        resources: [
+          "arn:aws:bedrock:*::foundation-model/amazon.nova-2-lite-v1:0",
+          `arn:aws:bedrock:${this.region}:${this.account}:inference-profile/us.amazon.nova-2-lite-v1:0`,
+        ],
+      }),
+    );
+    simulatorRole.addToPolicy(new iam.PolicyStatement({ actions: ["polly:SynthesizeSpeech"], resources: ["*"] }));
+
+    // -------------------------------------------------------------------------
     // Outputs
     // -------------------------------------------------------------------------
     new cdk.CfnOutput(this, "McpFunctionUrl", {
       value: this.mcpFunctionUrl.url,
       description: "MCP server endpoint — use this as TEST_MCP_URL",
       exportName: "HeyTriviMcpFunctionUrl",
+    });
+
+    new cdk.CfnOutput(this, "SimulatorComputeRoleArn", {
+      value: simulatorRole.roleArn,
+      description: "Attach to the Amplify app as its SSR compute role",
     });
 
     new cdk.CfnOutput(this, "DynamoTableName", {

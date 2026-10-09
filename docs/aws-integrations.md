@@ -16,4 +16,6 @@ Evidence for the AWS Builder mini challenge. One row per AWS service.
 | Amazon Bedrock (Nova 2 Lite, via the AI SDK Bedrock provider) | The simulator's host model: decides verdicts, picks MCP tools, and writes what the speaker says. Tools are passed from the browser's MCP client. | `apps/simulator/app/api/model/route.ts`, `apps/simulator/lib/host.ts`, `apps/simulator/lib/host-prompt.ts` |
 | Amazon Polly (standard engine) | The speaker's voice. | `apps/simulator/app/api/speak/route.ts`, `apps/simulator/lib/speech.ts` |
 
+| AWS Amplify Hosting | Hosts the simulator (Next.js SSR) from the GitHub repo. Its SSR compute role grants the API routes access to Bedrock and Polly. | `amplify.yml`, `.npmrc`, `infra/lib/hey-trivi-stack.ts` (compute role) |
+
 <!-- Add rows as services are wired up. -->

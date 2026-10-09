@@ -1,0 +1,26 @@
+version: 1
+applications:
+  - appRoot: apps/simulator
+    frontend:
+      # Install and build from the monorepo root (pnpm workspace).
+      buildPath: /
+      phases:
+        preBuild:
+          commands:
+            - nvm install 22 && nvm use 22
+            - npm install -g pnpm@9
+            - pnpm install --frozen-lockfile
+        build:
+          commands:
+            # Amplify only passes environment variables to the Next.js server
+            # runtime if they are written to .env.production at build time.
+            - env | grep -E '^(MCP_SERVER_URL|MCP_DEV_TOKEN|MOCK_MODEL|BEDROCK_MODEL_ID|BEDROCK_REGION|POLLY_REGION|POLLY_VOICE_ID|POLLY_ENGINE)=' >> apps/simulator/.env.production || true
+            - pnpm --filter simulator build
+      artifacts:
+        baseDirectory: apps/simulator/.next
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*
+          - apps/simulator/.next/cache/**/*
