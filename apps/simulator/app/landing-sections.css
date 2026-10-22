@@ -41,34 +41,6 @@
   100% { box-shadow: 0 0 0 9px transparent; }
 }
 
-/* The section's short name, as the nav says it, in the section's tone. */
-.lp-kicker {
-  --t: var(--acc);
-  --t-l: var(--acc-l);
-  --t-ink: var(--acc-ink);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 13px 5px 10px;
-  border-radius: 999px;
-  background: var(--t-l);
-  border: 1.5px solid color-mix(in srgb, var(--t) 40%, #fff);
-  color: var(--t-ink);
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 0.02em;
-}
-.lp-head .lp-kicker {
-  margin-bottom: 16px;
-}
-.lp-kicker::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--t);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--t) 25%, transparent);
-}
 .lp-head-left {
   margin: 0 0 28px;
   max-width: none;

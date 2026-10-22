@@ -321,42 +321,11 @@ html:has(.lp) {
   align-items: center;
   gap: 48px;
 }
-/* The hackathon, as a badge that links to it. */
 .lp-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  padding: 5px 12px 5px 5px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.07);
-  border: 1.5px solid rgb(255 255 255 / 0.14);
+  color: var(--brand-ink);
   font-weight: 900;
   font-size: 14px;
   letter-spacing: 0.01em;
-  transition: background 0.2s, border-color 0.2s;
-}
-.lp-eyebrow:hover {
-  background: rgb(255 255 255 / 0.12);
-  border-color: var(--acc);
-}
-.lp-eyebrow-badge {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--yellow);
-  box-shadow: 0 2px 0 var(--yellow-d);
-  color: #6b4b00;
-}
-.lp-eyebrow > svg {
-  margin-left: -4px;
-  color: var(--wolf);
-  transition: translate 0.2s;
-}
-.lp-eyebrow:hover > svg {
-  translate: 3px 0;
 }
 .lp-h1 {
   margin-top: 22px !important;
@@ -512,8 +481,8 @@ html:has(.lp) {
 
 .lp-section {
   padding: clamp(56px, 8vw, 96px) 0;
-  /* A nav link lands the section's kicker just under the sticky nav. */
-  scroll-margin-top: calc(var(--nav-h) + 28px - clamp(56px, 8vw, 96px));
+  /* A nav link lands the section's title just under the sticky nav. */
+  scroll-margin-top: calc(var(--nav-h) + 32px - clamp(56px, 8vw, 96px));
 }
 .lp-head {
   max-width: 680px;
@@ -610,10 +579,9 @@ html:has(.lp) {
   font-size: 12.5px;
   font-weight: 800;
   text-align: center;
-  transition: background 0.2s, color 0.2s;
+  transition: color 0.2s;
 }
 .lp-powered a:hover {
-  background: var(--polar);
   color: var(--eel);
 }
 .lp-powered .lp-aws-icon {
@@ -830,9 +798,6 @@ html:has(.lp) {
   }
   .lp-nav .lp-nav-gh {
     display: none;
-  }
-  .lp-eyebrow {
-    font-size: 13px;
   }
   /* Two rows of four. */
   .lp-powered a {

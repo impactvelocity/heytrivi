@@ -67,33 +67,19 @@ export function GitHubMark({ size = 18 }: { size?: number }) {
   );
 }
 
-/**
- * A section's heading. The kicker is the section's short name in its tone;
- * for sections in the nav it matches the link, so a reader who clicked
- * "Built on AWS" lands on those words.
- */
 export function SectionHead({
   title,
-  kicker,
-  tone,
   id,
   className = "",
   children,
 }: {
   title: ReactNode;
-  kicker?: string;
-  tone?: string;
   id: string;
   className?: string;
   children: ReactNode;
 }) {
   return (
     <div className={`lp-head ${className}`}>
-      {kicker && (
-        <p className="lp-kicker" data-tone={tone}>
-          {kicker}
-        </p>
-      )}
       <h2 id={id}>{title}</h2>
       <p>{children}</p>
     </div>

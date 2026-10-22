@@ -111,8 +111,6 @@ export function Playbook() {
     <section className="lp-section" id="play" aria-labelledby="lp-pb-title">
       <div className="lp-wrap">
         <SectionHead
-          kicker="See It Play"
-          tone="green"
           title={
             <>
               What Trivi hears, <br className="lp-br" />

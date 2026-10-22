@@ -242,13 +242,7 @@ function Hero() {
       <StageBackdrop kind="quiz" />
       <div className="lp-wrap lp-hero-grid">
         <div className="lp-hero-copy">
-          <a className="lp-eyebrow" href={HACKATHON_HREF} target="_blank" rel="noreferrer">
-            <span className="lp-eyebrow-badge">
-              <Trophy width={14} height={14} />
-            </span>
-            Built for the Build, Ship, Shape Hackathon
-            <ChevronRight width={16} height={16} />
-          </a>
+          <p className="lp-eyebrow">Built for the Build, Ship, Shape Hackathon</p>
           <h1 className="lp-h1">
             The family game show that <em>keeps score</em>
           </h1>

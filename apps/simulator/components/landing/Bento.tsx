@@ -17,7 +17,7 @@ export function Bento() {
   return (
     <section className="lp-section" id="features" aria-labelledby="lp-features-title">
       <div className="lp-wrap">
-        <SectionHead kicker="Features" tone="purple" title="Settle it with a quiz" id="lp-features-title">
+        <SectionHead title="Settle it with a quiz" id="lp-features-title">
           Every family argues about something. Hey Trivi turns the argument into a round of trivia, keeps track of who won, and remembers
           it tomorrow.
         </SectionHead>

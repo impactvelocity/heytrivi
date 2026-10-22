@@ -32,8 +32,6 @@ export function Parents() {
       <div className="lp-wrap lp-parents">
         <div className="lp-parents-copy">
           <SectionHead
-            kicker="For Parents"
-            tone="mint"
             title={
               <>
                 Parents set it up, <br className="lp-br" />

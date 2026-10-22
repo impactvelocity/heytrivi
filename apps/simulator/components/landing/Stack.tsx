@@ -66,8 +66,6 @@ export function HowBuilt() {
     <section className="lp-section" id="how" aria-labelledby="lp-how-title">
       <div className="lp-wrap">
         <SectionHead
-          kicker="How It Works"
-          tone="blue"
           title={
             <>
               The host judges, <br className="lp-br" />
@@ -208,7 +206,7 @@ function Node({ n }: { n: ArchNode }) {
             <n.glyph.Icon x={24} y={h / 2 - 10} width={20} height={20} color="#fff" />
           </>
         ) : (
-          <image href={`/aws/${n.aws}.svg`} x="16" y={h / 2 - 18} width="36" height="36" />
+          <image href={`/aws/${n.aws}.svg`} x="16" y={h / 2 - 18} width="36" height="36" clipPath="url(#lp-arch-round)" />
         )}
         <text className="lp-arch-title" x="64" y={top}>
           {n.title}
@@ -240,13 +238,17 @@ function Architecture() {
             table. The parent page signs in with Amazon Cognito, and Lambda checks Cognito's tokens. AWS Amplify hosts the Next.js app,
             whose compute role calls Amazon Bedrock and Amazon Polly. AWS CDK deploys it all as one CloudFormation stack.
           </desc>
+          {/* Rounds each service icon's corners, at any size, like the icons on the cards. */}
+          <clipPath id="lp-arch-round" clipPathUnits="objectBoundingBox">
+            <rect width="1" height="1" rx="0.24" />
+          </clipPath>
 
-          <text className="lp-arch-group" x="20" y="66">
+          <text className="lp-arch-group" x="20" y="57">
             At home
           </text>
           <rect className="lp-arch-cloud" x="262" y="24" width="832" height="570" rx="20" />
-          <image href="/aws/aws-cloud.svg" x="262" y="24" width="32" height="32" />
-          <text className="lp-arch-group" x="304" y="45">
+          <image href="/aws/aws-cloud.svg" x="278" y="38" width="26" height="26" clipPath="url(#lp-arch-round)" />
+          <text className="lp-arch-group" x="314" y="57">
             AWS Cloud <tspan>· us-east-2 · one CDK stack</tspan>
           </text>
 
@@ -275,7 +277,7 @@ function Architecture() {
           {INFRA.map((r) => (
             <g key={r.text} transform={`translate(${r.x + 12} 538)`}>
               {r.ids.map((id, i) => (
-                <image key={id} href={`/aws/${id}.svg`} x={i * 28} width="24" height="24" />
+                <image key={id} href={`/aws/${id}.svg`} x={i * 28} width="24" height="24" clipPath="url(#lp-arch-round)" />
               ))}
               <text className="lp-arch-sub lp-arch-infra-text" x={r.ids.length * 28 + 6} y="17">
                 {r.text}
@@ -331,7 +333,7 @@ export function Tech() {
   return (
     <section className="lp-section" id="tech" aria-labelledby="lp-tech-title">
       <div className="lp-wrap">
-        <SectionHead kicker="Built on AWS" tone="orange" title="Nine AWS services, one job each" id="lp-tech-title">
+        <SectionHead title="Nine AWS services, one job each" id="lp-tech-title">
           Every one is in the CDK stack or the Amplify app. Follow a guess from the kitchen table to DynamoDB, and a parent's sign-in to
           the server.
         </SectionHead>
@@ -401,7 +403,7 @@ export function Repo() {
   return (
     <section className="lp-section" id="built" aria-labelledby="lp-built-title">
       <div className="lp-wrap">
-        <SectionHead kicker="Open Source" tone="green" title="Everything that was built" id="lp-built-title">
+        <SectionHead title="Everything that was built" id="lp-built-title">
           All of it was built during the hackathon, starting October 8, 2026, and it's open source under the MIT license.
         </SectionHead>
         <div className="lp-built">

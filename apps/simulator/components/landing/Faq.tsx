@@ -33,7 +33,7 @@ export function Faq() {
   return (
     <section className="lp-section" id="faq" aria-labelledby="lp-faq-title">
       <div className="lp-wrap lp-faq-wrap">
-        <SectionHead kicker="FAQ" tone="blue" title="Good questions, short answers" id="lp-faq-title">
+        <SectionHead title="Good questions, short answers" id="lp-faq-title">
           The README and the docs have the long ones.
         </SectionHead>
         <div className="lp-faq">
