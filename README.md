@@ -78,9 +78,12 @@ With `MOCK_MODEL=1` there is no model. Each replay line carries the host's turn,
 http://localhost:3000/parent is where a parent signs up, sets up the family, and manages it:
 
 - **Family & leaderboard:** balances and all-time totals, chores owed, and adding, renaming, or removing family members.
+- **Themes:** sets of questions and riddles on one topic (called packs in the code and the MCP tools). Write them by hand, or describe what you want ("my kids are 6 and 8 and learning about dinosaurs, make 6 questions and riddles") and the helper writes a draft, answers each question blind, and fact-checks it. You review and edit before saving. The family plays a theme by name: "play the dinosaur theme."
 - **Points history:** every point earned, spent, traded, or reset, by day and by person.
 - **Question history:** each question, everyone's answer and verdict, and what was at stake.
 - **Settings:** point reset (never, weekly, monthly), time zone, reset now, the parent phrase, and the show name.
+
+The pack helper uses Claude Haiku 5.5 and Claude Sonnet 5.5 through the AI Gateway (`AI_GATEWAY_API_KEY`); override with `PACK_WRITER_MODEL_ID` and `PACK_FACT_MODEL_ID`. With `MOCK_MODEL=1` it returns a fixed sample.
 
 The page talks to the MCP server's `/parent` API, so it changes the same household the game plays. While a parent is signed in, the simulator plays as their family.
 

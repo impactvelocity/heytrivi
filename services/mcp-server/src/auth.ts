@@ -10,14 +10,16 @@
  *     token to it in `aud` (RFC 8707). A token bound to another resource is
  *     refused. Parent page tokens carry no `aud`.
  *   - Development tokens (R9.7): TOKEN# items in the store. The demo seed adds
- *     `dev-token-demo` for the demo family.
+ *     DEV_TOKEN for the demo family, `dev-token-demo` by default. That default
+ *     is printed in the repo, so a deployed server given its own DEV_TOKEN
+ *     refuses it: otherwise anyone could change the shared demo family.
  *   - Local dev sign-in, local mode only: `dev-user-<name>` stands in for a
  *     Cognito user called `dev:<name>`, so the parent page's signup works with
  *     no AWS account.
  */
 
 import { CognitoJwtVerifier } from "aws-jwt-verify";
-import { DEFAULT_SHOW_TITLE, UserError, createFamily, type Repo } from "@hey-trivi/store";
+import { DEFAULT_SHOW_TITLE, DEMO_DEV_TOKEN, UserError, createFamily, type Repo } from "@hey-trivi/store";
 import { getRepo } from "./context.js";
 import { resourceUrl } from "./oauth.js";
 
@@ -78,10 +80,20 @@ export async function userForRequest(req: Request): Promise<string | undefined> 
   return token ? (await userForToken(token, req))?.sub : undefined;
 }
 
+/**
+ * False for the repo's public demo token on a deployed server that has its
+ * own DEV_TOKEN. Its TOKEN# item can outlive the change, so the check is here.
+ */
+function devTokenAllowed(token: string): boolean {
+  if (isLocalMode() || token !== DEMO_DEV_TOKEN) return true;
+  const own = process.env.DEV_TOKEN;
+  return !own || own === DEMO_DEV_TOKEN;
+}
+
 /** Resolve a request to its household, or undefined if unauthenticated. */
 export async function householdForRequest(req: Request): Promise<string | undefined> {
   const token = bearerToken(req);
-  if (!token) return undefined;
+  if (!token || !devTokenAllowed(token)) return undefined;
   const hit = cache.get(token);
   if (hit && hit.until > Date.now()) return hit.hh;
   const repo = await getRepo();

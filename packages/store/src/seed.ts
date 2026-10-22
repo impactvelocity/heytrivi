@@ -72,7 +72,11 @@ export async function createFamily(repo: Repo, input: Parameters<Repo["createHou
 /** Create the demo household if it doesn't exist. Safe to call repeatedly. */
 export async function seedDemo(repo: Repo, opts: { householdId?: string; devToken?: string } = {}): Promise<string> {
   const hh = opts.householdId ?? DEMO_HOUSEHOLD_ID;
-  if (await repo.db.get({ PK: `HH#${hh}`, SK: "META" })) return hh;
+  if (await repo.db.get({ PK: `HH#${hh}`, SK: "META" })) {
+    // The family is already there, but a deploy may bring a new token for it.
+    if (opts.devToken && (await repo.householdForToken(opts.devToken)) !== hh) await repo.addDevToken(opts.devToken, hh);
+    return hh;
+  }
   await repo.createHousehold({
     householdId: hh,
     showTitle: "The Jones Family Trivia Night",

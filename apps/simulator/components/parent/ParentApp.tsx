@@ -2,8 +2,8 @@
 
 /**
  * The parent page (R11, R13): sign in, set up the family, then the dashboard
- * with the leaderboard, family members, points history, question history, and
- * settings. Data comes from the MCP server's /parent API through this app's
+ * with the leaderboard, family members, themes, points history,
+ * question history, and settings. Data comes from the MCP server's /parent API through this app's
  * /api/parent proxy, so it is the same household the game plays.
  */
 
@@ -12,12 +12,14 @@ import { SignedOut, parentApi, setPalette, type Dashboard } from "@/lib/parent";
 import { PointsHistory, QuestionHistory } from "./History";
 import { SetupScreen, SignInScreen } from "./Onboarding";
 import { Overview } from "./Overview";
+import { PacksTab } from "./Packs";
 import { Settings } from "./Settings";
 
 export type Run = (call: () => Promise<Dashboard>, done?: string) => Promise<boolean>;
 
 const TABS = [
   ["overview", "Family & leaderboard"],
+  ["packs", "Themes"],
   ["points", "Points history"],
   ["questions", "Question history"],
   ["settings", "Settings"],
@@ -141,6 +143,7 @@ export function ParentApp({ signedIn, cognito, mcpUrl, error }: Props) {
               ))}
             </nav>
             {tab === "overview" && <Overview data={data} run={run} mcpUrl={mcpUrl} />}
+            {tab === "packs" && <PacksTab data={data} run={run} />}
             {tab === "points" && <PointsHistory data={data} />}
             {tab === "questions" && <QuestionHistory data={data} />}
             {tab === "settings" && <Settings data={data} run={run} mcpUrl={mcpUrl} />}

@@ -10,7 +10,7 @@ import { clearTokens, parentApiBase, parentToken } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-const PATH = /^[a-z0-9_-]+(\/[a-z0-9_-]+)?$/i;
+const PATH = /^[a-z0-9_-]+(\/[a-z0-9_-]+){0,3}$/i;
 
 async function forward(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const path = (await ctx.params).path.join("/");

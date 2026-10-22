@@ -1,0 +1,589 @@
+/*
+ * Glow, Trivi's avatar, plus the .av box and the effects layer (ripples,
+ * dots, sweat, zzz, confetti) that every concept in the avatar lab shares.
+ * Loaded by /demo and /avatars. Size with --s on .av; colors like --blue and
+ * --yellow come from demo.css.
+ */
+
+/* ============================================================== avatars */
+
+.av {
+  position: relative;
+  flex: none;
+  width: var(--s);
+  height: var(--s);
+}
+.av *,
+.av *::before,
+.av *::after {
+  box-sizing: border-box;
+}
+.av > span {
+  position: absolute;
+}
+/* ---------------------------------------------------------------- effects */
+
+.av-fx {
+  inset: 0;
+  pointer-events: none;
+}
+.av-fx > span {
+  position: absolute;
+  display: none;
+}
+.av[data-mood="listening"] .av-ripples,
+.av[data-mood="wrong"] .av-sweat,
+.av[data-mood="sleeping"] .av-zzz,
+.av[data-mood="correct"] .av-confetti,
+.av[data-mood="celebrating"] .av-confetti {
+  display: block;
+}
+.av[data-mood="thinking"] .av-dots {
+  display: flex;
+}
+
+.av-ripples {
+  inset: 0;
+}
+.av-ripples i {
+  position: absolute;
+  inset: 4%;
+  border: calc(var(--s) * 0.018) solid color-mix(in srgb, var(--blue) 70%, transparent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: av-ripple 2s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+.av-ripples i + i {
+  animation-delay: 1s;
+}
+
+.av-dots {
+  top: -4%;
+  right: -6%;
+  align-items: flex-end;
+  gap: calc(var(--s) * 0.025);
+}
+.av-dots i {
+  width: calc(var(--s) * 0.05);
+  height: calc(var(--s) * 0.05);
+  border: calc(var(--s) * 0.01) solid var(--swan);
+  border-radius: 50%;
+  background: #fff;
+  animation: av-bob 1.2s ease-in-out infinite;
+}
+.av-dots i:nth-child(2) {
+  width: calc(var(--s) * 0.07);
+  height: calc(var(--s) * 0.07);
+  animation-delay: 0.15s;
+}
+.av-dots i:nth-child(3) {
+  width: calc(var(--s) * 0.1);
+  height: calc(var(--s) * 0.1);
+  animation-delay: 0.3s;
+}
+
+.av-sweat {
+  left: 12%;
+  top: 14%;
+  width: calc(var(--s) * 0.075);
+  height: calc(var(--s) * 0.075);
+  border-radius: 0 50% 50% 50%;
+  background: linear-gradient(135deg, #fff, #84d8ff 45%);
+  rotate: 45deg;
+  animation: av-drip 2.2s ease-in infinite;
+}
+
+.av-zzz {
+  top: -6%;
+  right: 4%;
+  width: 1px;
+  height: 1px;
+}
+.av-zzz i {
+  position: absolute;
+  font-style: normal;
+  font-weight: 900;
+  font-size: calc(var(--s) * 0.09);
+  line-height: 1;
+  color: var(--acc-d, #a568cc);
+  opacity: 0;
+  animation: av-zzz 3s ease-out infinite;
+}
+.av-zzz i:nth-child(2) {
+  font-size: calc(var(--s) * 0.12);
+  animation-delay: 1s;
+}
+.av-zzz i:nth-child(3) {
+  font-size: calc(var(--s) * 0.15);
+  animation-delay: 2s;
+}
+.al[data-backdrop="night"] .av-zzz i {
+  color: #e8d4ff;
+}
+
+.av-confetti {
+  inset: 0;
+}
+.av-confetti i {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: calc(var(--s) * 0.03);
+  height: calc(var(--s) * 0.06);
+  margin: calc(var(--s) * -0.03) 0 0 calc(var(--s) * -0.015);
+  border-radius: 2px;
+  background: var(--green);
+  opacity: 0;
+  animation: av-burst 1.6s cubic-bezier(0.15, 0.7, 0.3, 1) infinite;
+}
+.av-confetti i:nth-child(4n + 2) {
+  background: var(--blue);
+}
+.av-confetti i:nth-child(4n + 3) {
+  background: var(--yellow);
+}
+.av-confetti i:nth-child(4n + 4) {
+  background: var(--red);
+}
+.av-confetti i:nth-child(odd) {
+  animation-delay: 0.18s;
+}
+.av[data-mood="celebrating"] .av-confetti i {
+  animation-duration: 1.1s;
+}
+
+/* ------------------------------------------------------------------- glow */
+
+/* A 200-unit SVG. Parts transform around their own local origin (0 0), so
+   eyes and sparkles are drawn centered there; the body sets its own origins. */
+.av-glow svg {
+  --s: 200px;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+:where(.av-glow svg *) {
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+.gl-c1 {
+  stop-color: var(--gl-1);
+}
+.gl-c2 {
+  stop-color: var(--gl-2);
+}
+.gl-c3 {
+  stop-color: var(--gl-3);
+}
+.gl-hi {
+  stop-color: var(--gl-hi);
+}
+.gl-edge {
+  stop-color: var(--gl-edge);
+}
+/* A soft shadow under the body so it sits off the stage, and a thin rim of
+   light around it, brightest at the top left. */
+.gl-drop {
+  fill: rgb(0 0 0 / 0.42);
+}
+/* A soft specular spot at the top left: with the form shadow toward the
+   bottom right it reads as a ball, not a disc. */
+.gl-shine {
+  fill: #fff;
+  opacity: 0.2;
+}
+.gl-rim {
+  fill: none;
+  stroke-width: 2.5;
+}
+.gl-grain {
+  fill: #fff;
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+
+/* Three layers of motion: the pop when a mood lands, the body's travel
+   (float, hop, tilt) around its center, and squash and stretch from the floor. */
+.gl-pop {
+  transform-origin: 100px 182px;
+  animation: gl-pop 0.5s ease-out both;
+}
+.gl-body {
+  transform-origin: 100px 109px;
+  transition: rotate 0.45s cubic-bezier(0.3, 1.5, 0.5, 1), translate 0.45s cubic-bezier(0.3, 1.5, 0.5, 1);
+  animation: gl-float 4s ease-in-out infinite;
+}
+.gl-squish {
+  transform-origin: 100px 182px;
+  transition: scale 0.4s cubic-bezier(0.3, 1.5, 0.5, 1), filter 0.4s ease;
+  animation: gl-breathe 4s ease-in-out infinite;
+}
+.gl-face {
+  transition: translate 0.4s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.gl-eye {
+  transition: scale 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.gl-blink {
+  animation: gl-blink 5s infinite;
+}
+
+.gl-open,
+.gl-star,
+.gl-m-talk,
+.gl-m-grin,
+.gl-m-o {
+  fill: #fff;
+}
+.gl-happy,
+.gl-closed,
+.gl-brow-up,
+.gl-brow-think,
+.gl-brow-worry,
+.gl-m-smile,
+.gl-m-soft,
+.gl-m-hmm,
+.gl-m-wavy {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.gl-cheeks {
+  fill: #ff4f8b;
+  opacity: 0.5;
+}
+.gl-sparkles {
+  fill: #ffc22e;
+}
+.gl-sparkles path {
+  scale: 0;
+  animation: gl-sparkle 1.4s ease-out infinite;
+}
+.gl-sparkles g:nth-child(2) path {
+  animation-delay: 0.35s;
+}
+.gl-sparkles g:nth-child(3) path {
+  animation-delay: 0.7s;
+}
+.gl-sparkles g:nth-child(4) path {
+  animation-delay: 1.05s;
+}
+.gl-waves path {
+  fill: none;
+  stroke: var(--gl-2);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transform-origin: 100px 109px;
+  opacity: 0;
+  animation: gl-wave 1.5s ease-out infinite;
+}
+.gl-waves path:nth-child(n + 3) {
+  animation-delay: 0.5s;
+}
+.gl-waves path:nth-child(n + 5) {
+  animation-delay: 1s;
+}
+.gl-bubbles circle {
+  fill: #fff;
+  stroke: var(--gl-2);
+  stroke-width: 3;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: gl-bubble 1.5s ease-in-out infinite;
+}
+.gl-bubbles circle:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.gl-bubbles circle:nth-child(3) {
+  animation-delay: 0.4s;
+}
+/* Glow draws its own listening and thinking cues; the shared zzz takes its color. */
+.av.av-glow .av-ripples,
+.av.av-glow .av-dots {
+  display: none;
+}
+.av-glow .av-zzz i {
+  color: var(--gl-1);
+}
+.av-glow .av-sweat {
+  left: 20%;
+  top: 22%;
+}
+
+/* One eye, one brow and one mouth per mood; open eyes and a smile by default. */
+.gl-happy,
+.gl-closed,
+.gl-star,
+.gl-cheeks,
+.gl-brow-up,
+.gl-brow-think,
+.gl-brow-worry,
+.gl-m-soft,
+.gl-m-hmm,
+.gl-m-wavy,
+.gl-m-talk,
+.gl-m-grin,
+.gl-m-o,
+.gl-waves,
+.gl-bubbles,
+.gl-sparkles,
+.av-glow:not([data-mood="idle"]) .gl-m-smile,
+.av-glow:is([data-mood="correct"], [data-mood="celebrating"], [data-mood="sleeping"]) .gl-blink {
+  display: none;
+}
+.av-glow[data-mood="listening"] :is(.gl-brow-up, .gl-m-soft, .gl-waves),
+.av-glow[data-mood="thinking"] :is(.gl-brow-think, .gl-m-hmm, .gl-bubbles),
+.av-glow[data-mood="speaking"] .gl-m-talk,
+.av-glow[data-mood="correct"] :is(.gl-happy, .gl-cheeks, .gl-m-grin, .gl-sparkles),
+.av-glow[data-mood="wrong"] :is(.gl-brow-worry, .gl-m-wavy),
+.av-glow[data-mood="celebrating"] :is(.gl-star, .gl-cheeks, .gl-m-grin, .gl-sparkles),
+.av-glow[data-mood="sleeping"] :is(.gl-closed, .gl-m-o) {
+  display: inline;
+}
+
+/* Waiting: breathes, blinks, and glances around now and then. */
+.av-glow[data-mood="idle"] .gl-face {
+  animation: gl-glance 7s ease-in-out infinite;
+}
+
+/* Listening: head cocked, eyes wide, sound arcs flowing in, and the body
+   pulsing a little as if hearing each word. */
+.av-glow[data-mood="listening"] .gl-body {
+  rotate: -13deg;
+}
+.av-glow[data-mood="listening"] .gl-squish {
+  animation: gl-listen 1.1s ease-in-out infinite;
+}
+.av-glow[data-mood="listening"] .gl-face {
+  translate: 0 -3px;
+}
+.av-glow[data-mood="listening"] .gl-eye {
+  scale: 1.14;
+}
+
+/* Thinking: rocks slowly, eyes drift up and across, mouth goes "hmm",
+   and thought bubbles rise. */
+.av-glow[data-mood="thinking"] .gl-body {
+  animation: gl-float 4s ease-in-out infinite, gl-ponder 3.2s ease-in-out infinite alternate;
+}
+.av-glow[data-mood="thinking"] .gl-face {
+  animation: gl-look 4.4s ease-in-out infinite;
+}
+.av-glow[data-mood="thinking"] .gl-eye {
+  scale: 1 0.9;
+}
+.av-glow[data-mood="thinking"] .gl-m-hmm {
+  animation: gl-hmm 1.4s ease-in-out infinite alternate;
+}
+
+/* Talking: an uneven mouth and a bounce in time with it. */
+.av-glow[data-mood="speaking"] .gl-squish {
+  animation: gl-talk-squish 0.3s ease-in-out infinite alternate;
+}
+.av-glow[data-mood="speaking"] .gl-m-talk {
+  transform-origin: 100px 117px;
+  animation: gl-talk 0.9s linear infinite;
+}
+
+/* Right answer: happy eyes, a big grin, and a springy hop. */
+.av-glow[data-mood="correct"] .gl-body {
+  animation: gl-hop 0.9s infinite;
+}
+.av-glow[data-mood="correct"] .gl-squish {
+  animation: gl-hop-squish 0.9s ease-in-out infinite;
+}
+
+/* Wrong answer: a gentle oops. Worried brows, a wobbly mouth, a little
+   deflate and a shiver. */
+.av-glow[data-mood="wrong"] .gl-body {
+  animation: gl-oops 2.4s ease-in-out infinite;
+}
+.av-glow[data-mood="wrong"] .gl-squish {
+  scale: 1.05 0.94;
+  filter: saturate(0.8);
+  animation: none;
+}
+.av-glow[data-mood="wrong"] .gl-face {
+  translate: 0 5px;
+}
+.av-glow[data-mood="wrong"] .gl-eye {
+  scale: 0.9 0.85;
+}
+
+/* Winner: star eyes, a jump with a full spin, and sparkles. */
+.av-glow[data-mood="celebrating"] .gl-body {
+  animation: gl-flip 1.3s infinite;
+}
+.av-glow[data-mood="celebrating"] .gl-squish {
+  animation: gl-hop-squish 1.3s ease-in-out infinite;
+}
+.av-glow[data-mood="celebrating"] .gl-star path {
+  animation: gl-spin 2.4s linear infinite, gl-throb 0.4s ease-in-out infinite alternate;
+}
+.av-glow[data-mood="celebrating"] .gl-sparkles path {
+  animation-duration: 0.9s;
+}
+
+/* Asleep: sinks a little, breathes slow and deep, and snores. */
+.av-glow[data-mood="sleeping"] .gl-body {
+  translate: 0 4px;
+  animation: none;
+}
+.av-glow[data-mood="sleeping"] .gl-squish {
+  filter: saturate(0.8) brightness(0.96);
+  animation: gl-sleep 4.5s ease-in-out infinite;
+}
+.av-glow[data-mood="sleeping"] .gl-face {
+  translate: 0 7px;
+}
+.av-glow[data-mood="sleeping"] .gl-m-o {
+  transform-origin: 100px 125px;
+  animation: gl-snore 4.5s ease-in-out infinite;
+}
+
+@keyframes gl-pop {
+  0% { scale: 1.14 0.86; }
+  35% { scale: 0.93 1.09; }
+  65% { scale: 1.04 0.97; }
+  100% { scale: 1 1; }
+}
+@keyframes gl-float {
+  50% { translate: 0 -6px; }
+}
+@keyframes gl-breathe {
+  50% { scale: 0.985 1.02; }
+}
+@keyframes gl-blink {
+  0%, 44%, 48%, 88%, 92%, 96%, 100% { scale: 1 1; }
+  46%, 90%, 94% { scale: 1 0.08; }
+}
+@keyframes gl-glance {
+  0%, 30%, 80%, 100% { translate: 0 0; }
+  36%, 52% { translate: -6px 0; }
+  58%, 74% { translate: 6px 0; }
+}
+@keyframes gl-listen {
+  0%, 35%, 70%, 100% { scale: 1 1; }
+  20% { scale: 1.025 1.035; }
+  55% { scale: 1.015 1.02; }
+}
+@keyframes gl-wave {
+  0% { scale: 1.28; opacity: 0; }
+  35% { opacity: 0.7; }
+  100% { scale: 0.96; opacity: 0; }
+}
+@keyframes gl-ponder {
+  from { rotate: 3deg; }
+  to { rotate: 9deg; }
+}
+@keyframes gl-look {
+  0%, 38%, 100% { translate: -7px -8px; }
+  50%, 88% { translate: 7px -9px; }
+}
+@keyframes gl-hmm {
+  from { translate: -3px 0; }
+  to { translate: 3px 0; }
+}
+@keyframes gl-bubble {
+  0%, 100% { scale: 0.6; opacity: 0.4; }
+  50% { scale: 1; opacity: 1; }
+}
+@keyframes gl-talk {
+  0%, 100% { scale: 1 0.35; }
+  14% { scale: 1 1; }
+  28% { scale: 1 0.55; }
+  42% { scale: 0.9 0.95; }
+  56% { scale: 1 0.25; }
+  72% { scale: 1 1.05; }
+  86% { scale: 1 0.5; }
+}
+@keyframes gl-talk-squish {
+  from { scale: 1 1; }
+  to { scale: 1.02 0.975; }
+}
+/* Up fast and easing out, down easing in, so the hop has weight. */
+@keyframes gl-hop {
+  0%, 15% { translate: 0 0; animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); }
+  45% { translate: 0 -30px; animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.3); }
+  72%, 100% { translate: 0 0; }
+}
+@keyframes gl-flip {
+  0%, 15% { translate: 0 0; rotate: 0deg; animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); }
+  45% { translate: 0 -44px; animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.3); }
+  65% { rotate: 360deg; }
+  72%, 100% { translate: 0 0; rotate: 360deg; }
+}
+@keyframes gl-hop-squish {
+  0%, 100% { scale: 1 1; }
+  10% { scale: 1.1 0.88; }
+  20% { scale: 0.93 1.08; }
+  45% { scale: 1 1; }
+  68% { scale: 0.96 1.05; }
+  75% { scale: 1.12 0.86; }
+  86% { scale: 0.98 1.02; }
+}
+@keyframes gl-sparkle {
+  0% { scale: 0; rotate: 0deg; }
+  30% { scale: 1.2; }
+  60% { scale: 0.9; rotate: 90deg; }
+  80%, 100% { scale: 0; rotate: 120deg; }
+}
+@keyframes gl-spin {
+  to { rotate: 360deg; }
+}
+@keyframes gl-throb {
+  from { scale: 0.95; }
+  to { scale: 1.2; }
+}
+@keyframes gl-oops {
+  0%, 40%, 100% { translate: 0 0; }
+  5%, 15%, 25% { translate: -4px 0; }
+  10%, 20% { translate: 4px 0; }
+  30% { translate: 2px 0; }
+}
+@keyframes gl-sleep {
+  0%, 100% { scale: 1.02 0.97; }
+  50% { scale: 1.07 0.92; }
+}
+@keyframes gl-snore {
+  50% { scale: 1.35; }
+}
+
+/* ------------------------------------------------------------- keyframes */
+
+@keyframes av-ripple {
+  from { opacity: 0.8; scale: 0.95; }
+  to { opacity: 0; scale: 1.5; }
+}
+@keyframes av-bob {
+  50% { translate: 0 calc(var(--s) * -0.03); }
+}
+@keyframes av-drip {
+  0% { opacity: 0; translate: 0 calc(var(--s) * -0.02); }
+  20% { opacity: 1; }
+  80% { opacity: 1; translate: 0 calc(var(--s) * 0.08); }
+  100% { opacity: 0; translate: 0 calc(var(--s) * 0.09); }
+}
+@keyframes av-zzz {
+  0% { opacity: 0; translate: 0 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; translate: calc(var(--s) * 0.12) calc(var(--s) * -0.3); }
+}
+@keyframes av-burst {
+  0% { opacity: 1; transform: rotate(calc(var(--i) * 30deg)) translateY(0) scale(0.4); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(calc(var(--i) * 30deg)) translateY(calc(var(--s) * -0.72)) rotate(220deg) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .av *,
+  .av *::before,
+  .av *::after {
+    animation-duration: 0s !important;
+    animation-iteration-count: 1 !important;
+  }
+}

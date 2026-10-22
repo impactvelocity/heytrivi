@@ -221,3 +221,36 @@ body:has(.pp) { background-attachment: fixed; }
 .pp-legal p, .pp-legal li { font-size: 16px; line-height: 1.6; font-weight: 600; }
 .pp-legal ul { padding-left: 20px; display: grid; gap: 6px; margin: 0; }
 .pp-legal a { color: var(--coral-deep); }
+
+/* question packs */
+.pp textarea {
+  width: 100%; min-width: 0; border: 2px solid var(--line); background: var(--card); border-radius: var(--radius-sm);
+  padding: 11px 14px; font: inherit; font-weight: 700; resize: vertical; color: inherit;
+}
+.pp textarea:focus { border-color: var(--lavender); outline: none; }
+.pp-narrow { max-width: 760px; }
+.pp-pack-start { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+.pp-pack-start > div:first-child { flex: 1 1 320px; display: grid; gap: 6px; }
+.pp-pack-start h2 { font-size: 22px; font-weight: 800; }
+.pp-pack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.pp button.pp-pack-card {
+  display: grid; gap: 10px; text-align: left; padding: 18px; border-radius: var(--radius); background: var(--card); align-content: start;
+}
+.pp-pack-title { font-size: 18px; font-weight: 800; }
+.pp-pack-tags { gap: 6px; font-size: 12px; }
+.pp-pack-count { font-weight: 600; font-size: 14px; color: var(--ink-soft); }
+.pp-pack-count b { color: var(--ink); font-size: 18px; }
+.pp-tag-mixed, .pp-tag-trivia { background: var(--tint-mint); color: var(--mint-ink); }
+.pp-tag-riddle { background: var(--tint-lav); color: var(--ink); }
+.pp button.pp-back { margin: -6px 0 6px -10px; padding: 6px 10px; }
+.pp-narrow h2 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+.pp-pack-meta { margin-top: 10px; }
+.pp-example { justify-self: start; margin-top: -8px; font-size: 14px; }
+.pp-qcard h4 { font-size: 18px; }
+.pp-disputed { box-shadow: var(--shadow), inset 0 0 0 2px var(--butter); }
+.pp-check { font-weight: 700; font-size: 14px; padding: 10px 12px; border-radius: 12px; background: var(--tint-butter); color: var(--butter-ink); }
+.pp-qform { box-shadow: var(--shadow), inset 0 0 0 2px var(--lavender); }
+.pp-diff { max-width: 200px; }
+.pp button.pp-add-q { border: 2px dashed var(--line); background: transparent; box-shadow: none; padding: 16px; border-radius: var(--radius); color: var(--ink-soft); }
+.pp button.pp-add-q:hover:not(:disabled) { border-color: var(--lavender); color: var(--ink); }
+.pp-save-row { position: sticky; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); padding: 12px; background: var(--card); border-radius: 999px; box-shadow: var(--shadow); width: fit-content; max-width: 100%; }

@@ -501,7 +501,7 @@ export class Repo {
     let candidates: Pack[];
     if (packId) {
       const pack = this.findPack(state, packId);
-      if (pack.status !== "ready") throw new UserError(`The ${pack.title} pack isn't ready yet.`, "pack_not_ready");
+      if (pack.status !== "ready") throw new UserError(`The ${pack.title} theme isn't ready yet.`, "pack_not_ready");
       candidates = [pack];
     } else {
       // A paused pack stays out of the mix; naming it above still plays it.
@@ -525,9 +525,9 @@ export class Repo {
     return undefined;
   }
 
-  /** A pack by id or by what the family calls it: "dinosaurs", "the dinosaur pack". */
+  /** A pack by id or by what the family calls it: "dinosaurs", "the dinosaur pack", "the dinosaur theme". */
   findPack(state: State, ref: string): Pack {
-    const want = normalizeName(ref).replace(/^the /, "").replace(/ pack$/, "").replace(/s$/, "");
+    const want = normalizeName(ref).replace(/^the /, "").replace(/ (pack|theme)$/, "").replace(/s$/, "");
     const exact = state.packs.find((p) => p.packId === ref || normalizeName(p.title) === normalizeName(ref));
     const loose = state.packs.filter((p) => {
       const title = normalizeName(p.title);
@@ -536,7 +536,7 @@ export class Repo {
     const pack = exact ?? (loose.length === 1 ? loose[0] : undefined);
     if (!pack) {
       const which = loose.length > 1 ? loose : state.packs;
-      throw new UserError(`Which pack? You have ${listNames(which.map((p) => p.title))}.`, "unknown_pack");
+      throw new UserError(`Which theme? You have ${listNames(which.map((p) => p.title))}.`, "unknown_pack");
     }
     return pack;
   }
@@ -962,7 +962,7 @@ export class Repo {
     opts: { finish?: boolean; announce?: boolean; newsText?: string } = {},
   ): Promise<void> {
     const existing = await this.getPack(hh, packId);
-    if (!existing) throw new UserError("That pack doesn't exist.", "unknown_pack");
+    if (!existing) throw new UserError("That theme doesn't exist.", "unknown_pack");
     let next = existing.questions.reduce((m, q) => Math.max(m, q.n), 0) + 1;
     const items = questions.map((q) => ({
       ...keys.question(hh, packId, next),
@@ -985,7 +985,7 @@ export class Repo {
         remove: last && opts.finish ? ["failReason"] : [],
       });
       if (last && opts.finish && opts.announce !== false) {
-        writes.push(this.news(hh, opts.newsText ?? `A new pack is ready: ${existing.pack.title}.`));
+        writes.push(this.news(hh, opts.newsText ?? `A new theme is ready: ${existing.pack.title}.`));
       }
       await this.db.transact(writes);
     }
@@ -1018,7 +1018,7 @@ export class Repo {
     const remove: string[] = [];
     if (p.title !== undefined) {
       const title = p.title.trim().slice(0, 60);
-      if (!title) throw new UserError("Give the pack a name.");
+      if (!title) throw new UserError("Give the theme a name.");
       set.title = title;
     }
     if (p.kind) set.kind = p.kind;
@@ -1033,7 +1033,7 @@ export class Repo {
   /** "Play them again": every question in the pack counts as unasked. */
   async resetPackUsage(hh: string, packId: string): Promise<void> {
     const existing = await this.getPack(hh, packId);
-    if (!existing) throw new UserError("That pack doesn't exist.", "unknown_pack");
+    if (!existing) throw new UserError("That theme doesn't exist.", "unknown_pack");
     const used = existing.questions.filter((q) => q.usedAt);
     const writes: Write[] = used.map((q) => ({ kind: "update", key: keys.question(hh, packId, q.n), remove: ["usedAt"] }));
     for (let i = 0; i < writes.length; i += 90) await this.db.transact(writes.slice(i, i + 90));

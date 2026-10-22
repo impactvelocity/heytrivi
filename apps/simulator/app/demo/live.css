@@ -1,0 +1,158 @@
+/*
+ * The live loop on the /demo stage: the orb following real sound, the MCP
+ * status button in the header, and the protocol drawer it opens.
+ */
+
+/* ------------------------------------------------------------ live levels */
+
+/* --l (per bar) and --lvl (overall) come from VoiceOrb while sound is measured. */
+.dm-orb[data-live][data-state] .dm-orb-bars i {
+  animation: none;
+  height: max(var(--dot), calc(var(--l, 0) * 100%));
+  transition: height 0.06s linear;
+}
+.dm-orb[data-live] .dm-orb-halo {
+  scale: calc(1 + var(--lvl, 0) * 0.14);
+}
+.dm[data-skin="duo"] .dm-orb[data-live][data-state="speaking"] .dm-orb-mouth {
+  animation: none;
+  height: calc(var(--orb) * (0.03 + var(--lvl, 0) * 0.09));
+  transition: height 0.06s linear;
+}
+.dm[data-skin="duo"] .dm-orb[data-live][data-state="listening"] .dm-orb-face {
+  scale: calc(1 + var(--lvl, 0) * 0.06);
+}
+
+/* ------------------------------------------------------------- MCP button */
+
+.dm-header-end {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.dm-mcp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--field-line);
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+}
+.dm-mcp-pill:hover {
+  border-color: var(--ink-faint);
+}
+.dm-mcp-pill:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.dm-mcp-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+}
+.dm-mcp-pill[data-status="live"] .dm-mcp-dot {
+  background: #3ee0c5;
+  box-shadow: 0 0 8px #3ee0c5;
+}
+.dm-mcp-pill[data-status="ready"] .dm-mcp-dot {
+  background: #ffc53d;
+}
+.dm-mcp-pill[data-status="error"] .dm-mcp-dot {
+  background: #ff5f6d;
+}
+
+/* -------------------------------------------------------- protocol drawer */
+
+/* ProtocolPanel is styled in globals.css for the light simulator; put its tokens back. */
+.dm-protocol {
+  --ink: #2b2340;
+  --ink-soft: #6b6383;
+  --line: #efe3d6;
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 40;
+  width: min(460px, calc(100vw - 32px));
+  height: min(62vh, 620px);
+  display: flex;
+  flex-direction: column;
+  color: var(--ink);
+  font-family: var(--font-friendly);
+  font-size: 13px;
+  border-radius: var(--radius);
+  box-shadow: 0 24px 60px rgb(12 2 26 / 0.45);
+}
+.dm-protocol .panel {
+  flex: 1;
+  overflow: hidden;
+}
+/* Centered on the header row, its × centered inside it. */
+.dm-protocol-close {
+  position: absolute;
+  top: 11px;
+  right: 12px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0 0 2px;
+  border: 0;
+  border-radius: 50%;
+  background: #f3eee8;
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+/* Leave room for the close button beside the message count. */
+.dm-protocol .panel-head {
+  padding-right: 56px;
+}
+
+@media (max-width: 640px) {
+  .dm-protocol {
+    right: 16px;
+    bottom: 16px;
+    height: 70vh;
+  }
+}
+
+/* --------------------------------------------------------- live settings */
+
+/* An error from a change, or why settings can't be changed (signed out). */
+.dm-notice {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 14px;
+  background: var(--field);
+  border: 1px solid var(--field-line);
+}
+.dm-notice[data-kind="error"] {
+  background: color-mix(in srgb, #ff5f6d 14%, transparent);
+  border-color: color-mix(in srgb, #ff5f6d 45%, transparent);
+}
+
+/* A draft question the fact-check flagged: shown, but not saved. */
+.dm-draft li[data-flagged] {
+  opacity: 0.7;
+}
+.dm-draft-flag {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.dm-thinking {
+  color: var(--ink-soft);
+}

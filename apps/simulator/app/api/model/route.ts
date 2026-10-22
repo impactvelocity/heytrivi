@@ -11,6 +11,7 @@
 
 import { ToolChoiceViolationError, generateText, jsonSchema, tool, type ModelMessage, type ToolChoice, type ToolSet } from "ai";
 import { HOST_PROMPT, SAY_TOOL } from "@/lib/host-prompt";
+import { liveAllowed, lockedResponse } from "@/lib/live-access";
 import { PROVIDER, languageModel, modelErrorMessage } from "@/lib/model";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ interface Body {
 }
 
 export async function POST(req: Request) {
+  if (!(await liveAllowed())) return lockedResponse();
   if (process.env.MOCK_MODEL === "1") {
     return Response.json({ error: "The model is mocked (MOCK_MODEL=1). Play a replay script instead." }, { status: 400 });
   }

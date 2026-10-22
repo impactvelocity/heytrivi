@@ -49,6 +49,61 @@ export interface RoundRow {
   at: string;
 }
 
+export type PackKind = "trivia" | "riddle" | "mixed";
+export type QuestionKind = "trivia" | "riddle";
+export type Difficulty = "easy" | "medium" | "hard";
+
+export interface PackSummary {
+  packId: string;
+  title: string;
+  topic: string;
+  kind: PackKind;
+  status: "building" | "ready" | "failed";
+  failReason: string | null;
+  /** Left out of the mix; still plays by name. */
+  paused: boolean;
+  questionCount: number;
+  remaining: number;
+  forPlayerId: string | null;
+  createdAt: string;
+}
+
+/** A question as the parent writes it. */
+export interface QuestionInput {
+  kind: QuestionKind;
+  question: string;
+  answer: string;
+  accept: string[];
+  explanation: string;
+  difficulty: Difficulty;
+}
+
+export interface PackQuestionRow extends QuestionInput {
+  n: number;
+  used: boolean;
+}
+
+export interface PackDetail {
+  packId: string;
+  title: string;
+  topic: string;
+  kind: PackKind;
+  forPlayerId: string | null;
+  questions: PackQuestionRow[];
+}
+
+/** From the pack helper (app/api/pack-draft). */
+export interface DraftQuestion extends QuestionInput {
+  check: { status: "agreed" } | { status: "disputed"; checkerAnswer?: string; problem?: string };
+}
+export interface Draft {
+  title: string;
+  topic: string;
+  questions: DraftQuestion[];
+}
+
+export const PACK_KIND_LABEL: Record<PackKind, string> = { trivia: "Questions", riddle: "Riddles", mixed: "Questions and riddles" };
+
 export interface PointSettings {
   correct: number;
   partial: number;
@@ -80,6 +135,7 @@ export interface Dashboard {
   openChores: Array<{ choreId: string; label: string; owedBy: string }>;
   ledger: LedgerRow[];
   rounds: RoundRow[];
+  packs: PackSummary[];
 }
 
 export class SignedOut extends Error {}

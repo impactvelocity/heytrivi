@@ -4,12 +4,15 @@
  */
 
 import { PollyClient, SynthesizeSpeechCommand, type Engine, type VoiceId } from "@aws-sdk/client-polly";
+import { liveAllowed } from "@/lib/live-access";
 
 export const dynamic = "force-dynamic";
 
 const polly = new PollyClient({ region: process.env.POLLY_REGION ?? process.env.AWS_REGION ?? "us-east-2" });
 
 export async function POST(req: Request) {
+  // Locked to the scripted demo: the browser's own voice speaks instead.
+  if (!(await liveAllowed())) return new Response(null, { status: 204 });
   if (process.env.MOCK_MODEL === "1" && process.env.POLLY_IN_MOCK !== "1") return new Response(null, { status: 204 });
   const { text } = (await req.json()) as { text: string };
   try {

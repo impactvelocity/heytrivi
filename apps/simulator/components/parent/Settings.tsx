@@ -40,7 +40,7 @@ export function Settings({ data, run, mcpUrl }: { data: Dashboard; run: Run; mcp
           <h2 id="rs-h">Point reset</h2>
         </div>
         <p className="pp-muted pp-semibold" style={{ marginBottom: 14 }}>
-          When balances go back to zero. All-time totals, owed chores, and packs stay put.
+          When balances go back to zero. All-time totals, owed chores, and themes stay put.
         </p>
         <div className="pp-seg" role="radiogroup" aria-label="Point reset">
           {SCHEDULES.map(([k, label, sub]) => (

@@ -35,6 +35,15 @@ describe("household and players", () => {
     expect(JSON.stringify(s.meta)).not.toContain(DEMO_PARENT_PHRASE);
   });
 
+  it("adds a new dev token to an existing demo family without touching it", async () => {
+    await repo.addPlayer(HH, await repo.begin(HH), { name: "Grandma", role: "parent" });
+    const token = `new-token-${HH}`;
+    await seedDemo(repo, { householdId: HH, devToken: token });
+    expect(await repo.householdForToken(token)).toBe(HH);
+    expect(await repo.householdForToken(`dev-token-${HH}`)).toBe(HH);
+    expect((await repo.load(HH)).players.map((p) => p.name)).toContain("Grandma");
+  });
+
   it("adds a player with first name, role, and grade band only", async () => {
     const players = await repo.addPlayer(HH, await repo.begin(HH), { name: "Grandma", role: "parent" });
     expect(players.map((p) => p.name)).toContain("Grandma");
@@ -426,7 +435,7 @@ describe("parent-made packs", () => {
   it("a mixed pack plays riddles for 'riddles', trivia for 'quiz us', and anything when named loosely", async () => {
     const pack = await repo.createPack(HH, { title: "Dinosaur Discoveries", topic: "dinosaurs", kind: "mixed" });
     await repo.addPackQuestions(HH, pack.packId, dino, { finish: true });
-    expect((await repo.load(HH)).news.map((n) => n.text)).toContain("A new pack is ready: Dinosaur Discoveries.");
+    expect((await repo.load(HH)).news.map((n) => n.text)).toContain("A new theme is ready: Dinosaur Discoveries.");
 
     const riddle = await repo.startRound(HH, await repo.begin(HH), { mode: "riddle", packId: "the dinosaur pack" });
     expect(riddle.question).toContain("long neck");
@@ -437,7 +446,7 @@ describe("parent-made packs", () => {
   it("asks which pack when a name matches more than one", async () => {
     await repo.createPack(HH, { title: "Dinosaurs for Sally", topic: "dinosaurs", status: "ready" });
     await repo.createPack(HH, { title: "Dinosaurs for John", topic: "dinosaurs", status: "ready" });
-    await expect(repo.startRound(HH, await repo.begin(HH), { mode: "hosted", packId: "dinosaur" })).rejects.toThrow(/Which pack\? You have Dinosaurs for Sally and Dinosaurs for John/);
+    await expect(repo.startRound(HH, await repo.begin(HH), { mode: "hosted", packId: "dinosaur" })).rejects.toThrow(/^Which theme\? You have Dinosaurs for (Sally and Dinosaurs for John|John and Dinosaurs for Sally)\.$/);
   });
 
   it("plays a used-up pack again after a reset, and renames it", async () => {

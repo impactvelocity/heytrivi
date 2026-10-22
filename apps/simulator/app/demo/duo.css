@@ -1,0 +1,1734 @@
+/*
+ * The Duo look for the demo stage (/demo): the same layout and pieces,
+ * drawn flat the way Duolingo does it, in dark mode. The page and cards are
+ * deep shades of the stage theme, with 2px borders and a thicker bottom edge,
+ * chunky buttons that press down, outlined speech bubbles, and Trivi with a
+ * face. Everything is scoped to [data-skin="duo"] and loads after demo.css,
+ * so it only overrides.
+ */
+
+/* The page behind the app takes the theme's night color too. */
+body:has(.dm[data-skin="duo"]) {
+  background: #170a30;
+}
+body:has(.dm[data-skin="duo"][data-theme="arcade"]) {
+  background: #061631;
+}
+body:has(.dm[data-skin="duo"][data-theme="sunset"]) {
+  background: #200c03;
+}
+body:has(.dm[data-skin="duo"][data-theme="pajama"]) {
+  background: #230820;
+}
+
+/* ------------------------------------------------------------------ tokens */
+
+.dm[data-skin="duo"] {
+  /* Duolingo-style neutrals, in dark mode and tinted by the theme:
+     text, soft text, faint text, lines, and a raised fill. */
+  --eel: #f4f0fb;
+  --wolf: color-mix(in srgb, var(--night-ink) 45%, #a7a2b5);
+  --hare: color-mix(in srgb, var(--night-ink) 28%, #6e6880);
+  --swan: var(--night-line);
+  --polar: color-mix(in srgb, var(--night-card) 55%, var(--night-line));
+  /* bright colors and their pressed-down shades */
+  --green: #58cc02;
+  --green-d: #58a700;
+  --blue: #1cb0f6;
+  --blue-d: #1899d6;
+  --blue-l: #ddf4ff;
+  --blue-b: #84d8ff;
+  --yellow: #ffc800;
+  --yellow-d: #e5b400;
+  --red: #ff4b4b;
+  --red-d: #ea2b2b;
+  /* the stage color; themes swap these */
+  --acc: #ce82ff;
+  --acc-d: #a568cc;
+  --acc-l: #f6ecff;
+  --acc-ink: #9a4fd6;
+  --ring-listen: var(--blue);
+  /* the controls (mic, tabs, picks) wear the stage color */
+  --brand: var(--acc);
+  --brand-d: var(--acc-d);
+  --brand-ink: color-mix(in srgb, var(--acc) 55%, #fff);
+  /* the night inside the frame: a deep shade of the stage color */
+  --night: #170a30;
+  --night-hi: #3a1a70;
+  --night-card: #241046;
+  --night-line: #3f2370;
+  --night-ink: #d9bfff;
+  /* pops of color for the glows: fun accents that sit well with the theme */
+  --pop-1: #ff5fd2;
+  --pop-2: #4de1ff;
+  --pop-3: #ffcf4a;
+  /* picked things (tabs, tiles, menu rows) and the leader's row */
+  --sel-bg: color-mix(in srgb, var(--brand) 20%, var(--night-card));
+  --sel-line: color-mix(in srgb, var(--brand) 70%, var(--night-card));
+  --sel-ink: var(--brand-ink);
+  --lead-bg: color-mix(in srgb, var(--brand) 16%, var(--night-card));
+
+  /* Nunito from the root layout; its heaviest weight (800) stands in for 900. */
+  --display: var(--font-friendly);
+  --bg: var(--night);
+  --ink: var(--eel);
+  --ink-soft: var(--wolf);
+  --ink-faint: var(--hare);
+  --line: var(--swan);
+  --panel: var(--night-card);
+  --panel-hi: var(--polar);
+  --field: var(--polar);
+  --field-line: var(--swan);
+  --drawer: color-mix(in srgb, var(--night) 55%, var(--night-card));
+  --scrim: rgb(0 0 0 / 0.55);
+  --hover: var(--polar);
+  --hi: var(--yellow);
+  --hi-ink: #fff;
+  --cta-a: var(--green);
+  --cta-b: var(--green);
+  --focus: var(--brand);
+  --card: var(--night-card);
+  --card-ink: var(--eel);
+
+  color-scheme: dark;
+  background: var(--night);
+}
+.dm[data-skin="duo"][data-theme="arcade"] {
+  --acc: #1cb0f6;
+  --acc-d: #1899d6;
+  --acc-l: #e8f7fe;
+  --acc-ink: #1482b8;
+  --ring-listen: var(--green);
+  --night: #061631;
+  --night-hi: #0f3a78;
+  --night-card: #0c2449;
+  --night-line: #1b4280;
+  --night-ink: #a9dcff;
+  --pop-1: #3ef0c0;
+  --pop-2: #8b6bff;
+  --pop-3: #ff7ab8;
+}
+.dm[data-skin="duo"][data-theme="sunset"] {
+  --acc: #ff9600;
+  --acc-d: #e08400;
+  --acc-l: #fff4e5;
+  --acc-ink: #c86f00;
+  --night: #200c03;
+  --night-hi: #5a2708;
+  --night-card: #321506;
+  --night-line: #5c2d0e;
+  --night-ink: #ffd29a;
+  --pop-1: #ff4f7b;
+  --pop-2: #ffd23f;
+  --pop-3: #b06bff;
+}
+.dm[data-skin="duo"][data-theme="pajama"] {
+  --acc: #ff6bc1;
+  --acc-d: #e04fa3;
+  --acc-l: #ffeef8;
+  --acc-ink: #c93a8c;
+  --night: #230820;
+  --night-hi: #5c1650;
+  --night-card: #36102f;
+  --night-line: #632457;
+  --night-ink: #ffc2e6;
+  --pop-1: #9b6bff;
+  --pop-2: #4de1ff;
+  --pop-3: #ffb35c;
+}
+
+/* A white card with a 2px border and a thicker bottom edge. */
+.dm[data-skin="duo"] .dm-card {
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 4px;
+  border-radius: 20px;
+  box-shadow: none;
+}
+
+/* ----------------------------------------------------------------- header */
+
+.dm[data-skin="duo"] .dm-logo {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--eel);
+}
+.dm[data-skin="duo"] .dm-logo b {
+  font-weight: 900;
+  color: var(--acc);
+}
+/* Trivi's mark: the stage-colored face from the orb, small. */
+.dm[data-skin="duo"] .dm-mark {
+  background:
+    radial-gradient(circle at 35% 44%, #2a2140 0 7%, #fff 8% 17%, transparent 18%),
+    radial-gradient(circle at 65% 44%, #2a2140 0 7%, #fff 8% 17%, transparent 18%),
+    var(--acc);
+  box-shadow: inset 0 -3px 0 var(--acc-d);
+}
+.dm[data-skin="duo"] .dm-mark-xs {
+  background:
+    radial-gradient(circle at 34% 44%, #fff 0 15%, transparent 17%),
+    radial-gradient(circle at 66% 44%, #fff 0 15%, transparent 17%),
+    var(--brand);
+  box-shadow: none;
+}
+/* ----------------------------------------------------------------- stage */
+
+.dm[data-skin="duo"] .dm-frame {
+  background: var(--acc);
+  /* the pressed-down edge, then a dark drop shadow that sits over the
+     colored glow behind the frame so the screen lifts off it */
+  box-shadow:
+    0 8px 0 var(--acc-d),
+    0 14px 24px rgb(0 0 0 / 0.45),
+    0 30px 70px rgb(0 0 0 / 0.5);
+  margin-bottom: 8px;
+}
+/* Each bulb sits in a dark socket so it reads against the bright frame. Lit,
+   it glows warm, and a soft halo spills light onto the frame around it,
+   timed with the bulb by the same chase and blink patterns. */
+/* Unlit, a bulb is a flat pale dot with a thin ring in the frame's deeper
+   shade, so the pattern reads even when it's dark. */
+.dm[data-skin="duo"] .dm-bulb {
+  background: rgb(255 255 255 / 0.42);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--acc-d) 75%, #000);
+}
+.dm[data-skin="duo"] .dm-bulb::after {
+  background: radial-gradient(circle at 36% 32%, #fff 0 22%, #fff0a8 36%, #ffd23f 62%, #ffad0a 100%);
+  box-shadow:
+    0 0 6px 1px rgb(255 226 110 / 0.95),
+    0 0 16px 5px rgb(255 196 0 / 0.55);
+}
+/* Between flashes a bulb rests at half brightness instead of going dark. */
+.dm[data-skin="duo"] .dm-lights[data-mode="chase"] .dm-bulb::after,
+.dm[data-skin="duo"] .dm-lights[data-mode="fast"] .dm-bulb::after {
+  animation-name: dm-chase-half;
+}
+.dm[data-skin="duo"] .dm-lights[data-mode="celebrate"] .dm-bulb::after {
+  animation-name: dm-blink-half;
+}
+@keyframes dm-chase-half {
+  0%, 30% { opacity: 1; }
+  36%, 94% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+@keyframes dm-blink-half {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.dm[data-skin="duo"] .dm-bulb::before {
+  content: "";
+  position: absolute;
+  inset: -160%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(255 220 90 / 0.5), rgb(255 190 0 / 0.14) 55%, transparent);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.dm[data-skin="duo"] .dm-lights[data-mode="chase"] .dm-bulb::before {
+  animation: dm-chase 1.8s linear infinite;
+  animation-delay: calc((3 - var(--g3)) * -0.6s);
+}
+.dm[data-skin="duo"] .dm-lights[data-mode="fast"] .dm-bulb::before {
+  animation: dm-chase 0.54s linear infinite;
+  animation-delay: calc((3 - var(--g3)) * -0.18s);
+}
+.dm[data-skin="duo"] .dm-lights[data-mode="glow"] .dm-bulb::before {
+  animation: dm-glow 1.4s ease-in-out infinite;
+}
+.dm[data-skin="duo"] .dm-lights[data-mode="celebrate"] .dm-bulb::before {
+  animation: dm-blink 0.36s steps(1) infinite;
+  animation-delay: calc(var(--g2) * -0.18s);
+}
+.dm[data-skin="duo"] .dm-lights[data-mode="off"] .dm-bulb::before {
+  opacity: 0;
+}
+
+.dm[data-skin="duo"] .dm-stage {
+  color: var(--eel);
+  background: var(--acc-l);
+  box-shadow: 0 0 0 3px var(--acc-d), inset 0 4px 0 rgb(0 0 0 / 0.05);
+}
+/* Wide diagonal stripes instead of the LED wall and spotlight. */
+.dm[data-skin="duo"] .dm-stage-bg::after {
+  background-image: repeating-linear-gradient(118deg, transparent 0 90px, rgb(255 255 255 / 0.55) 90px 180px);
+  background-size: auto;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.dm[data-skin="duo"] .dm-rays,
+.dm[data-skin="duo"] .dm-floor {
+  display: none;
+}
+
+.dm[data-skin="duo"] .dm-chip {
+  gap: 10px;
+  padding: 6px 14px 5px;
+  border-radius: 14px;
+  background: var(--panel);
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 4px;
+  color: var(--eel);
+  font-weight: 900;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.dm[data-skin="duo"] .dm-chip-dot {
+  box-shadow: none;
+}
+.dm[data-skin="duo"] .dm-chip-stake {
+  border-color: var(--yellow);
+  border-bottom-color: var(--yellow-d);
+  background: var(--lead-bg);
+  color: #b87400;
+  box-shadow: none;
+}
+.dm[data-skin="duo"] .dm-chip-stake svg {
+  color: var(--yellow-d);
+}
+
+/* A Duolingo-style progress bar: thick, rounded, with a light stripe on top. */
+.dm[data-skin="duo"] .dm-progress {
+  display: block;
+  width: clamp(70px, 9vw, 120px);
+  height: 14px;
+  border-radius: 999px;
+  background: var(--swan);
+  overflow: hidden;
+}
+.dm[data-skin="duo"] .dm-progress > span,
+.dm[data-skin="duo"] .dm-meter > span {
+  position: relative;
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand);
+  transition: width 0.6s cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+.dm[data-skin="duo"] .dm-progress > span::after,
+.dm[data-skin="duo"] .dm-meter > span::after {
+  content: "";
+  position: absolute;
+  top: 22%;
+  left: 7px;
+  right: 7px;
+  height: 28%;
+  min-height: 2px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.3);
+}
+
+.dm[data-skin="duo"] .dm-status {
+  color: var(--wolf);
+  font-weight: 800;
+}
+/* What the player said looks like a picked answer tile. */
+.dm[data-skin="duo"] .dm-status-heard {
+  padding: 6px 18px 6px 7px;
+  border-radius: 18px;
+  background: var(--sel-bg);
+  border: 1.5px solid var(--sel-line);
+  border-bottom-width: 4px;
+  color: var(--sel-ink);
+  font-weight: 800;
+  font-size: 19px;
+}
+.dm[data-skin="duo"] .dm-status-heard b {
+  font-weight: 900;
+  color: var(--sel-ink);
+}
+
+/* Trivi's line is an outlined speech bubble pointing up at Trivi. */
+.dm[data-skin="duo"] .dm-caption {
+  border: 1.5px solid var(--swan);
+  border-radius: 20px;
+  box-shadow: none;
+}
+.dm[data-skin="duo"] .dm-caption::before {
+  top: -12px;
+  border: 1.5px solid var(--swan);
+  border-right: 0;
+  border-bottom: 0;
+  border-radius: 4px 0 0 0;
+}
+.dm[data-skin="duo"] .dm-caption-label {
+  color: var(--brand);
+  font-weight: 900;
+}
+.dm[data-skin="duo"] .dm-caption-text {
+  font-weight: 800;
+  font-size: clamp(20px, 1.8vw, 28px);
+}
+
+/* The mic's face plus its 5px ledge is as tall as the form with its ledge,
+   and the two line up along the top. */
+.dm[data-skin="duo"] .dm-dock {
+  align-items: flex-start;
+}
+.dm[data-skin="duo"] .dm-mic {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  background: var(--brand);
+  box-shadow: 0 5px 0 var(--brand-d);
+}
+.dm[data-skin="duo"] .dm-mic[data-active="true"] {
+  background: var(--red);
+  box-shadow: 0 5px 0 var(--red-d);
+}
+.dm[data-skin="duo"] .dm-mic[data-active="true"]::after {
+  inset: -7px;
+  border-radius: 24px;
+  border-color: rgb(255 75 75 / 0.55);
+}
+.dm[data-skin="duo"] .dm-mic:hover:not(:disabled) {
+  transform: none;
+  filter: brightness(1.06);
+}
+.dm[data-skin="duo"] .dm-mic:active:not(:disabled) {
+  transform: translateY(5px);
+  box-shadow: none;
+}
+.dm[data-skin="duo"] .dm-type {
+  padding: 5px 5px 5px 18px;
+  border-radius: 18px;
+  background: var(--panel);
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 4px;
+}
+.dm[data-skin="duo"] .dm-type:focus-within {
+  border-color: var(--sel-line);
+  box-shadow: none;
+}
+.dm[data-skin="duo"] .dm-type input {
+  color: var(--eel);
+  font-weight: 700;
+}
+.dm[data-skin="duo"] .dm-type input::placeholder {
+  color: var(--hare);
+}
+.dm[data-skin="duo"] .dm-send {
+  width: 44px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--green);
+  box-shadow: 0 3px 0 var(--green-d);
+  margin-bottom: 3px;
+}
+.dm[data-skin="duo"] .dm-send:disabled {
+  opacity: 1;
+  background: var(--swan);
+  box-shadow: none;
+  color: var(--hare);
+}
+
+/* --------------------------------------------------------- frame glow */
+
+/* Behind the frame: the stage color glowing out around it, its hues slowly
+   turning, and a soft shadow pool underneath that breathes. .dm-main is
+   isolated so both sit behind the frame but above the page. */
+@property --dm-glow-turn {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.dm[data-skin="duo"] .dm-main {
+  isolation: isolate;
+}
+.dm[data-skin="duo"] .dm-frame::before,
+.dm[data-skin="duo"] .dm-frame::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+.dm[data-skin="duo"] .dm-frame::before {
+  inset: -18px;
+  border-radius: calc(var(--frame-radius) + 18px);
+  background: conic-gradient(
+    from var(--dm-glow-turn),
+    var(--acc),
+    var(--pop-1) 14%,
+    var(--acc) 30%,
+    var(--pop-2) 46%,
+    var(--night-ink) 58%,
+    var(--pop-3) 74%,
+    var(--pop-1) 88%,
+    var(--acc)
+  );
+  filter: blur(46px);
+  opacity: 0.36;
+  animation:
+    dm-glow-turn 14s linear infinite,
+    dm-glow-breathe 6s ease-in-out infinite;
+}
+.dm[data-skin="duo"] .dm-frame::after {
+  left: 6%;
+  right: 6%;
+  bottom: -46px;
+  height: 90px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.55);
+  filter: blur(28px);
+  animation: dm-shadow-breathe 6s ease-in-out infinite;
+}
+@keyframes dm-glow-turn {
+  to { --dm-glow-turn: 360deg; }
+}
+@keyframes dm-glow-breathe {
+  0%, 100% { opacity: 0.26; scale: 0.99; }
+  50% { opacity: 0.46; scale: 1.015; }
+}
+@keyframes dm-shadow-breathe {
+  0%, 100% { opacity: 0.8; scale: 0.96 1; }
+  50% { opacity: 1; scale: 1.02 1.1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dm[data-skin="duo"] .dm-frame::before,
+  .dm[data-skin="duo"] .dm-frame::after {
+    animation: none;
+  }
+}
+
+/* -------------------------------------------------------------- header */
+
+/* Over the stage: the logo at the left and the event at the right, each
+   tucked just inside the frame's rounded corners. The MCP pill sits over the
+   side column, on the same grid as the page below. */
+.dm[data-skin="duo"] .dm-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(340px, calc(27vw + 20px), 440px);
+  gap: 12px clamp(18px, 2vw, 32px);
+}
+.dm[data-skin="duo"] .dm-header-stage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-inline: 42px;
+}
+.dm[data-skin="duo"] .dm-event {
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--eel);
+  opacity: 0.55;
+}
+.dm[data-skin="duo"] .dm-header-end {
+  justify-self: end;
+}
+@media (max-width: 1080px) {
+  .dm[data-skin="duo"] .dm-header {
+    grid-template-columns: 1fr;
+  }
+  .dm[data-skin="duo"] .dm-header-end {
+    grid-row: 1;
+  }
+}
+/* The required disclaimer, small and faint, beside the MCP pill. */
+.dm[data-skin="duo"] .dm-disclaimer {
+  margin: 0;
+  font-size: 12px;
+  color: var(--eel);
+  opacity: 0.38;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .dm[data-skin="duo"] .dm-header-stage {
+    padding-inline: 30px;
+  }
+}
+
+/* ------------------------------------------------------------ night stage */
+
+/* Inside the frame it's showtime: a rich dark shade of the stage color, a
+   soft spotlight on Trivi, and the bubble and dock drawn to match. */
+.dm[data-skin="duo"] .dm-stage {
+  color: #fff;
+  background: radial-gradient(ellipse 70% 58% at 50% 38%, var(--night-hi), var(--night) 78%);
+  box-shadow: 0 0 0 3px var(--acc-d), inset 0 0 80px rgb(0 0 0 / 0.45);
+}
+.dm[data-skin="duo"] .dm-stage-bg::after {
+  content: none;
+}
+
+/* ------------------------------------------------------- stage backdrops */
+
+/* StageBackdrop.tsx. Sized in container units so the Settings previews
+   match the stage. */
+.dm-bd {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  container-type: size;
+  pointer-events: none;
+}
+.dm-bd > i {
+  position: absolute;
+  display: block;
+}
+
+/* Quiz night: two studio spotlights sway slowly from the top corners, and
+   question marks and little game-show icons (trophies, buzzers, bulbs, mics,
+   crowns and more) drift up the stage, tilting and bobbing as they go.
+   Everything stays faint so Trivi leads. */
+.dm-bd[data-kind="quiz"] {
+  --quiz-1: var(--pop-1);
+  --quiz-2: var(--pop-2);
+  --quiz-3: var(--pop-3);
+  --quiz-4: var(--night-ink);
+  background: radial-gradient(ellipse 70% 58% at 50% 38%, var(--night-hi), var(--night) 78%);
+}
+.dm-beam {
+  top: -6cqh;
+  width: 46cqw;
+  height: 120cqh;
+  background: linear-gradient(to bottom, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.25) 45%, transparent 85%);
+  clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%);
+  transform-origin: 50% 0;
+  mix-blend-mode: soft-light;
+  opacity: 0.32;
+  filter: blur(1.2cqw);
+  animation: dm-beam-sway 11s ease-in-out infinite alternate;
+}
+.dm-beam:nth-child(1) {
+  left: -14cqw;
+  --from: -28deg;
+  --to: -10deg;
+}
+.dm-beam:nth-child(2) {
+  right: -14cqw;
+  --from: 26deg;
+  --to: 8deg;
+  animation-duration: 13s;
+  animation-delay: -5s;
+}
+@keyframes dm-beam-sway {
+  from { rotate: var(--from); }
+  to { rotate: var(--to); }
+}
+.dm-quiz {
+  left: var(--x);
+  bottom: -12cqh;
+  font: 900 calc(7cqw * var(--k)) / 1 var(--display);
+  font-style: normal;
+  color: var(--c);
+  text-shadow: 0 0 2cqw var(--c);
+  opacity: 0;
+  animation: dm-quiz-float var(--t) linear var(--d) infinite;
+}
+.dm-quiz-icon svg {
+  display: block;
+  width: calc(7cqw * var(--k));
+  height: calc(7cqw * var(--k));
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 1.2cqw var(--c));
+}
+@keyframes dm-quiz-float {
+  0% { translate: 0 0; rotate: -14deg; opacity: 0; }
+  10% { opacity: 0.2; }
+  30% { translate: 2.5cqw -36cqh; rotate: 8deg; }
+  55% { translate: -2cqw -68cqh; rotate: -6deg; }
+  80% { translate: 2cqw -98cqh; rotate: 10deg; opacity: 0.2; }
+  100% { translate: 0 -128cqh; rotate: -4deg; opacity: 0; }
+}
+
+/* Aura: four soft glows that wander and slowly fade in and out, each on
+   its own clock so the stage never looks the same twice. */
+.dm-aura {
+  width: 80cqw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(14cqw);
+  opacity: 0;
+  animation:
+    dm-aura-move 29s ease-in-out infinite,
+    dm-aura-fade 13s ease-in-out infinite;
+}
+.dm-aura:nth-child(1) {
+  left: -25cqw;
+  top: -15cqh;
+  background: var(--acc);
+}
+.dm-aura:nth-child(2) {
+  right: -30cqw;
+  top: 25cqh;
+  background: var(--night-ink);
+  animation-duration: 34s, 17s;
+  animation-delay: -11s, -6s;
+}
+.dm-aura:nth-child(3) {
+  left: -10cqw;
+  bottom: -30cqh;
+  background: #ff5fa2;
+  animation-duration: 38s, 15s;
+  animation-delay: -19s, -9s;
+}
+.dm-aura:nth-child(4) {
+  right: -15cqw;
+  top: -25cqh;
+  width: 60cqw;
+  background: var(--acc-d);
+  animation-duration: 25s, 11s;
+  animation-delay: -7s, -3s;
+}
+@keyframes dm-aura-move {
+  0%, 100% { translate: 0 0; scale: 1; }
+  33% { translate: 16cqw 9cqh; scale: 1.12; }
+  66% { translate: -9cqw 16cqh; scale: 0.92; }
+}
+@keyframes dm-aura-fade {
+  0%, 100% { opacity: 0.06; }
+  50% { opacity: 0.3; }
+}
+
+/* Spotlight: Aura plus faint rays turning behind Trivi, soft-lit into the
+   gradient. The backdrop carries its own copy of the stage gradient so the
+   blend has something to light up. */
+.dm-bd[data-kind="spotlight"] {
+  background: radial-gradient(ellipse 70% 58% at 50% 38%, var(--night-hi), var(--night) 78%);
+}
+.dm-sunrays {
+  left: 50%;
+  top: 38%;
+  width: 240cqmax;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: repeating-conic-gradient(rgb(255 255 255 / 0.9) 0deg 5deg, transparent 5deg 15deg);
+  -webkit-mask-image: radial-gradient(circle, #000 0 4%, transparent 30%);
+  mask-image: radial-gradient(circle, #000 0 4%, transparent 30%);
+  mix-blend-mode: soft-light;
+  opacity: 0.28;
+  filter: blur(0.3cqw);
+  animation: dm-spin 160s linear infinite;
+}
+
+/* Grid: a faint grid on the back wall drifting slowly, and a floor grid in
+   perspective rolling toward the viewer. */
+.dm-grid-wall,
+.dm-grid-floor {
+  --grid-line: color-mix(in srgb, var(--night-ink) 75%, transparent);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+}
+.dm-grid-wall {
+  inset: -10cqw;
+  background-size: 9cqw 9cqw;
+  opacity: 0.16;
+  -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 30%, #000, transparent 75%);
+  mask-image: radial-gradient(ellipse 70% 55% at 50% 30%, #000, transparent 75%);
+  animation: dm-grid-drift 40s linear infinite;
+}
+.dm-grid-floor {
+  left: -60%;
+  right: -60%;
+  bottom: 0;
+  height: 120%;
+  background-size: 8cqw 8cqw;
+  opacity: 0.4;
+  transform: perspective(120cqh) rotateX(50deg);
+  transform-origin: 50% 100%;
+  -webkit-mask-image: linear-gradient(to top, #000 10%, transparent 85%);
+  mask-image: linear-gradient(to top, #000 10%, transparent 85%);
+  animation: dm-grid-roll 4s linear infinite;
+}
+/* Highlights running along the grid: a glow wanders the back wall lighting
+   up the lines it crosses, and a band of light rolls down the floor. Both
+   are masked to the grid lines and move with them. */
+.dm-grid-glint {
+  inset: -10cqw;
+  background:
+    radial-gradient(circle 16cqw, var(--pop-1), transparent),
+    radial-gradient(circle 12cqw, var(--acc), transparent);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  opacity: 0.55;
+  -webkit-mask-image:
+    linear-gradient(#000 1px, transparent 1px),
+    linear-gradient(90deg, #000 1px, transparent 1px);
+  -webkit-mask-size: 9cqw 9cqw;
+  mask-image:
+    linear-gradient(#000 1px, transparent 1px),
+    linear-gradient(90deg, #000 1px, transparent 1px);
+  mask-size: 9cqw 9cqw;
+  animation:
+    dm-grid-drift 40s linear infinite,
+    dm-glint-wander 16s ease-in-out infinite;
+}
+@keyframes dm-glint-wander {
+  0%, 100% { background-position: -30cqw -20cqh, 120cqw 70cqh; }
+  25% { background-position: 20cqw 10cqh, 60cqw 20cqh; }
+  50% { background-position: 70cqw -10cqh, -10cqw 40cqh; }
+  75% { background-position: 30cqw 40cqh, 90cqw -10cqh; }
+}
+.dm-grid-floor::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, var(--pop-1) 48%, #fff 50%, var(--acc) 52%, transparent 60%);
+  background-size: 100% 300%;
+  -webkit-mask-image:
+    linear-gradient(#000 1px, transparent 1px),
+    linear-gradient(90deg, #000 1px, transparent 1px);
+  -webkit-mask-size: 8cqw 8cqw;
+  mask-image:
+    linear-gradient(#000 1px, transparent 1px),
+    linear-gradient(90deg, #000 1px, transparent 1px);
+  mask-size: 8cqw 8cqw;
+  animation:
+    dm-grid-roll-mask 4s linear infinite,
+    dm-floor-sweep 7s ease-in infinite;
+}
+@keyframes dm-grid-roll-mask {
+  to { -webkit-mask-position: 0 8cqw, 0 0; mask-position: 0 8cqw, 0 0; }
+}
+@keyframes dm-floor-sweep {
+  from { background-position: 0 100%; }
+  to { background-position: 0 0; }
+}
+@keyframes dm-grid-drift {
+  to { translate: 9cqw 9cqw; }
+}
+@keyframes dm-grid-roll {
+  to { background-position: 0 8cqw, 0 0; }
+}
+
+/* Dreamy: four big blurred globs drifting in the stage's colors. */
+.dm-glob {
+  width: 70cqw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(12cqw);
+  opacity: 0.55;
+  animation: dm-drift 22s ease-in-out infinite alternate;
+}
+.dm-glob:nth-child(1) {
+  left: -20cqw;
+  top: -10cqh;
+  background: var(--acc);
+}
+.dm-glob:nth-child(2) {
+  right: -25cqw;
+  top: 20cqh;
+  background: var(--night-ink);
+  opacity: 0.35;
+  animation-duration: 27s;
+  animation-delay: -8s;
+}
+.dm-glob:nth-child(3) {
+  left: 10cqw;
+  bottom: -25cqh;
+  background: #ff5fa2;
+  opacity: 0.35;
+  animation-duration: 31s;
+  animation-delay: -14s;
+}
+.dm-glob:nth-child(4) {
+  right: 0;
+  bottom: -30cqh;
+  width: 55cqw;
+  background: var(--acc-d);
+  animation-duration: 19s;
+  animation-delay: -5s;
+}
+@keyframes dm-drift {
+  0% { translate: 0 0; scale: 1; }
+  50% { translate: 18cqw 10cqh; scale: 1.15; }
+  100% { translate: -10cqw 18cqh; scale: 0.9; }
+}
+
+/* Sparkles: faint star dust, a few soft glows breathing, and four-point
+   twinkles. */
+.dm-bd[data-kind="sparkles"] {
+  background-image:
+    radial-gradient(circle, rgb(255 255 255 / 0.3) 0.25cqw, transparent 0.35cqw),
+    radial-gradient(circle, rgb(255 255 255 / 0.16) 0.2cqw, transparent 0.3cqw),
+    radial-gradient(circle, rgb(255 255 255 / 0.22) 0.15cqw, transparent 0.25cqw);
+  background-size: 37cqw 29cqh, 23cqw 41cqh, 53cqw 17cqh;
+  background-position: 7cqw 11cqh, 19cqw 3cqh, 31cqw 23cqh;
+}
+.dm-softglow {
+  width: 60cqw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--night-ink) 30%, transparent), transparent);
+  animation: dm-breathe-glow 7s ease-in-out infinite alternate;
+}
+.dm-softglow:nth-child(1) {
+  left: -15cqw;
+  top: 5cqh;
+}
+.dm-softglow:nth-child(2) {
+  right: -20cqw;
+  top: 40cqh;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--acc) 35%, transparent), transparent);
+  animation-delay: -3s;
+}
+.dm-softglow:nth-child(3) {
+  left: 20cqw;
+  bottom: -25cqh;
+  animation-delay: -5s;
+}
+.dm-twinkle {
+  left: var(--x);
+  top: var(--y);
+  width: calc(4.5cqw * var(--k));
+  aspect-ratio: 1;
+  margin: calc(-2.25cqw * var(--k));
+  background: #fff;
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  filter: drop-shadow(0 0 1cqw var(--night-ink));
+  animation: dm-twinkle 4.2s ease-in-out var(--d) infinite;
+  scale: 0;
+}
+.dm-twinkle:nth-child(3n) {
+  background: var(--night-ink);
+}
+@keyframes dm-breathe-glow {
+  from { opacity: 0.5; scale: 0.9; }
+  to { opacity: 1; scale: 1.1; }
+}
+@keyframes dm-twinkle {
+  0%, 100% { scale: 0; rotate: 0deg; opacity: 0; }
+  25% { scale: 1; opacity: 1; }
+  50% { scale: 0.6; rotate: 45deg; opacity: 0.85; }
+  75% { scale: 0; rotate: 90deg; opacity: 0; }
+}
+
+/* Lava lamp: blobs rise and sink and merge, through an SVG goo filter. */
+.dm-lava {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.34;
+  filter: blur(0.4cqw);
+}
+.dm-lava-top {
+  stop-color: var(--acc);
+}
+.dm-lava-bottom {
+  stop-color: #ff5fa2;
+}
+.dm-blob {
+  animation: dm-lava var(--t) ease-in-out var(--d) infinite alternate;
+}
+@keyframes dm-lava {
+  from { translate: 0 0; }
+  to { translate: var(--dx) var(--rise); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dm-bd *,
+  .dm-bd > i {
+    animation-play-state: paused;
+  }
+  .dm-twinkle {
+    scale: 0.6;
+  }
+}
+
+/* The backdrop picker in Settings: a mini night stage per option. */
+.dm-bd-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 5px;
+  background: radial-gradient(ellipse 70% 58% at 50% 40%, var(--night-hi), var(--night) 78%);
+}
+.dm-bd-orb {
+  position: relative;
+  width: 26%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--acc-d), var(--acc) 50%, #ff8fc8);
+}
+.dm-bd-orb::before,
+.dm-bd-orb::after {
+  content: "";
+  position: absolute;
+  top: 34%;
+  width: 12%;
+  height: 22%;
+  border-radius: 50%;
+  background: #fff;
+}
+.dm-bd-orb::before {
+  left: 32%;
+}
+.dm-bd-orb::after {
+  right: 32%;
+}
+.dm[data-skin="duo"] .dm-bd-frame {
+  border: 0;
+  padding: 0;
+  background: var(--night);
+}
+
+/* Glass over the screen: a small reflection tucked in the top-left corner
+   with a short glint beside it, and a lit inner edge. It sits over
+   everything on the stage and never takes a click. */
+.dm[data-skin="duo"] .dm-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 34% 22% at 0% 0%, rgb(255 255 255 / 0.09), transparent 70%),
+    linear-gradient(128deg, transparent 0 13%, rgb(255 255 255 / 0.035) 13% 15.5%, transparent 15.5% 17%, rgb(255 255 255 / 0.02) 17% 17.8%, transparent 17.8%),
+    linear-gradient(to bottom, transparent 75%, rgb(0 0 0 / 0.1));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    inset 0 0 0 1px rgb(255 255 255 / 0.03),
+    inset 0 0 40px rgb(0 0 0 / 0.22);
+}
+
+/* Behind Trivi, two soft blobs in its body colors that slowly morph and
+   turn against each other, so the light behind it is never a plain disc. */
+.dm[data-skin="duo"] .dm-glow .av-glow::before,
+.dm[data-skin="duo"] .dm-glow .av-glow::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  filter: blur(calc(var(--s) * 0.08));
+}
+.dm[data-skin="duo"] .dm-glow .av-glow::before {
+  inset: -14% -20% -10% -8%;
+  border-radius: 58% 42% 55% 45% / 48% 60% 40% 52%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--gl-3) 30%, transparent), transparent);
+  animation: dm-halo-morph 11s ease-in-out infinite, dm-glow-halo 5s ease-in-out infinite;
+}
+.dm[data-skin="duo"] .dm-glow .av-glow::after {
+  inset: -6% -6% -18% -22%;
+  z-index: -1;
+  border-radius: 42% 58% 46% 54% / 60% 44% 56% 40%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--gl-1) 26%, transparent), transparent);
+  animation: dm-halo-morph 14s ease-in-out infinite reverse, dm-glow-halo 7s ease-in-out -2s infinite;
+}
+.dm[data-skin="duo"] .dm-glow .av-glow[data-mood="speaking"]::before {
+  animation-duration: 11s, 0.9s;
+}
+@keyframes dm-halo-morph {
+  0%, 100% { rotate: 0deg; border-radius: 58% 42% 55% 45% / 48% 60% 40% 52%; }
+  33% { rotate: 50deg; border-radius: 44% 56% 38% 62% / 58% 42% 58% 42%; }
+  66% { rotate: -35deg; border-radius: 62% 38% 52% 48% / 40% 56% 44% 60%; }
+}
+.dm[data-skin="duo"] .dm-glow .av-zzz i {
+  color: var(--gl-hi);
+}
+@keyframes dm-glow-halo {
+  50% { opacity: 0.65; scale: 0.94; }
+}
+
+.dm[data-skin="duo"] .dm-status {
+  color: rgb(255 255 255 / 0.62);
+}
+.dm[data-skin="duo"] .dm-status-heard {
+  background: color-mix(in srgb, var(--brand) 18%, transparent);
+  border-color: color-mix(in srgb, var(--brand) 60%, transparent);
+  color: var(--brand-ink);
+}
+.dm[data-skin="duo"] .dm-status-heard b {
+  color: #fff;
+}
+
+.dm[data-skin="duo"] .dm-caption {
+  background: var(--night-card);
+  border: 1.5px solid var(--night-line);
+  border-bottom-width: 5px;
+  color: #fff;
+  box-shadow: 0 16px 40px rgb(0 0 0 / 0.35);
+}
+.dm[data-skin="duo"] .dm-caption::before {
+  background: var(--night-card);
+  border-color: var(--night-line);
+}
+.dm[data-skin="duo"] .dm-caption-label {
+  color: var(--night-ink);
+}
+
+.dm[data-skin="duo"] .dm-mic {
+  box-shadow: 0 5px 0 var(--brand-d), 0 10px 26px rgb(0 0 0 / 0.35);
+}
+.dm[data-skin="duo"] .dm-mic[data-active="true"] {
+  box-shadow: 0 5px 0 var(--red-d), 0 10px 26px rgb(0 0 0 / 0.35);
+}
+.dm[data-skin="duo"] .dm-type {
+  background: var(--night-card);
+  border-color: var(--night-line);
+}
+.dm[data-skin="duo"] .dm-type:focus-within {
+  border-color: var(--brand);
+}
+.dm[data-skin="duo"] .dm-type input {
+  color: #fff;
+}
+.dm[data-skin="duo"] .dm-type input::placeholder {
+  color: rgb(255 255 255 / 0.42);
+}
+.dm[data-skin="duo"] .dm-send:disabled {
+  background: rgb(255 255 255 / 0.08);
+  color: rgb(255 255 255 / 0.32);
+}
+
+/* ------------------------------------------------------------ Trivi, flat */
+
+.dm[data-skin="duo"] .dm-orb {
+  --ring-t: calc(var(--orb) * 0.07);
+}
+.dm[data-skin="duo"] .dm-orb .dm-orb-halo {
+  inset: -12%;
+  background: rgb(255 255 255 / 0.75);
+}
+/* The blurred glow becomes a flat shadow on the floor. */
+.dm[data-skin="duo"] .dm-orb .dm-orb-glow {
+  inset: auto 20% -9% 20%;
+  height: 8%;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.08);
+  filter: none;
+  opacity: 1;
+  animation: none;
+}
+.dm[data-skin="duo"] .dm-orb .dm-orb-ring {
+  background: conic-gradient(
+    var(--green) 0 22%,
+    transparent 22% 25%,
+    var(--blue) 25% 47%,
+    transparent 47% 50%,
+    var(--yellow) 50% 72%,
+    transparent 72% 75%,
+    var(--red) 75% 97%,
+    transparent 97%
+  );
+}
+.dm[data-skin="duo"] .dm-orb[data-state="listening"] .dm-orb-ring {
+  background: var(--ring-listen);
+}
+.dm[data-skin="duo"] .dm-orb[data-state="thinking"] .dm-orb-ring {
+  background: conic-gradient(var(--acc-d) 0 26%, color-mix(in srgb, var(--acc) 22%, #fff) 26%);
+}
+.dm[data-skin="duo"] .dm-orb-ripple {
+  border: 4px solid color-mix(in srgb, var(--ring-listen) 45%, transparent);
+}
+
+.dm[data-skin="duo"] .dm-orb-core {
+  background: var(--acc);
+  box-shadow: inset 0 calc(var(--orb) * -0.05) 0 var(--acc-d), inset 0 3px 0 rgb(255 255 255 / 0.3);
+}
+.dm[data-skin="duo"] .dm-orb-core::before {
+  background: rgb(255 255 255 / 0.28);
+  left: 20%;
+  top: 11%;
+  width: 26%;
+  height: 13%;
+}
+.dm[data-skin="duo"] .dm-orb-bars {
+  display: none;
+}
+
+.dm[data-skin="duo"] .dm-orb-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--orb) * 0.035);
+  padding-top: calc(var(--orb) * 0.02);
+  --look-x: 0%;
+  --look-y: 12%;
+}
+/* Cheeks */
+.dm[data-skin="duo"] .dm-orb-face::before,
+.dm[data-skin="duo"] .dm-orb-face::after {
+  content: "";
+  position: absolute;
+  top: 58%;
+  width: calc(var(--orb) * 0.075);
+  height: calc(var(--orb) * 0.042);
+  border-radius: 50%;
+  background: rgb(255 110 150 / 0.45);
+}
+.dm[data-skin="duo"] .dm-orb-face::before {
+  left: 19%;
+}
+.dm[data-skin="duo"] .dm-orb-face::after {
+  right: 19%;
+}
+.dm[data-skin="duo"] .dm-orb-eyes {
+  display: flex;
+  gap: calc(var(--orb) * 0.05);
+}
+.dm[data-skin="duo"] .dm-orb-eye {
+  display: grid;
+  place-items: center;
+  width: calc(var(--orb) * 0.15);
+  height: calc(var(--orb) * 0.175);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.07);
+  animation: dm-wink 5s ease-in-out infinite;
+}
+.dm[data-skin="duo"] .dm-orb-eye i {
+  position: relative;
+  width: 54%;
+  height: 48%;
+  border-radius: 50%;
+  background: var(--eel);
+  translate: var(--look-x) var(--look-y);
+  transition: translate 0.35s ease;
+}
+.dm[data-skin="duo"] .dm-orb-eye i::after {
+  content: "";
+  position: absolute;
+  top: 16%;
+  left: 20%;
+  width: 34%;
+  height: 34%;
+  border-radius: 50%;
+  background: #fff;
+}
+.dm[data-skin="duo"] .dm-orb-mouth {
+  position: relative;
+  width: calc(var(--orb) * 0.13);
+  height: calc(var(--orb) * 0.065);
+  border-radius: 0 0 999px 999px;
+  background: #3b2340;
+  overflow: hidden;
+  transition: width 0.25s ease, height 0.25s ease, border-radius 0.25s ease, translate 0.25s ease;
+}
+.dm[data-skin="duo"] .dm-orb-mouth::after {
+  content: "";
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: -30%;
+  height: 65%;
+  border-radius: 50%;
+  background: #ff86a8;
+}
+
+.dm[data-skin="duo"] .dm-orb[data-state="listening"] .dm-orb-face {
+  --look-y: 34%;
+}
+.dm[data-skin="duo"] .dm-orb[data-state="listening"] .dm-orb-mouth {
+  width: calc(var(--orb) * 0.075);
+  height: calc(var(--orb) * 0.075);
+  border-radius: 999px;
+}
+.dm[data-skin="duo"] .dm-orb[data-state="thinking"] .dm-orb-face {
+  --look-x: 30%;
+  --look-y: -36%;
+}
+.dm[data-skin="duo"] .dm-orb[data-state="thinking"] .dm-orb-mouth {
+  width: calc(var(--orb) * 0.07);
+  height: calc(var(--orb) * 0.022);
+  border-radius: 999px;
+  translate: 40% 0;
+}
+.dm[data-skin="duo"] .dm-orb[data-state="speaking"] .dm-orb-face {
+  --look-y: 0%;
+}
+.dm[data-skin="duo"] .dm-orb[data-state="speaking"] .dm-orb-mouth {
+  border-radius: 45% 45% 999px 999px;
+  animation: dm-talk 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes dm-wink {
+  0%, 93%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.1); }
+}
+@keyframes dm-talk {
+  from { height: calc(var(--orb) * 0.04); }
+  to { height: calc(var(--orb) * 0.1); }
+}
+
+/* ----------------------------------------------------------- side column */
+
+.dm[data-skin="duo"] .dm-family-btn:hover,
+.dm[data-skin="duo"] .dm-settings:hover {
+  background: var(--polar);
+}
+.dm[data-skin="duo"] .dm-family-name {
+  font-size: 19px;
+  font-weight: 800;
+  color: #fff;
+}
+.dm[data-skin="duo"] .dm-stack-item {
+  box-shadow: none;
+}
+.dm[data-skin="duo"] .dm-family-chev,
+.dm[data-skin="duo"] .dm-settings-chev {
+  color: var(--hare);
+}
+
+.dm[data-skin="duo"] .dm-menu {
+  border: 1.5px solid var(--swan);
+  border-radius: 20px;
+  background: var(--panel);
+  box-shadow: 0 16px 32px rgb(0 0 0 / 0.45);
+}
+.dm[data-skin="duo"] .dm-menu-item {
+  border: 1.5px solid transparent;
+}
+.dm[data-skin="duo"] .dm-menu-item[aria-checked="true"] {
+  background: var(--sel-bg);
+  border-color: var(--sel-line);
+}
+.dm[data-skin="duo"] .dm-menu-item[aria-checked="true"] strong {
+  color: var(--sel-ink);
+}
+.dm[data-skin="duo"] .dm-menu-item .dm-stack-item {
+  box-shadow: none;
+}
+.dm[data-skin="duo"] .dm-menu-item[aria-checked="true"] .dm-stack-item {
+  box-shadow: none;
+}
+.dm[data-skin="duo"] .dm-menu-text strong {
+  font-weight: 900;
+}
+.dm[data-skin="duo"] .dm-menu-check {
+  color: var(--brand);
+}
+
+.dm[data-skin="duo"] .dm-board-head h2 {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--eel);
+}
+/* Range picker as Duolingo tabs: uppercase, blue underline. */
+.dm[data-skin="duo"] .dm-board .dm-seg {
+  gap: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.dm[data-skin="duo"] .dm-board .dm-seg button {
+  padding: 6px 2px;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hare);
+}
+.dm[data-skin="duo"] .dm-board .dm-seg button[aria-pressed="true"] {
+  background: none;
+  color: var(--brand);
+  box-shadow: inset 0 -3px 0 var(--brand);
+}
+
+.dm[data-skin="duo"] .dm-row {
+  background: var(--panel);
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 4px;
+  border-radius: 18px;
+}
+.dm[data-skin="duo"] .dm-row-lead {
+  background: var(--lead-bg);
+  border-color: var(--brand);
+  border-bottom-color: var(--brand-d);
+}
+.dm[data-skin="duo"] .dm-rank {
+  font-weight: 900;
+  color: var(--hare);
+}
+.dm[data-skin="duo"] .dm-row-lead .dm-rank {
+  color: var(--brand-ink);
+  filter: none;
+}
+.dm[data-skin="duo"] .dm-row-name {
+  font-size: 20px;
+  font-weight: 900;
+}
+.dm[data-skin="duo"] .dm-row-meta {
+  color: var(--wolf);
+}
+.dm[data-skin="duo"] .dm-meter {
+  height: 10px;
+  background: var(--swan);
+}
+.dm[data-skin="duo"] .dm-row-lead .dm-meter > span {
+  background: var(--brand-ink);
+}
+.dm[data-skin="duo"] .dm-meter > span::after {
+  top: 2px;
+  height: 3px;
+  left: 5px;
+  right: 5px;
+}
+.dm[data-skin="duo"] .dm-score {
+  font-weight: 900;
+  font-size: 22px;
+}
+.dm[data-skin="duo"] .dm-flash {
+  background: var(--yellow);
+  color: #fff;
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.15);
+  box-shadow: 0 3px 0 var(--yellow-d);
+}
+
+/* A compact Settings row: about the height of the family card. */
+.dm[data-skin="duo"] .dm-settings {
+  gap: 12px;
+  padding: 10px 16px 10px 10px;
+}
+.dm[data-skin="duo"] .dm-settings-icon {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--brand);
+  box-shadow: 0 3px 0 var(--brand-d);
+  color: #fff;
+}
+.dm[data-skin="duo"] .dm-settings-text strong {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* ----------------------------------------------------------------- drawer */
+
+.dm[data-skin="duo"] .dm-drawer {
+  border-left: 1.5px solid var(--swan);
+  border-radius: 24px 0 0 24px;
+  box-shadow: -20px 0 50px rgb(0 0 0 / 0.45);
+}
+.dm[data-skin="duo"] .dm-drawer-head h2 {
+  font-weight: 900;
+  font-size: 30px;
+}
+.dm[data-skin="duo"] .dm-close {
+  border: 0;
+  background: none;
+  color: var(--hare);
+}
+.dm[data-skin="duo"] .dm-close:hover {
+  background: var(--polar);
+  color: var(--wolf);
+}
+.dm[data-skin="duo"] .dm-tabs {
+  gap: 4px;
+  padding-bottom: 0;
+  border-bottom: 1.5px solid var(--swan);
+}
+.dm[data-skin="duo"] .dm-tab {
+  flex: 1;
+  justify-content: center;
+  padding: 10px 6px 12px;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--hare);
+}
+.dm[data-skin="duo"] .dm-tab:hover {
+  background: none;
+  color: var(--wolf);
+}
+.dm[data-skin="duo"] .dm-tab[aria-selected="true"] {
+  background: none;
+  color: var(--brand);
+  box-shadow: inset 0 -3px 0 var(--brand);
+}
+/* Duolingo tabs are words only, split evenly. */
+.dm[data-skin="duo"] .dm-tab svg {
+  display: none;
+}
+
+.dm[data-skin="duo"] .dm-dsec h3 {
+  font-weight: 900;
+}
+.dm[data-skin="duo"] .dm-count {
+  border: 1.5px solid var(--swan);
+  background: var(--panel);
+  color: var(--wolf);
+}
+.dm[data-skin="duo"] .dm-field > span:first-child {
+  font-weight: 900;
+  color: var(--wolf);
+}
+.dm[data-skin="duo"] .dm-input {
+  border: 1.5px solid var(--swan);
+  border-radius: 14px;
+  background: var(--polar);
+  font-weight: 700;
+}
+.dm[data-skin="duo"] .dm-input:focus,
+.dm[data-skin="duo"] .dm-input:focus-visible {
+  border-color: var(--sel-line);
+  background: var(--panel);
+  box-shadow: none;
+}
+.dm[data-skin="duo"] .dm-list-item {
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 4px;
+  border-radius: 16px;
+}
+.dm[data-skin="duo"] .dm-list-text strong {
+  font-weight: 900;
+}
+.dm[data-skin="duo"] .dm-role {
+  background: var(--polar);
+  color: var(--wolf);
+}
+.dm[data-skin="duo"] .dm-pack-tile {
+  border-radius: 12px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.2);
+  box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.15);
+}
+.dm[data-skin="duo"] .dm-switch {
+  background: var(--swan);
+}
+.dm[data-skin="duo"] .dm-switch[aria-checked="true"] {
+  background: var(--green);
+}
+.dm[data-skin="duo"] .dm-switch::after {
+  box-shadow: 0 2px 0 rgb(0 0 0 / 0.15);
+}
+.dm[data-skin="duo"] .dm-add {
+  border: 1.5px dashed var(--swan);
+  border-radius: 20px;
+}
+.dm[data-skin="duo"] .dm-add-who > .dm-avatar {
+  box-shadow: none;
+}
+/* Kid or grown-up as two answer tiles. */
+.dm[data-skin="duo"] .dm-add .dm-seg {
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.dm[data-skin="duo"] .dm-add .dm-seg button {
+  padding: 7px 14px 5px;
+  border-radius: 12px;
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 4px;
+  font-weight: 900;
+  color: var(--wolf);
+}
+.dm[data-skin="duo"] .dm-add .dm-seg button[aria-pressed="true"] {
+  background: var(--sel-bg);
+  border-color: var(--sel-line);
+  color: var(--sel-ink);
+  box-shadow: none;
+}
+.dm[data-skin="duo"] .dm-swatch[aria-pressed="true"] {
+  box-shadow: 0 0 0 3px var(--drawer), 0 0 0 5px var(--brand);
+}
+
+/* Chunky buttons that press down. */
+.dm[data-skin="duo"] .dm-btn {
+  border-radius: 16px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.dm[data-skin="duo"] .dm-btn-primary {
+  background: var(--green);
+  box-shadow: 0 4px 0 var(--green-d);
+}
+.dm[data-skin="duo"] .dm-btn-ghost {
+  background: var(--panel);
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 4px;
+  color: var(--brand);
+}
+.dm[data-skin="duo"] .dm-btn-ghost:hover {
+  background: var(--polar);
+}
+.dm[data-skin="duo"] .dm-btn-sm {
+  font-size: 12.5px;
+}
+.dm[data-skin="duo"] .dm-btn-primary:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: none;
+}
+.dm[data-skin="duo"] .dm-btn:disabled {
+  opacity: 1;
+  background: var(--swan);
+  border-color: var(--swan);
+  color: var(--hare);
+  box-shadow: none;
+}
+
+.dm[data-skin="duo"] .dm-theme {
+  background: var(--panel);
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 4px;
+  border-radius: 18px;
+}
+.dm[data-skin="duo"] .dm-theme:hover {
+  background: var(--polar);
+}
+.dm[data-skin="duo"] .dm-theme[aria-pressed="true"] {
+  background: var(--sel-bg);
+  border-color: var(--sel-line);
+}
+.dm[data-skin="duo"] .dm-theme[aria-pressed="true"] strong {
+  color: var(--sel-ink);
+}
+.dm[data-skin="duo"] .dm-theme-text strong {
+  font-weight: 900;
+}
+.dm[data-skin="duo"] .dm-theme-frame {
+  border-color: var(--p-bulb);
+  background: var(--p-frame);
+}
+/* Previews show each theme's dark stage, mixed from its frame color. */
+.dm[data-skin="duo"] .dm-theme-preview {
+  background: color-mix(in srgb, var(--p-frame) 10%, #0b0518);
+}
+.dm[data-skin="duo"] .dm-theme-stage {
+  background: radial-gradient(ellipse 70% 60% at 50% 40%, color-mix(in srgb, var(--p-frame) 38%, #0b0518), color-mix(in srgb, var(--p-frame) 12%, #0b0518) 80%);
+}
+.dm[data-skin="duo"] .dm-theme-orb {
+  background:
+    radial-gradient(circle at 36% 45%, #fff 0 13%, transparent 15%),
+    radial-gradient(circle at 64% 45%, #fff 0 13%, transparent 15%),
+    var(--p-frame);
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.15);
+}
+.dm[data-skin="duo"] .dm-theme-check {
+  background: var(--brand);
+  color: #fff;
+}
+
+.dm[data-skin="duo"] .dm-msg-me p {
+  border: 1.5px solid var(--sel-line);
+  border-radius: 18px 18px 6px 18px;
+  background: var(--sel-bg);
+  color: var(--sel-ink);
+  font-weight: 800;
+}
+.dm[data-skin="duo"] .dm-bubble {
+  border: 1.5px solid var(--swan);
+  border-radius: 18px 18px 18px 6px;
+  font-weight: 700;
+}
+.dm[data-skin="duo"] .dm-draft {
+  border: 1.5px solid var(--swan);
+  background: var(--polar);
+}
+.dm[data-skin="duo"] .dm-draft-head strong {
+  font-weight: 900;
+}
+.dm[data-skin="duo"] .dm-draft em {
+  border: 1.5px solid var(--swan);
+  background: var(--panel);
+  font-weight: 900;
+}
+/* Suggestions as word tiles. */
+.dm[data-skin="duo"] .dm-suggest button {
+  padding: 8px 13px 6px;
+  border-radius: 14px;
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 4px;
+  color: var(--eel);
+  font-weight: 800;
+}
+.dm[data-skin="duo"] .dm-suggest button svg {
+  color: var(--acc);
+}
+.dm[data-skin="duo"] .dm-suggest button:hover {
+  background: var(--polar);
+}
+.dm[data-skin="duo"] .dm-composer {
+  border-top: 1.5px solid var(--swan);
+}
+.dm[data-skin="duo"] .dm-send-solid {
+  margin-bottom: 4px;
+}
+
+/* --------------------------------------------------------- MCP messages */
+
+/* ProtocolPanel is styled in globals.css for the light simulator; live.css
+   gives it light tokens, and these put it back in the dark. */
+.dm[data-skin="duo"] .dm-protocol {
+  --ink: var(--eel);
+  --ink-soft: var(--wolf);
+  --line: var(--swan);
+  --card: var(--drawer);
+  border: 1.5px solid var(--swan);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.55);
+}
+.dm[data-skin="duo"] .dm-protocol .msg {
+  background: var(--panel);
+}
+.dm[data-skin="duo"] .dm-protocol .msg-head {
+  color: var(--eel);
+}
+.dm[data-skin="duo"] .dm-protocol .msg-head:hover:not(:disabled) {
+  background: var(--polar);
+}
+.dm[data-skin="duo"] .dm-protocol .dur {
+  color: var(--coral);
+}
+.dm[data-skin="duo"] .dm-protocol-close {
+  background: var(--polar);
+  color: var(--eel);
+}
+
+/* ---------------------------------------------------------------- unlock */
+
+/* The hidden live-play switch (UnlockDialog.tsx): a small card over a scrim. */
+.dm-unlock-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: var(--scrim);
+}
+.dm-unlock {
+  width: min(380px, 100%);
+  padding: 22px;
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 4px;
+  border-radius: 20px;
+  background: var(--drawer);
+  color: var(--eel);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.5);
+}
+.dm-unlock h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 900;
+}
+.dm-unlock p {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--wolf);
+}
+.dm-unlock .dm-input {
+  width: 100%;
+}
+.dm-unlock .dm-unlock-error {
+  margin: 10px 0 0;
+  color: var(--red);
+  font-weight: 800;
+}
+.dm-unlock-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}

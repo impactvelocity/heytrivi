@@ -144,7 +144,7 @@ export async function dashboard(hh: string) {
 /** One pack with its questions, in order. */
 async function packDetail(hh: string, packId: string) {
   const found = await (await getRepo()).getPack(hh, packId);
-  if (!found) throw new UserError("That pack doesn't exist.", "unknown_pack");
+  if (!found) throw new UserError("That theme doesn't exist.", "unknown_pack");
   return {
     packId: found.pack.packId,
     title: found.pack.title,
@@ -271,7 +271,7 @@ export function parentRoutes(): Hono<Env> {
   async function ownPack(c: Context<Env>): Promise<{ hh: string; packId: string; questionCount: number }> {
     const hh = await household(c);
     const found = await (await getRepo()).getPack(hh, c.req.param("id")!);
-    if (!found) throw new UserError("That pack doesn't exist.", "unknown_pack");
+    if (!found) throw new UserError("That theme doesn't exist.", "unknown_pack");
     return { hh, packId: found.pack.packId, questionCount: found.questions.length };
   }
 
@@ -287,7 +287,7 @@ export function parentRoutes(): Hono<Env> {
     const hh = await household(c);
     const b = await body(c, schemas.pack);
     const repo = await getRepo();
-    if (!b.title.trim()) throw new UserError("Give the pack a name.");
+    if (!b.title.trim()) throw new UserError("Give the theme a name.");
     if (b.forPlayerId && !(await repo.load(hh)).players.some((p) => p.playerId === b.forPlayerId)) {
       throw new UserError("That player isn't in your family.", "unknown_player");
     }
@@ -296,7 +296,7 @@ export function parentRoutes(): Hono<Env> {
     const title = pack.title;
     await repo.addPackQuestions(hh, pack.packId, questions, {
       finish: true,
-      newsText: `A new question pack is ready: ${title}. Say "play the ${title} pack" to try it.`,
+      newsText: `A new theme is ready: ${title}. Say "play the ${title} theme" to try it.`,
     });
     return c.json({ ...(await dashboard(hh)), pack: await packDetail(hh, pack.packId) });
   });
@@ -323,7 +323,7 @@ export function parentRoutes(): Hono<Env> {
   app.post("/packs/:id/questions", async (c) => {
     const { hh, packId, questionCount } = await ownPack(c);
     const b = await body(c, schemas.questions);
-    if (questionCount + b.questions.length > MAX_QUESTIONS) throw new UserError(`A pack can hold up to ${MAX_QUESTIONS} questions.`);
+    if (questionCount + b.questions.length > MAX_QUESTIONS) throw new UserError(`A theme can hold up to ${MAX_QUESTIONS} questions.`);
     const repo = await getRepo();
     const detail = await packDetail(hh, packId);
     await repo.addPackQuestions(hh, packId, b.questions.map((q) => ({ ...q, kind: kindFor(detail.kind, q) })), { announce: false });
@@ -335,7 +335,7 @@ export function parentRoutes(): Hono<Env> {
     const b = await body(c, schemas.question);
     const detail = await packDetail(hh, packId);
     const n = Number(c.req.param("n"));
-    if (!detail.questions.some((q) => q.n === n)) throw new UserError("That question isn't in this pack.", "unknown_question");
+    if (!detail.questions.some((q) => q.n === n)) throw new UserError("That question isn't in this theme.", "unknown_question");
     await (await getRepo()).updatePackQuestion(hh, packId, n, { ...b, kind: kindFor(detail.kind, b) });
     return c.json({ ...(await dashboard(hh)), pack: await packDetail(hh, packId) });
   });

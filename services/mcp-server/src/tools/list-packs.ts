@@ -10,8 +10,8 @@ export function registerListPacks(server: McpServer): void {
   server.registerTool(
     "list_packs",
     {
-      title: "List question packs",
-      description: "List the family's question packs and how many questions are left: 'what packs do we have', 'is Sally's pack ready'.",
+      title: "List themes",
+      description: "List the family's question packs, which the family calls themes, and how many questions are left: 'what themes do we have', 'is Sally's theme ready'.",
       inputSchema: z.object({}),
       annotations: { readOnlyHint: true },
     },

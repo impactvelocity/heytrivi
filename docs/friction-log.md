@@ -88,6 +88,16 @@ Entries here count toward the hackathon score. Add one every time a tool, SDK, o
 - Workaround: Support both (a confidential client by default, `ALEXA_PUBLIC_CLIENT=1` for a public one), take redirect URLs from configuration, accept both protocol versions, and document the open questions in docs/alexa-plus.md.
 - Suggestion: List every regional redirect URL on the page, state the token endpoint's client authentication method, and show `accountLinking` in the full `addon.json` example.
 
+### AI SDK structured output fails with "No output generated" when the token limit is hit
+- Tool / doc: AI SDK 7 (`generateText` with `Output.object`) through the Vercel AI Gateway
+- Task attempted: Generate a 10-question pack as structured output.
+- Steps taken: `maxOutputTokens: 3000` was enough for 6 questions; asked for 10.
+- Expected: An error saying the output was cut off at the token limit.
+- Actual: `AI_NoOutputGeneratedError: No output generated.` with no mention of the limit. The same call works with a higher limit.
+- Severity: minor
+- Workaround: Scale `maxOutputTokens` with the number of items requested.
+- Suggestion: Include the finish reason (`length`) in the error message.
+
 ### Nova 2 Lite writes its reasoning into the spoken reply
 - Tool / doc: Amazon Nova 2 Lite through the Vercel AI Gateway, AI SDK 7 `generateText` with tools
 - Task attempted: Have the host model speak its reply after a `start_round` tool call that returned an answer key.

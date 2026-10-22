@@ -22,13 +22,14 @@ export function registerStartRound(server: McpServer): void {
       title: "Ask the family a question",
       description:
         "Start a round where you ask the question: 'ask us one', 'quiz us', 'let's play for the garbage', 'riddles', " +
-        "'play the fractions pack', or a tiebreak after record_round says tiebreak_needed. " +
+        "'play the fractions theme', or a tiebreak after record_round says tiebreak_needed. " +
+        "The family calls a pack a theme. " +
         "Returns the question and an answer key. Ask the question out loud, never reveal the answer key before everyone has guessed. " +
         "If needsHostQuestion is true, make up a fair question yourself and pass it to record_round with the roundId. " +
         "Use mode 'family' with a stake when the family will ask their own question for a chore or a pick.",
       inputSchema: z.object({
         mode: z.enum(["hosted", "riddle", "family"]).default("hosted").describe("hosted: trivia from a pack. riddle: a riddle. family: the family asks"),
-        pack: z.string().optional().describe("A pack title or id, if they asked for a specific pack"),
+        pack: z.string().optional().describe("A pack title or id, if they asked for a specific theme"),
         stake: stakeSchema.optional(),
         players: z.array(z.string()).optional().describe("Only these players answer, for example the tied players in a tiebreak"),
         tiebreakOf: z.string().optional().describe("The roundId that ended in tiebreak_needed. The stake carries forward."),
