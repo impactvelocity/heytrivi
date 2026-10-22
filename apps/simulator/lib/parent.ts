@@ -49,6 +49,20 @@ export interface RoundRow {
   at: string;
 }
 
+export interface PointSettings {
+  correct: number;
+  partial: number;
+  wrong: number;
+}
+
+/** Household show settings (the /demo stage). readTwice also changes what the host says. */
+export interface StageSettings {
+  theme: string;
+  lights: boolean;
+  celebrate: boolean;
+  readTwice: boolean;
+}
+
 export interface Dashboard {
   household: {
     householdId: string;
@@ -59,6 +73,8 @@ export interface Dashboard {
     nextReset: string | null;
     phraseSet: boolean;
     phraseRequiredFor: PhraseScope;
+    pointSettings: PointSettings;
+    stage: StageSettings;
   };
   players: ParentPlayer[];
   openChores: Array<{ choreId: string; label: string; owedBy: string }>;

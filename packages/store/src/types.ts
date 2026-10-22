@@ -69,8 +69,27 @@ export interface HouseholdMeta {
   phraseLockedUntil?: number;
   openRound?: OpenRound;
   lastRound?: LastRound;
+  /** How the game is staged on screens and spoken. Unset fields use STAGE_DEFAULTS. */
+  stage?: Partial<StageSettings>;
   createdAt: string;
 }
+
+/**
+ * Household-wide show settings. `readTwice` changes what the host is told to
+ * say (start_round), so it works on Alexa+ too; the rest style a screen.
+ */
+export interface StageSettings {
+  /** A theme id the screen knows, like "showtime". */
+  theme: string;
+  /** Marquee lights around the stage. */
+  lights: boolean;
+  /** Flash the lights when someone scores. */
+  celebrate: boolean;
+  /** Ask each question twice, for little ones. */
+  readTwice: boolean;
+}
+
+export const STAGE_DEFAULTS: StageSettings = { theme: "showtime", lights: true, celebrate: true, readTwice: false };
 
 /** "mixed" packs hold both; each question then says which it is. */
 export type PackKind = "trivia" | "riddle" | "mixed";
@@ -85,6 +104,8 @@ export interface Pack {
   forPlayerId?: string;
   status: PackStatus;
   failReason?: string;
+  /** Left out of the mix. The family can still play it by name. */
+  paused?: boolean;
   questionCount: number;
   usedCount: number;
   createdAt: string;

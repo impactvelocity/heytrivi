@@ -22,7 +22,7 @@ export function registerListPacks(server: McpServer): void {
           ? packs
               .map((p) =>
                 p.status === "ready"
-                  ? `${p.title}: ${plural(p.remaining, "question")} left.`
+                  ? `${p.title}: ${plural(p.remaining, "question")} left${p.paused ? ", paused (it plays only when asked for by name)" : ""}.`
                   : p.status === "building"
                     ? `${p.title}: still being built.`
                     : `${p.title}: couldn't be built. ${p.failReason ?? ""}`.trim(),

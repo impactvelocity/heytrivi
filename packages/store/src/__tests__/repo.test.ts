@@ -456,3 +456,27 @@ describe("parent-made packs", () => {
     expect((await repo.getPack(HH, pack.packId))!.pack.title).toBe("Dino Days");
   });
 });
+
+describe("show settings", () => {
+  it("a paused pack is left out of the mix but still plays by name", async () => {
+    const s = await repo.begin(HH);
+    const trivia = s.packs.find((p) => p.title === "Starter Trivia")!;
+    await repo.updatePack(HH, trivia.packId, { paused: true });
+    expect((await repo.load(HH)).packs.find((p) => p.packId === trivia.packId)!.paused).toBe(true);
+
+    // The only trivia pack is paused, so the host is told to ask its own question.
+    expect((await repo.startRound(HH, await repo.begin(HH), { mode: "hosted" })).needsHostQuestion).toBe(true);
+    const named = await repo.startRound(HH, await repo.begin(HH), { mode: "hosted", packId: "Starter Trivia" });
+    expect(named.packTitle).toBe("Starter Trivia");
+
+    await repo.updatePack(HH, trivia.packId, { paused: false });
+    expect((await repo.load(HH)).packs.find((p) => p.packId === trivia.packId)!.paused).toBeUndefined();
+  });
+
+  it("stage settings merge one switch at a time, over the defaults", async () => {
+    expect(repo.stageSettings(await repo.load(HH))).toEqual({ theme: "showtime", lights: true, celebrate: true, readTwice: false });
+    await repo.updateSettings(HH, { stage: { readTwice: true } });
+    await repo.updateSettings(HH, { stage: { theme: "sunny", lights: false } });
+    expect(repo.stageSettings(await repo.load(HH))).toEqual({ theme: "sunny", lights: false, celebrate: true, readTwice: true });
+  });
+});

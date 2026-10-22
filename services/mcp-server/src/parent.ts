@@ -42,7 +42,22 @@ const schemas = {
     resetSchedule: schedule.optional(),
     players: z.array(newPlayer).max(12).default([]),
   }),
-  settings: z.object({ showTitle: z.string().max(80).optional(), timeZone: z.string().max(64).optional(), resetSchedule: schedule.optional() }),
+  settings: z.object({
+    showTitle: z.string().max(80).optional(),
+    timeZone: z.string().max(64).optional(),
+    resetSchedule: schedule.optional(),
+    pointSettings: z
+      .object({ correct: z.number().int().min(0).max(10), partial: z.number().int().min(0).max(10), wrong: z.number().int().min(0).max(0) })
+      .optional(),
+    stage: z
+      .object({
+        theme: z.string().regex(/^[a-z0-9-]{1,30}$/).optional(),
+        lights: z.boolean().optional(),
+        celebrate: z.boolean().optional(),
+        readTwice: z.boolean().optional(),
+      })
+      .optional(),
+  }),
   phrase: z.object({ phrase: z.string().max(120).optional(), requiredFor: scope }),
   player: newPlayer,
   playerEdit: z.object({ name: z.string().max(40).optional(), role: role.optional(), gradeBand: gradeBand.optional() }),
@@ -53,7 +68,12 @@ const schemas = {
     forPlayerId: z.string().max(60).optional(),
     questions: z.array(question).min(1).max(MAX_QUESTIONS),
   }),
-  packEdit: z.object({ title: z.string().max(80).optional(), kind: packKind.optional(), forPlayerId: z.string().max(60).nullable().optional() }),
+  packEdit: z.object({
+    title: z.string().max(80).optional(),
+    kind: packKind.optional(),
+    forPlayerId: z.string().max(60).nullable().optional(),
+    paused: z.boolean().optional(),
+  }),
   questions: z.object({ questions: z.array(question).min(1).max(MAX_QUESTIONS) }),
   question,
 };
@@ -88,6 +108,8 @@ export async function dashboard(hh: string) {
       nextReset: meta.periodStart ? nextPeriodStart(meta.periodStart, meta.resetSchedule) : null,
       phraseSet: !!meta.phraseHash,
       phraseRequiredFor: (meta.phraseRequiredFor ?? "spend") as PhraseScope,
+      pointSettings: meta.pointSettings,
+      stage: repo.stageSettings(state),
     },
     players: state.players.map((p) => ({
       playerId: p.playerId,
@@ -110,6 +132,7 @@ export async function dashboard(hh: string) {
         kind: p.kind,
         status: p.status,
         failReason: p.failReason ?? null,
+        paused: !!p.paused,
         questionCount: p.questionCount,
         remaining: Math.max(0, p.questionCount - p.usedCount),
         forPlayerId: p.forPlayerId ?? null,

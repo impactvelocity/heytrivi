@@ -55,8 +55,10 @@ import type {
   RoundMode,
   RoundResult,
   Scoreboard,
+  StageSettings,
   State,
 } from "./types.js";
+import { STAGE_DEFAULTS } from "./types.js";
 
 export class UserError extends Error {
   constructor(
@@ -297,12 +299,14 @@ export class Repo {
 
   async updateSettings(
     hh: string,
-    s: { showTitle?: string; timeZone?: string; resetSchedule?: ResetSchedule; pointSettings?: PointSettings },
+    s: { showTitle?: string; timeZone?: string; resetSchedule?: ResetSchedule; pointSettings?: PointSettings; stage?: Partial<StageSettings> },
   ): Promise<void> {
     const state = await this.load(hh);
     const set: Record<string, unknown> = {};
     if (s.showTitle !== undefined) set.showTitle = s.showTitle.trim().slice(0, 60);
     if (s.pointSettings) set.pointSettings = s.pointSettings;
+    // Stage settings merge, so one switch can change without sending them all.
+    if (s.stage && Object.keys(s.stage).length) set.stage = { ...state.meta.stage, ...s.stage };
     const tz = s.timeZone ?? state.meta.timeZone;
     if (!isValidTimeZone(tz)) throw new UserError(`Unknown time zone ${tz}.`);
     const schedule = s.resetSchedule ?? state.meta.resetSchedule;
@@ -500,7 +504,8 @@ export class Repo {
       if (pack.status !== "ready") throw new UserError(`The ${pack.title} pack isn't ready yet.`, "pack_not_ready");
       candidates = [pack];
     } else {
-      candidates = state.packs.filter((p) => p.status === "ready" && (p.kind === want || p.kind === "mixed"));
+      // A paused pack stays out of the mix; naming it above still plays it.
+      candidates = state.packs.filter((p) => p.status === "ready" && !p.paused && (p.kind === want || p.kind === "mixed"));
     }
     candidates = candidates.filter((p) => p.questionCount - p.usedCount > 0);
     // Newest packs first, so a freshly built pack gets played.
@@ -1004,7 +1009,11 @@ export class Repo {
     ]);
   }
 
-  async updatePack(hh: string, packId: string, p: { title?: string; forPlayerId?: string | null; kind?: PackKind }): Promise<void> {
+  async updatePack(
+    hh: string,
+    packId: string,
+    p: { title?: string; forPlayerId?: string | null; kind?: PackKind; paused?: boolean },
+  ): Promise<void> {
     const set: Record<string, unknown> = {};
     const remove: string[] = [];
     if (p.title !== undefined) {
@@ -1013,6 +1022,8 @@ export class Repo {
       set.title = title;
     }
     if (p.kind) set.kind = p.kind;
+    if (p.paused === true) set.paused = true;
+    if (p.paused === false) remove.push("paused");
     if (p.forPlayerId === null) remove.push("forPlayerId");
     else if (p.forPlayerId) set.forPlayerId = p.forPlayerId;
     if (!Object.keys(set).length && !remove.length) return;
@@ -1127,8 +1138,14 @@ export class Repo {
           remaining: Math.max(0, p.questionCount - p.usedCount),
           forPlayer: p.forPlayerId ? state.players.find((x) => x.playerId === p.forPlayerId)?.name : undefined,
           failReason: p.failReason,
+          paused: p.paused || undefined,
         }),
       );
+  }
+
+  /** The household's stage settings, with defaults for anything unset. */
+  stageSettings(state: Pick<State, "meta">): StageSettings {
+    return { ...STAGE_DEFAULTS, ...state.meta.stage };
   }
 }
 

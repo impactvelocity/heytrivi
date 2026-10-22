@@ -116,6 +116,30 @@ describe("parent API", () => {
     expect(r.json.household.phraseSet).toBe(false);
   });
 
+  it("saves show settings, and reading twice reaches the host through start_round", async () => {
+    let r = await api("/settings", { body: { stage: { readTwice: true, theme: "sunny" }, pointSettings: { correct: 2, partial: 1, wrong: 0 } } });
+    expect(r.json.household.stage).toEqual({ theme: "sunny", lights: true, celebrate: true, readTwice: true });
+    expect(r.json.household.pointSettings).toEqual({ correct: 2, partial: 1, wrong: 0 });
+    r = await api("/settings", { body: { stage: { lights: false } } });
+    expect(r.json.household.stage).toMatchObject({ theme: "sunny", lights: false, readTwice: true });
+    expect((await api("/settings", { body: { stage: { theme: "<script>" } } })).status).toBe(400);
+
+    const res = await app.request("/mcp", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json, text/event-stream", authorization: "Bearer dev-token-demo" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "start_round", arguments: { mode: "hosted" } } }),
+    });
+    expect(await res.text()).toContain("read the question twice");
+  });
+
+  it("pauses a pack and plays it again", async () => {
+    const trivia = (await api("/me")).json.packs.find((p: Json) => p.title === "Starter Trivia");
+    let r = await api(`/packs/${trivia.packId}`, { body: { paused: true } });
+    expect(r.json.packs.find((p: Json) => p.packId === trivia.packId).paused).toBe(true);
+    r = await api(`/packs/${trivia.packId}`, { body: { paused: false } });
+    expect(r.json.packs.find((p: Json) => p.packId === trivia.packId).paused).toBe(false);
+  });
+
   it("resets balances now and shows it in the points history", async () => {
     const r = await api("/reset", { body: {} });
     expect(r.json.players.every((p: Json) => p.balance === 0)).toBe(true);

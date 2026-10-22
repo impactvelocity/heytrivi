@@ -9,7 +9,7 @@
  * The model and provider are set up in lib/model.ts.
  */
 
-import { generateText, jsonSchema, tool, type ModelMessage, type ToolSet } from "ai";
+import { ToolChoiceViolationError, generateText, jsonSchema, tool, type ModelMessage, type ToolChoice, type ToolSet } from "ai";
 import { HOST_PROMPT, SAY_TOOL } from "@/lib/host-prompt";
 import { PROVIDER, languageModel, modelErrorMessage } from "@/lib/model";
 
@@ -33,16 +33,18 @@ export async function POST(req: Request) {
     const { $schema: _ignored, ...schema } = t.inputSchema as Record<string, unknown>;
     tools[t.name] = tool({ description: t.description, inputSchema: jsonSchema(schema as never) });
   }
+  const step = (toolChoice: ToolChoice<ToolSet>) =>
+    generateText({ model, system: HOST_PROMPT, messages: body.messages, tools, toolChoice, maxOutputTokens: 600, temperature: 0.4 });
   try {
-    const result = await generateText({
-      model,
-      system: HOST_PROMPT,
-      messages: body.messages,
-      tools,
-      toolChoice: body.forceTool && tools[body.forceTool] ? { type: "tool", toolName: body.forceTool } : "required",
-      maxOutputTokens: 600,
-      temperature: 0.4,
-    });
+    let result;
+    try {
+      result = await step(body.forceTool && tools[body.forceTool] ? { type: "tool", toolName: body.forceTool } : "required");
+    } catch (err) {
+      // Nova sometimes answers in plain text anyway. It meant to speak, so
+      // ask again with `say` required: its text still never reaches the speaker.
+      if (!ToolChoiceViolationError.isInstance(err)) throw err;
+      result = await step({ type: "tool", toolName: SAY_TOOL.name });
+    }
     return Response.json({
       text: result.text,
       toolCalls: result.toolCalls.map((c) => ({ toolCallId: c.toolCallId, toolName: c.toolName, input: c.input })),

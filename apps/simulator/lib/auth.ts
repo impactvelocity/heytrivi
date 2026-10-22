@@ -111,6 +111,17 @@ export async function accessToken(): Promise<string | undefined> {
 }
 
 /**
+ * The token for the parent API: the signed-in parent's, or, in local dev
+ * with no Cognito, the demo family's parent (`dev-user-demo`). That's the
+ * family /demo plays without signing in (dev-token-demo), so its settings
+ * drawer changes the same household. The MCP server accepts `dev-user-*`
+ * only in local mode, and with Cognito set there is no fallback.
+ */
+export async function parentToken(): Promise<string | undefined> {
+  return (await accessToken()) ?? (cognitoConfig() ? undefined : "dev-user-demo");
+}
+
+/**
  * A 303 redirect. Built by hand because Response.redirect() has immutable
  * headers, and Next.js adds the cookies set through cookies() to the response.
  */

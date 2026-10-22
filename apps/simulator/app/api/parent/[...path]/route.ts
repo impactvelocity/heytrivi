@@ -1,10 +1,12 @@
 /**
  * The parent page's calls, forwarded to the MCP server's /parent API with the
  * signed-in parent's access token. The token stays in an httpOnly cookie.
+ * The /demo settings drawer uses it too; locally, signed out, that's the demo
+ * family's parent (parentToken in lib/auth.ts).
  */
 
 import { cookies } from "next/headers";
-import { accessToken, clearTokens, parentApiBase } from "@/lib/auth";
+import { clearTokens, parentApiBase, parentToken } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +22,7 @@ async function forward(req: Request, ctx: { params: Promise<{ path: string[] }> 
     return Response.json({ error: "Not allowed" }, { status: 403 });
   }
 
-  const token = await accessToken();
+  const token = await parentToken();
   if (!token) return Response.json({ error: "Please sign in again." }, { status: 401 });
 
   let res: Response;

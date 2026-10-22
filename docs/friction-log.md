@@ -97,3 +97,13 @@ Entries here count toward the hackathon score. Add one every time a tool, SDK, o
 - Severity: major
 - Workaround: A `say` tool with `toolChoice: "required"`. Only `say`'s text is spoken and loose text is dropped (decisions #27). `<thinking>` tags are stripped as a backstop.
 - Suggestion: Keep reasoning out of the text content block, or document a setting that guarantees it for tool-using voice apps.
+
+### Nova 2 Lite ignores a required tool call
+- Tool / doc: Amazon Nova 2 Lite through the Vercel AI Gateway, AI SDK 7 `generateText` with `toolChoice: "required"`
+- Task attempted: Require a tool call on every host step, so speech always comes through the `say` tool (decisions #27).
+- Steps taken: Set `toolChoice: "required"` and played full rounds.
+- Expected: Every step calls a tool.
+- Actual: About one step in ten came back as plain text, and the AI SDK threw `AI_ToolChoiceViolationError: Model response did not contain a tool call even though tool choice was required.` The turn failed.
+- Severity: major
+- Workaround: On that error, ask again with `say` itself required (`toolChoice: { type: "tool", toolName: "say" }`). A plain-text answer means the model meant to speak, so this keeps the rule that only `say` is spoken.
+- Suggestion: Honor "any tool" tool choice for Nova on the gateway, or document that it's best effort.

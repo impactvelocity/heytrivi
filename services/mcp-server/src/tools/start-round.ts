@@ -39,10 +39,13 @@ export function registerStartRound(server: McpServer): void {
         const r = await repo.startRound(hh, state, { mode, packId: pack, stake, players, tiebreakOf });
         const who = r.players.length < state.players.length ? ` Only ${listNames(r.players)} answer.` : "";
         const forWhat = r.stake ? ` This round is for ${r.stake.label ?? r.stake.type}.` : "";
+        // A parent setting for little ones (stage.readTwice on the parent page).
+        const readTwice = repo.stageSettings(state).readTwice;
+        const twice = readTwice ? " Little ones are playing: read the question twice, slowly." : "";
         const text = r.needsHostQuestion
-          ? `Round ${r.roundId} is open. No unused pack questions are left, so ask your own question and pass it to record_round.${forWhat}${who}`
-          : `Ask: ${r.question}${forWhat}${who} (Answer key is in structured content. Don't say it until everyone has guessed.)`;
-        return ok({ ...r }, text);
+          ? `Round ${r.roundId} is open. No unused pack questions are left, so ask your own question and pass it to record_round.${forWhat}${who}${twice}`
+          : `Ask: ${r.question}${forWhat}${who}${twice} (Answer key is in structured content. Don't say it until everyone has guessed.)`;
+        return ok({ ...r, readTwice }, text);
       }),
   );
 }
