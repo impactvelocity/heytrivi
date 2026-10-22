@@ -2,15 +2,17 @@
  * The host loop, in the browser.
  *
  * Real model: the conversation lives here. Each step posts it to /api/model
- * (Nova 2 Lite via the AI Gateway or Bedrock), which returns either speech or tool calls. Tool calls run here
- * through the MCP client, so the protocol panel shows them, and the results go
- * back to the model until it answers (R10.3).
+ * (Nova 2 Lite via the AI Gateway or Bedrock), which returns tool calls. Game
+ * tool calls run here through the MCP client, so the protocol panel shows
+ * them, and the results go back to the model until it calls `say` (R10.3).
+ * Only `say`'s text is spoken; see SAY_TOOL in host-prompt.ts.
  *
  * Mock model (MOCK_MODEL=1): no model at all. Replay lines carry the host's
  * turn, which is played against the real MCP server.
  */
 
 import type { MockCall } from "@hey-trivi/replays";
+import { SAY_TOOL } from "./host-prompt";
 import { maskText } from "./mask";
 import { resultText, type LoggedMcpClient, type ToolResult } from "./mcp";
 
@@ -22,6 +24,17 @@ export interface HostEvents {
 }
 
 const MAX_STEPS = 8;
+
+/**
+ * Drop reasoning a model wraps in tags (Nova uses <thinking>), and unwrap a
+ * <response> block. An unclosed <thinking> drops everything after it.
+ */
+export function stripReasoning(text: string): string {
+  return text
+    .replace(/<(thinking|reasoning)>[\s\S]*?(<\/\1>|$)/gi, "")
+    .replace(/<\/?response>/gi, "")
+    .trim();
+}
 
 export class Host {
   private messages: Message[] = [];
@@ -70,10 +83,28 @@ export class Host {
         responseMessages: Message[];
       };
       this.messages.push(...out.responseMessages);
+      // Only `say` is spoken. Loose text is dropped: it can be the model's reasoning.
+      const sayCall = out.toolCalls.find((c) => c.toolName === SAY_TOOL.name);
+      const gameCalls = out.toolCalls.filter((c) => c.toolName !== SAY_TOOL.name);
+      const said = (call: { toolCallId: string }, value: string) => ({
+        type: "tool-result",
+        toolCallId: call.toolCallId,
+        toolName: SAY_TOOL.name,
+        output: { type: "text", value },
+      });
+      if (sayCall && !gameCalls.length) {
+        // Answer the call so the next turn's history stays valid.
+        this.messages.push({ role: "tool", content: [said(sayCall, "Spoken.")] });
+        return this.clean(String(sayCall.input?.text ?? ""));
+      }
+      // No tool call at all: older behavior, kept so a model that ignores the
+      // tool still talks. Reasoning tags are stripped in clean().
       if (!out.toolCalls.length) return this.clean(out.text);
 
-      const results = [];
-      for (const call of out.toolCalls) {
+      const results: unknown[] = [];
+      // `say` alongside game tools was decided before their results: not spoken.
+      if (sayCall) results.push(said(sayCall, "Not spoken. Call say again after reading the tool results."));
+      for (const call of gameCalls) {
         const r = await this.runTool(call.toolName, call.input ?? {});
         results.push({
           type: "tool-result",
@@ -101,7 +132,7 @@ export class Host {
 
   /** Keep spoken output plain and never let the parent phrase through. */
   private clean(text: string): string {
-    return maskText(text.replace(/[*_#`]+/g, "").trim(), this.mcp.secrets);
+    return maskText(stripReasoning(text).replace(/[*_#`]+/g, "").trim(), this.mcp.secrets);
   }
 
   private lookup(ref: string): unknown {

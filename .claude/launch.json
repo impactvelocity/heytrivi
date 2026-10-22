@@ -12,6 +12,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "simulator", "dev"],
       "port": 3000
+    },
+    {
+      "name": "simulator-3010",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["NEXT_DIST_DIR=.next-3010", "pnpm", "--filter", "simulator", "exec", "next", "dev", "-p", "3010"],
+      "port": 3010
     }
   ]
 }

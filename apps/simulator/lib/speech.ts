@@ -3,6 +3,8 @@
  * /api/speak, falling back to the browser's voice). (R10.3, R10.10)
  */
 
+import { measureAudio, stopLevels } from "./audio-levels";
+
 /** Common mishearings of the name, mapped back to it (R10.10). */
 const NAME_VARIANTS = "trivia|trevi|trivy|trivee|trivi|treavy|tree ?vee|tribe ?ee";
 const MISHEARINGS = [
@@ -66,9 +68,14 @@ export function listenOnce(onInterim: (text: string) => void): { done: Promise<s
 }
 
 let currentAudio: HTMLAudioElement | null = null;
+/** Ends the current Polly playback's promise; pausing fires no event. */
+let finishAudio: (() => void) | null = null;
 
-/** Speak text. Resolves when speech ends. */
-export async function speak(text: string, opts: { usePolly: boolean }): Promise<void> {
+/**
+ * Speak text. Resolves when speech ends. With `measure`, Polly's audio goes
+ * through the level analyser (lib/audio-levels.ts) so the orb can follow it.
+ */
+export async function speak(text: string, opts: { usePolly: boolean; measure?: boolean }): Promise<void> {
   stopSpeaking();
   if (!text.trim()) return;
   if (opts.usePolly) {
@@ -78,10 +85,14 @@ export async function speak(text: string, opts: { usePolly: boolean }): Promise<
         const url = URL.createObjectURL(await res.blob());
         const audio = new Audio(url);
         currentAudio = audio;
+        const measured = opts.measure ? await measureAudio(audio) : false;
         await new Promise<void>((resolve) => {
+          finishAudio = resolve;
           audio.onended = audio.onerror = () => resolve();
           audio.play().catch(() => resolve());
         });
+        finishAudio = null;
+        if (measured) stopLevels();
         URL.revokeObjectURL(url);
         return;
       }
@@ -101,5 +112,6 @@ export async function speak(text: string, opts: { usePolly: boolean }): Promise<
 export function stopSpeaking(): void {
   currentAudio?.pause();
   currentAudio = null;
+  finishAudio?.();
   if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
 }

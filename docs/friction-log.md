@@ -87,3 +87,13 @@ Entries here count toward the hackathon score. Add one every time a tool, SDK, o
 - Severity: minor
 - Workaround: Support both (a confidential client by default, `ALEXA_PUBLIC_CLIENT=1` for a public one), take redirect URLs from configuration, accept both protocol versions, and document the open questions in docs/alexa-plus.md.
 - Suggestion: List every regional redirect URL on the page, state the token endpoint's client authentication method, and show `accountLinking` in the full `addon.json` example.
+
+### Nova 2 Lite writes its reasoning into the spoken reply
+- Tool / doc: Amazon Nova 2 Lite through the Vercel AI Gateway, AI SDK 7 `generateText` with tools
+- Task attempted: Have the host model speak its reply after a `start_round` tool call that returned an answer key.
+- Steps taken: Took `result.text` from the final step as the speech, as the AI SDK tool-calling guides show.
+- Expected: Reasoning, if any, in a separate reasoning part; the text part only holds the reply.
+- Actual: Sometimes the text part held the model's plan: "The answer key says the Sun, but I must not reveal that yet." The speaker read the answer out loud. It didn't reproduce on short conversations, only mid-game.
+- Severity: major
+- Workaround: A `say` tool with `toolChoice: "required"`. Only `say`'s text is spoken and loose text is dropped (decisions #27). `<thinking>` tags are stripped as a backstop.
+- Suggestion: Keep reasoning out of the text content block, or document a setting that guarantees it for tool-using voice apps.
