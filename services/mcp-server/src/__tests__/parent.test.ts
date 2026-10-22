@@ -43,7 +43,7 @@ describe("parent API", () => {
   it("returns the dashboard for the demo family", async () => {
     const { status, json } = await api("/me");
     expect(status).toBe(200);
-    expect(json.household).toMatchObject({ showTitle: "The Jones Family Trivia Night", resetSchedule: "weekly", phraseSet: true });
+    expect(json.household).toMatchObject({ showTitle: "The Jones Family Trivia Night", resetSchedule: "weekly", phraseSet: true, demo: true });
     expect(json.household).not.toHaveProperty("phraseHash");
     expect(JSON.stringify(json)).not.toContain("phraseSalt");
     expect(json.players.map((p: Json) => p.name)).toEqual(["Dad", "John", "Mom", "Sally"]);
@@ -68,7 +68,7 @@ describe("parent API", () => {
       },
     });
     expect(created.status).toBe(200);
-    expect(created.json.household).toMatchObject({ showTitle: "Kitchen Table Trivia", resetSchedule: "monthly", phraseSet: false });
+    expect(created.json.household).toMatchObject({ showTitle: "Kitchen Table Trivia", resetSchedule: "monthly", phraseSet: false, demo: false });
     expect(created.json.players.map((p: Json) => [p.name, p.gradeBand])).toEqual([
       ["Ava", "K-2"],
       ["Mom", null],

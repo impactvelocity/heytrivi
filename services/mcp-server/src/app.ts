@@ -10,7 +10,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { createMcpHandler } from "mcp-handler";
 import { householdForRequest, unauthorized } from "./auth.js";
-import { runWithContext } from "./context.js";
+import { prepareHousehold, runWithContext } from "./context.js";
 import { oauthMetadata } from "./oauth.js";
 import { parentRoutes } from "./parent.js";
 import { registerTools } from "./tools/index.js";
@@ -58,6 +58,7 @@ export function createApp(): Hono {
   app.all("/mcp", async (c) => {
     const hh = await householdForRequest(c.req.raw);
     if (!hh) return unauthorized();
+    await prepareHousehold(hh);
     return runWithContext({ householdId: hh }, () => mcpHandler(c.req.raw));
   });
 

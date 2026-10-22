@@ -47,7 +47,7 @@ In a second terminal:
 pnpm --filter simulator dev
 ```
 
-Open http://localhost:3000 in Chrome (speech recognition needs Chrome). Tap to talk, or type.
+Open http://localhost:3000/demo in Chrome (speech recognition needs Chrome). Tap to talk, or type.
 
 Settings go in `apps/simulator/.env.local`:
 

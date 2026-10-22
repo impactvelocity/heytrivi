@@ -1,3 +1,4 @@
+export * from "./dashboard.js";
 export * from "./item-store.js";
 export * from "./memory-store.js";
 export * from "./repo.js";

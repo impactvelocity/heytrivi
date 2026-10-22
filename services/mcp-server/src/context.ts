@@ -7,7 +7,7 @@
  */
 
 import { AsyncLocalStorage } from "node:async_hooks";
-import { MemoryItemStore, Repo, seedDemo, DEMO_DEV_TOKEN, DEMO_HOUSEHOLD_ID, type ItemStore } from "@hey-trivi/store";
+import { MemoryItemStore, Repo, restoreDemoWhenIdle, seedDemo, DEMO_DEV_TOKEN, DEMO_HOUSEHOLD_ID, type ItemStore } from "@hey-trivi/store";
 import { DynamoItemStore } from "@hey-trivi/store/dynamo";
 
 export interface RequestContext {
@@ -42,7 +42,7 @@ export function getRepo(): Promise<Repo> {
     const db: ItemStore = table ? new DynamoItemStore(table) : new MemoryItemStore();
     const repo = new Repo(db);
     if (!table || process.env.SEED_DEMO === "1") {
-      await seedDemo(repo, { devToken: process.env.DEV_TOKEN || DEMO_DEV_TOKEN });
+      await seedDemo(repo, { devToken: process.env.DEV_TOKEN || DEMO_DEV_TOKEN, history: demoHistory() });
       // A second copy of the demo family for the latency test, so it never
       // disturbs the real demo household.
       await seedDemo(repo, { householdId: "bench", devToken: "dev-token-bench" });
@@ -52,6 +52,17 @@ export function getRepo(): Promise<Repo> {
     return repo;
   })();
   return repoPromise;
+}
+
+/** Local runs seed the demo family with two weeks of play; deployed ones start it fresh. */
+const demoHistory = () => !process.env.DYNAMODB_TABLE;
+
+/**
+ * Before a request for a household: the shared demo family goes back to how
+ * it was seeded once it has sat idle, so visitors' edits don't stay.
+ */
+export async function prepareHousehold(hh: string): Promise<void> {
+  if (hh === DEMO_HOUSEHOLD_ID) await restoreDemoWhenIdle(await getRepo(), { history: demoHistory() });
 }
 
 /** For tests: swap in a fresh repo. */

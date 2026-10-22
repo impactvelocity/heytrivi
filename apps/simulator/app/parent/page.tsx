@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ParentApp } from "@/components/parent/ParentApp";
 import { cognitoConfig, hasSession } from "@/lib/auth";
+import { demoOnly } from "@/lib/live-access";
 import "./parent.css";
 
 export const dynamic = "force-dynamic";
@@ -14,9 +15,8 @@ export default async function ParentPage({ searchParams }: { searchParams: Promi
   const { error } = await searchParams;
   return (
     <ParentApp
-      signedIn={await hasSession()}
+      signedIn={demoOnly() || (await hasSession())}
       cognito={!!cognitoConfig()}
-      mcpUrl={process.env.MCP_SERVER_URL ?? "http://localhost:4787/mcp"}
       error={error}
     />
   );

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { dateLabel, parentApi, type Dashboard, type PhraseScope, type ResetSchedule } from "@/lib/parent";
 import type { Run } from "./ParentApp";
-import { Connect } from "./Overview";
 import { TimeZoneSelect } from "./ui";
 
 const SCHEDULES: Array<[ResetSchedule, string, string]> = [
@@ -12,7 +11,7 @@ const SCHEDULES: Array<[ResetSchedule, string, string]> = [
   ["monthly", "Monthly", "On the 1st"],
 ];
 
-export function Settings({ data, run, mcpUrl }: { data: Dashboard; run: Run; mcpUrl: string }) {
+export function Settings({ data, run }: { data: Dashboard; run: Run }) {
   const h = data.household;
   const [confirmReset, setConfirmReset] = useState(false);
   const [phrase, setPhrase] = useState("");
@@ -39,7 +38,7 @@ export function Settings({ data, run, mcpUrl }: { data: Dashboard; run: Run; mcp
         <div className="pp-card-head">
           <h2 id="rs-h">Point reset</h2>
         </div>
-        <p className="pp-muted pp-semibold" style={{ marginBottom: 14 }}>
+        <p className="pp-muted pp-semibold" style={{ marginBottom: 18 }}>
           When balances go back to zero. All-time totals, owed chores, and themes stay put.
         </p>
         <div className="pp-seg" role="radiogroup" aria-label="Point reset">
@@ -58,7 +57,7 @@ export function Settings({ data, run, mcpUrl }: { data: Dashboard; run: Run; mcp
           ))}
         </div>
         <p className="pp-note">{note}</p>
-        <div className="pp-stack" style={{ marginTop: 16 }}>
+        <div className="pp-stack" style={{ marginTop: 22 }}>
           <label className="pp-field">
             Time zone
             <span className="pp-hint">Resets happen at midnight here, and history uses this time.</span>
@@ -98,7 +97,7 @@ export function Settings({ data, run, mcpUrl }: { data: Dashboard; run: Run; mcp
             <h2 id="ph-h">Parent phrase</h2>
             <span className={`pp-pill ${h.phraseSet ? "pp-kid" : ""}`}>{h.phraseSet ? "On" : "Off"}</span>
           </div>
-          <p className="pp-muted pp-semibold" style={{ marginBottom: 14 }}>
+          <p className="pp-muted pp-semibold" style={{ marginBottom: 18 }}>
             A phrase a parent says out loud before points are spent. Kids might overhear it, so change it now and then. We keep only a scrambled copy.
           </p>
           <form
@@ -176,7 +175,6 @@ export function Settings({ data, run, mcpUrl }: { data: Dashboard; run: Run; mcp
           </p>
         </section>
 
-        <Connect mcpUrl={mcpUrl} />
       </div>
     </div>
   );

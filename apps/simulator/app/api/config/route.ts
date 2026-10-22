@@ -10,12 +10,13 @@
  */
 
 import { accessToken } from "@/lib/auth";
-import { demoLockOn, liveAllowed } from "@/lib/live-access";
+import { demoLockOn, demoOnly, liveAllowed } from "@/lib/live-access";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const lockable = demoLockOn();
+  // With DEMO=1 there's no code to type, so the page offers no unlock.
+  const lockable = demoLockOn() && !demoOnly();
   if (!(await liveAllowed())) return Response.json({ locked: true, lockable, mcpUrl: "", token: "", account: "demo", mock: true });
   const token = await accessToken();
   return Response.json({

@@ -121,6 +121,10 @@ export interface StageSettings {
 export interface Dashboard {
   household: {
     householdId: string;
+    /** The shared demo family, which resets itself after sitting idle. */
+    demo: boolean;
+    /** DEMO=1: the built-in demo family, where saves change nothing (lib/demo-family.ts). */
+    readOnly?: boolean;
     showTitle: string;
     timeZone: string;
     resetSchedule: ResetSchedule;
@@ -158,13 +162,11 @@ export async function parentApi<T = Dashboard>(path: string, opts: { method?: "G
 // Display helpers
 // ---------------------------------------------------------------------------
 
-export const PLAYER_COLORS = ["var(--coral)", "var(--sky)", "var(--lavender)", "var(--butter)", "var(--mint)", "#f7a8d0", "#9fd8c4", "#ffb38a"];
-
 let palette = new Map<string, string>();
 
-/** Give each family member their own colour, in list order. Call when the dashboard loads. */
-export function setPalette(players: Array<{ playerId: string }>): void {
-  palette = new Map(players.map((p, i) => [p.playerId, PLAYER_COLORS[i % PLAYER_COLORS.length]!]));
+/** Each family member's colour, by player id (components/parent/ui.tsx works them out). Call when the dashboard loads. */
+export function setPalette(colors: Map<string, string>): void {
+  palette = colors;
 }
 
 export function playerColor(playerId: string): string {

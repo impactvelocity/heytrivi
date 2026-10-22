@@ -6,6 +6,7 @@ const dash = (): Dashboard =>
   ({
     household: {
       householdId: "demo",
+      demo: true,
       showTitle: "Jones Trivia Night",
       timeZone: "America/New_York",
       resetSchedule: "weekly",

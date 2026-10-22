@@ -15,7 +15,7 @@ export function SignInScreen({ cognito, error }: { cognito: boolean; error?: str
   return (
     <div className="pp-onboard">
       <div className="pp-card">
-        <span className="pp-logo pp-logo-lg" aria-hidden />
+        <span className="pp-logo" aria-hidden />
         <h2>Your family&apos;s Hey Trivi page</h2>
         <p className="pp-muted pp-lead">See who&apos;s ahead, what everyone answered, and choose when points reset. One account per family.</p>
         {error && SIGNIN_ERRORS[error] && <p className="pp-alert">{SIGNIN_ERRORS[error]}</p>}

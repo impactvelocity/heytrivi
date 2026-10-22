@@ -7,7 +7,7 @@
 
 import { z } from "zod";
 import { accessToken, parentApiBase } from "@/lib/auth";
-import { liveAllowed, lockedResponse } from "@/lib/live-access";
+import { demoOnly, liveAllowed, lockedResponse } from "@/lib/live-access";
 import { PROVIDER, languageModel, modelErrorMessage } from "@/lib/model";
 import { NotForKids, checkDraft, mockDraft, writeDraft } from "@/lib/pack-helper";
 
@@ -44,6 +44,15 @@ const fastModel = languageModel({ gateway: process.env.PACK_WRITER_MODEL_ID ?? "
 const carefulModel = languageModel({ gateway: process.env.PACK_FACT_MODEL_ID ?? "anthropic/claude-sonnet-5.5", bedrock: process.env.PACK_BEDROCK_MODEL_ID });
 
 export async function POST(req: Request) {
+  // DEMO=1: the parent page's demo gets the fixed sample, with no model call.
+  if (demoOnly()) {
+    const parsed = input.safeParse(await req.json().catch(() => undefined));
+    if (!parsed.success) return Response.json({ error: "Tell the helper what the questions should be about." }, { status: 400 });
+    const body = parsed.data;
+    return body.stage === "write"
+      ? Response.json({ draft: mockDraft(body), mock: true })
+      : Response.json({ checks: body.questions.map(() => ({ status: "agreed" })), mock: true });
+  }
   if (!(await liveAllowed())) return lockedResponse();
   // Only a signed-in parent may spend model calls. The parent API checks the token.
   const token = await accessToken();

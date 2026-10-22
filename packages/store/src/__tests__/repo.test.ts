@@ -1,6 +1,19 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
-import { DEMO_PARENT_PHRASE, MemoryItemStore, createFamily, PHRASE_LOCKED, PHRASE_NEEDED, Repo, UserError, seedDemo, type ItemStore } from "../index.js";
+import {
+  DEMO_IDLE_MS,
+  DEMO_MAX_AGE_MS,
+  DEMO_PARENT_PHRASE,
+  MemoryItemStore,
+  createFamily,
+  PHRASE_LOCKED,
+  PHRASE_NEEDED,
+  Repo,
+  UserError,
+  restoreDemoWhenIdle,
+  seedDemo,
+  type ItemStore,
+} from "../index.js";
 import { DynamoItemStore } from "../dynamo-store.js";
 
 // Set TEST_DYNAMO_TABLE to run the same tests against a real DynamoDB table.
@@ -487,5 +500,54 @@ describe("show settings", () => {
     await repo.updateSettings(HH, { stage: { readTwice: true } });
     await repo.updateSettings(HH, { stage: { theme: "sunny", lights: false } });
     expect(repo.stageSettings(await repo.load(HH))).toEqual({ theme: "sunny", lights: false, celebrate: true, readTwice: true });
+  });
+});
+
+describe("the shared demo family", () => {
+  const T = Date.parse("2026-10-07T18:00:00Z");
+  const restore = (at: number) => restoreDemoWhenIdle(repo, { householdId: HH, now: at });
+  const vandalize = async () => {
+    await repo.addPlayer(HH, await repo.load(HH), { name: "Rudename", role: "kid", gradeBand: "3-5" });
+    await repo.updateSettings(HH, { showTitle: "Something rude" });
+  };
+
+  it("goes back to how it was seeded after sitting idle", async () => {
+    expect(await restore(T)).toBe(false);
+    await vandalize();
+    expect(await restore(T + 5 * 60_000)).toBe(false);
+    expect((await repo.load(HH)).players.map((p) => p.name)).toContain("Rudename");
+
+    expect(await restore(T + 5 * 60_000 + DEMO_IDLE_MS)).toBe(true);
+    const s = await repo.load(HH);
+    expect(s.meta.showTitle).toBe("The Jones Family Trivia Night");
+    expect(s.players.map((p) => p.name)).toEqual(["Dad", "John", "Mom", "Sally"]);
+    expect(s.packs).toHaveLength(2);
+    // The dev token still opens it.
+    expect(await repo.householdForToken(`dev-token-${HH}`)).toBe(HH);
+  });
+
+  it("stays put while it's in use, until the hourly restore at a pause", async () => {
+    await restore(T);
+    await vandalize();
+    let at = T;
+    while (at < T + DEMO_MAX_AGE_MS) {
+      at += 60_000;
+      expect(await restore(at)).toBe(false);
+    }
+    expect(await restore(at + 3 * 60_000)).toBe(true);
+    expect((await repo.load(HH)).meta.showTitle).toBe("The Jones Family Trivia Night");
+  });
+
+  it("can start with two weeks of play that add up", async () => {
+    if (TABLE) return;
+    await seedDemo(repo, { householdId: "history", history: true });
+    const s = await repo.load("history");
+    const ledger = await repo.ledgerFor("history", 500);
+    expect((await repo.roundsFor("history")).length).toBeGreaterThan(10);
+    expect(ledger.some((e) => e.reason === "reset")).toBe(true);
+    for (const p of s.players) {
+      const sum = ledger.filter((e) => e.playerId === p.playerId).reduce((n, e) => n + e.change, 0);
+      expect(sum).toBe(p.balance);
+    }
   });
 });

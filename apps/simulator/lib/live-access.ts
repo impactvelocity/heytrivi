@@ -5,6 +5,9 @@
  * code unlocks live play for their browser (POST /api/unlock), which sets an
  * httpOnly cookie signed with the code. Changing the code locks everyone out
  * again. Without DEMO_UNLOCK_CODE (local development) everything is live.
+ *
+ * DEMO=1 locks the site for good: no code unlocks it, and the parent page
+ * shows a built-in demo family whose saves are only pretend (lib/demo-family.ts).
  */
 
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
@@ -17,8 +20,11 @@ export const LIVE_DAYS = 30;
 
 const code = () => process.env.DEMO_UNLOCK_CODE?.trim() ?? "";
 
+/** DEMO=1: the scripted demo only, never the real game server, model, or voice. */
+export const demoOnly = () => process.env.DEMO === "1";
+
 /** True when the site is locked to the scripted demo unless unlocked. */
-export const demoLockOn = () => code() !== "";
+export const demoLockOn = () => demoOnly() || code() !== "";
 
 const stamp = (c: string) => createHmac("sha256", c).update("heytrivi-live-v1").digest("base64url");
 
@@ -30,6 +36,7 @@ const same = (a: string, b: string) => {
 
 /** Whether this request may use live play: the lock is off, or the browser unlocked it. */
 export async function liveAllowed(): Promise<boolean> {
+  if (demoOnly()) return false;
   const c = code();
   if (!c) return true;
   const value = (await cookies()).get(LIVE_COOKIE)?.value;
@@ -39,7 +46,7 @@ export async function liveAllowed(): Promise<boolean> {
 /** Checks a typed code and, if it's right, unlocks this browser. */
 export async function unlock(typed: string): Promise<boolean> {
   const c = code();
-  if (!c || !same(typed.trim(), c)) return false;
+  if (demoOnly() || !c || !same(typed.trim(), c)) return false;
   (await cookies()).set(LIVE_COOKIE, stamp(c), cookieOptions(LIVE_DAYS * 24 * 3600));
   return true;
 }

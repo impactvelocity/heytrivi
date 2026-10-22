@@ -48,6 +48,34 @@ export function newLook(bg: string, n: number): Look {
   };
 }
 
+/** The same portrait for a name every time. */
+export function lookFor(name: string) {
+  let h = 0;
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return newLook(SWATCHES[h % SWATCHES.length]!, h % 97);
+}
+
+/**
+ * Portraits are saved on this device only, by player id. The store keeps a
+ * player to a first name, a role, and a grade band (packages/core types.ts),
+ * and a drawn likeness of a child is more than that.
+ */
+const LOOKS_KEY = "heytrivi.looks";
+export function savedLooks(): Record<string, Look> {
+  try {
+    return JSON.parse(localStorage.getItem(LOOKS_KEY) ?? "{}") as Record<string, Look>;
+  } catch {
+    return {};
+  }
+}
+export function saveLook(playerId: string, look: Look): void {
+  try {
+    localStorage.setItem(LOOKS_KEY, JSON.stringify({ ...savedLooks(), [playerId]: look }));
+  } catch {
+    // Private window: the look lasts until reload.
+  }
+}
+
 const look = (bg: string, skin: number, hair: HairStyle, hairColor: string, shirt: string): Look => ({
   bg,
   skin: SKIN[skin]!,

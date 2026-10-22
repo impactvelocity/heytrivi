@@ -4,39 +4,102 @@
     {
       "name": "mcp-server",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev:local"],
+      "runtimeArgs": [
+        "dev:local"
+      ],
       "port": 4787
     },
     {
       "name": "simulator",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "simulator", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "simulator",
+        "dev"
+      ],
       "port": 3000
     },
     {
       "name": "simulator-3010",
       "runtimeExecutable": "env",
-      "runtimeArgs": ["NEXT_DIST_DIR=.next-3010", "pnpm", "--filter", "simulator", "exec", "next", "dev", "-p", "3010"],
+      "runtimeArgs": [
+        "NEXT_DIST_DIR=.next-3010",
+        "pnpm",
+        "--filter",
+        "simulator",
+        "exec",
+        "next",
+        "dev",
+        "-p",
+        "3010"
+      ],
       "port": 3010
     },
     {
       "name": "simulator-3040",
       "runtimeExecutable": "env",
-      "runtimeArgs": ["NEXT_DIST_DIR=.next-3040", "pnpm", "--filter", "simulator", "exec", "next", "dev", "-p", "3040"],
+      "runtimeArgs": [
+        "NEXT_DIST_DIR=.next-3040",
+        "pnpm",
+        "--filter",
+        "simulator",
+        "exec",
+        "next",
+        "dev",
+        "-p",
+        "3040"
+      ],
       "port": 3040,
       "autoPort": false
     },
     {
       "name": "simulator-3020",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "simulator", "exec", "next", "dev", "-p", "3020"],
+      "runtimeArgs": [
+        "--filter",
+        "simulator",
+        "exec",
+        "next",
+        "dev",
+        "-p",
+        "3020"
+      ],
       "port": 3020
     },
     {
       "name": "simulator-locked-3050",
       "runtimeExecutable": "env",
-      "runtimeArgs": ["NEXT_DIST_DIR=.next-3050", "DEMO_UNLOCK_CODE=local-test-7427a785", "pnpm", "--filter", "simulator", "exec", "next", "dev", "-p", "3050"],
+      "runtimeArgs": [
+        "NEXT_DIST_DIR=.next-3050",
+        "DEMO_UNLOCK_CODE=local-test-7427a785",
+        "pnpm",
+        "--filter",
+        "simulator",
+        "exec",
+        "next",
+        "dev",
+        "-p",
+        "3050"
+      ],
       "port": 3050,
+      "autoPort": false
+    },
+    {
+      "name": "simulator-demo-3060",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "NEXT_DIST_DIR=.next-3060",
+        "DEMO=1",
+        "pnpm",
+        "--filter",
+        "simulator",
+        "exec",
+        "next",
+        "dev",
+        "-p",
+        "3060"
+      ],
+      "port": 3060,
       "autoPort": false
     }
   ]

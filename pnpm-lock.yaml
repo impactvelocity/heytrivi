@@ -29,9 +29,15 @@ importers:
       '@aws-sdk/credential-providers':
         specifier: ^3.1148.0
         version: 3.1148.0
+      '@hey-trivi/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@hey-trivi/replays':
         specifier: workspace:*
         version: link:../../scripts/replays
+      '@hey-trivi/store':
+        specifier: workspace:*
+        version: link:../../packages/store
       '@modelcontextprotocol/client':
         specifier: ^2.3.1
         version: 2.3.1

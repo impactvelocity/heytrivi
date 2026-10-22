@@ -8,12 +8,14 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { SignedOut, parentApi, setPalette, type Dashboard } from "@/lib/parent";
+import { ChevronRight } from "@/components/demo/icons";
+import { SignedOut, parentApi, type Dashboard } from "@/lib/parent";
 import { PointsHistory, QuestionHistory } from "./History";
 import { SetupScreen, SignInScreen } from "./Onboarding";
 import { Overview } from "./Overview";
 import { PacksTab } from "./Packs";
 import { Settings } from "./Settings";
+import { setFamily } from "./ui";
 
 export type Run = (call: () => Promise<Dashboard>, done?: string) => Promise<boolean>;
 
@@ -29,11 +31,10 @@ type Tab = (typeof TABS)[number][0];
 interface Props {
   signedIn: boolean;
   cognito: boolean;
-  mcpUrl: string;
   error?: string;
 }
 
-export function ParentApp({ signedIn, cognito, mcpUrl, error }: Props) {
+export function ParentApp({ signedIn, cognito, error }: Props) {
   const [phase, setPhase] = useState<"signin" | "loading" | "setup" | "dashboard" | "down">(signedIn ? "loading" : "signin");
   const [data, setData] = useState<Dashboard | null>(null);
   const [tab, setTab] = useState<Tab>("overview");
@@ -52,7 +53,8 @@ export function ParentApp({ signedIn, cognito, mcpUrl, error }: Props) {
         const d = await call();
         setData(d);
         setPhase("dashboard");
-        if (done) say(done);
+        // The DEMO=1 demo family keeps nothing, so the message says so.
+        if (done) say(d.household.readOnly ? `${done} (demo, not saved)` : done);
         return true;
       } catch (err) {
         if (err instanceof SignedOut) setPhase("signin");
@@ -91,7 +93,7 @@ export function ParentApp({ signedIn, cognito, mcpUrl, error }: Props) {
     return () => window.removeEventListener("hashchange", fromHash);
   }, []);
 
-  if (data) setPalette(data.players);
+  if (data) setFamily(data.players);
 
   const pickTab = (t: Tab) => {
     setTab(t);
@@ -121,19 +123,15 @@ export function ParentApp({ signedIn, cognito, mcpUrl, error }: Props) {
         {phase === "dashboard" && data && (
           <>
             <header className="pp-top">
-              <div className="pp-brand">
-                <span className="pp-logo" aria-hidden />
-                <div>
-                  <h1>{data.household.showTitle}</h1>
-                  <div className="pp-sub">Hey Trivi parent page</div>
-                </div>
-              </div>
-              <div className="pp-row">
-                <a className="pp-btn pp-btn-quiet" href="/">
-                  Open the simulator
+              <div className="pp-title">
+                <a className="pp-btn pp-home" href="/" aria-label="Back to Hey Trivi" title="Back to Hey Trivi">
+                  <ChevronRight width={20} height={20} />
                 </a>
-                <SignOutButton />
+                <h1>{data.household.showTitle}</h1>
               </div>
+              <a className="pp-btn pp-btn-quiet" href="/demo">
+                Open the game show
+              </a>
             </header>
             <nav className="pp-tabs" role="tablist" aria-label="Sections">
               {TABS.map(([k, label]) => (
@@ -142,11 +140,21 @@ export function ParentApp({ signedIn, cognito, mcpUrl, error }: Props) {
                 </button>
               ))}
             </nav>
-            {tab === "overview" && <Overview data={data} run={run} mcpUrl={mcpUrl} />}
+            {tab === "overview" && <Overview data={data} run={run} />}
             {tab === "packs" && <PacksTab data={data} run={run} />}
             {tab === "points" && <PointsHistory data={data} />}
             {tab === "questions" && <QuestionHistory data={data} />}
-            {tab === "settings" && <Settings data={data} run={run} mcpUrl={mcpUrl} />}
+            {tab === "settings" && <Settings data={data} run={run} />}
+            {data.household.demo && (
+              <footer className="pp-demo-note">
+                <b>Demo</b>
+                <span>
+                  {data.household.readOnly
+                    ? "This is a demo of the parent page, so changes here aren't saved. In the real app, everything here is also controlled through the Hey Trivi MCP server: a change made by voice shows up here, and a change here reaches the game."
+                    : "This is a demo of the parent page. Everything here is also controlled through the Hey Trivi MCP server, so a change made by voice shows up here, and a change here reaches the game. The demo family goes back to how it started after ten quiet minutes."}
+                </span>
+              </footer>
+            )}
           </>
         )}
       </div>

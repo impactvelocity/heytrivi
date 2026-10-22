@@ -2,11 +2,14 @@
  * The parent page's calls, forwarded to the MCP server's /parent API with the
  * signed-in parent's access token. The token stays in an httpOnly cookie.
  * The /demo settings drawer uses it too; locally, signed out, that's the demo
- * family's parent (parentToken in lib/auth.ts).
+ * family's parent (parentToken in lib/auth.ts). With DEMO=1 the calls never
+ * leave this app: lib/demo-family.ts answers them, and saves change nothing.
  */
 
 import { cookies } from "next/headers";
 import { clearTokens, parentApiBase, parentToken } from "@/lib/auth";
+import { demoParentApi } from "@/lib/demo-family";
+import { demoOnly } from "@/lib/live-access";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +18,7 @@ const PATH = /^[a-z0-9_-]+(\/[a-z0-9_-]+){0,3}$/i;
 async function forward(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const path = (await ctx.params).path.join("/");
   if (!PATH.test(path)) return Response.json({ error: "Not found" }, { status: 404 });
+  if (demoOnly()) return demoParentApi(req.method, path);
 
   // Changes must come from this site's own pages.
   const origin = req.headers.get("origin");

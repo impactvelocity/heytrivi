@@ -11,14 +11,11 @@ export function periodLabel(d: Dashboard): string {
   return `${resetSchedule === "weekly" ? "This week" : "This month"} · resets ${dateLabel(nextReset)}`;
 }
 
-export function Overview({ data, run, mcpUrl }: { data: Dashboard; run: Run; mcpUrl: string }) {
+export function Overview({ data, run }: { data: Dashboard; run: Run }) {
   return (
     <div className="pp-grid pp-grid-2">
       <Leaderboard data={data} />
-      <div className="pp-grid">
-        <Family data={data} run={run} />
-        <Connect mcpUrl={mcpUrl} compact />
-      </div>
+      <Family data={data} run={run} />
     </div>
   );
 }
@@ -41,7 +38,7 @@ function Leaderboard({ data }: { data: Dashboard }) {
           {ps.map((p, i) => (
             <li key={p.playerId} className={p.playerId === lead ? "pp-lead" : ""}>
               <span className="pp-rank pp-num">{i + 1}</span>
-              <Avatar player={p} />
+              <Avatar player={p} rank={i} of={ps.length} />
               <div style={{ minWidth: 0 }}>
                 <div className="pp-name">
                   {p.name}
@@ -219,50 +216,6 @@ function Family({ data, run }: { data: Dashboard; run: Run }) {
         </button>
       </form>
       <p className="pp-privacy">For kids we keep a first name and a grade band. No birthdays, no recordings.</p>
-    </section>
-  );
-}
-
-export function Connect({ mcpUrl, compact }: { mcpUrl: string; compact?: boolean }) {
-  const [copied, setCopied] = useState(false);
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(mcpUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      const el = document.getElementById("mcp-url");
-      if (el) getSelection()?.selectAllChildren(el);
-    }
-  };
-  return (
-    <section className="pp-card pp-connect" aria-labelledby="cn-h">
-      <div className="pp-card-head">
-        <h2 id="cn-h">Your assistant</h2>
-      </div>
-      <p className="pp-semibold">Every family uses the same server address. Signing in tells it which family you are.</p>
-      <div className="pp-url">
-        <code id="mcp-url">{mcpUrl}</code>
-        <button type="button" onClick={copy}>
-          {copied ? "Copied" : "Copy"}
-        </button>
-      </div>
-      {!compact && (
-        <ol className="pp-steps">
-          <li>In your assistant, add Hey Trivi as an MCP server with this address.</li>
-          <li>When it asks you to sign in, use this Hey Trivi account.</li>
-          <li>Say &ldquo;Let&apos;s play Hey Trivi.&rdquo; Your family and scores are already there.</li>
-        </ol>
-      )}
-      <div className="pp-linked">
-        <span className="pp-semibold">
-          <span className="pp-dot" />
-          The simulator plays as your family while you&apos;re signed in here.
-        </span>
-        <a className="pp-btn pp-btn-quiet" href="/">
-          Try it
-        </a>
-      </div>
     </section>
   );
 }

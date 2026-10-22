@@ -1,0 +1,704 @@
+/*
+ * The landing page (/). It sits inside .dm[data-skin="duo"] so it
+ * reads the demo stage's tokens (demo.css, then duo.css) and borrows its
+ * frame, bulbs, and logo; everything here is prefixed lp-. The Duo rules
+ * apply: flat fills, 1.5px borders with a thick bottom edge, buttons that
+ * press down, and Nunito at its heaviest.
+ */
+
+.lp {
+  --wrap: 1120px;
+  --gutter: 24px;
+  /* How far the video rises into the hero (Tailwind's -mt-48). The hero's
+     bottom padding grows by the same amount so nothing gets covered. */
+  --overlap: 12rem;
+  /* The nav's height. The hero slides up under the see-through nav by this
+     much, so the nav blurs the hero, not the white page. */
+  --nav-h: 68px;
+  background: #fff;
+  color: var(--eel);
+  overflow-x: clip;
+}
+
+/* Everything below the hero is Duo's light mode: white page and cards, grey
+   lines, and darker text. Only the tokens change, so the same rules draw it. */
+/* duo.css paints .dm with the night color; the page under the hero is white. */
+.dm[data-skin="duo"].lp {
+  background: #fff;
+}
+.dm .lp-light {
+  --eel: #3c3c3c;
+  --wolf: #6f6f78;
+  --hare: #a3a3ad;
+  --swan: #e5e5e5;
+  --polar: #f2f0f6;
+  --night: #f7f7f7;
+  --night-card: #fff;
+  --night-ink: #4b4b4b;
+  --brand-ink: var(--acc-ink);
+  --sel-bg: var(--acc-l);
+  --sel-line: color-mix(in srgb, var(--acc) 55%, #fff);
+  --lead-bg: var(--acc-l);
+  color: var(--eel);
+}
+/* Selected text gets a see-through purple highlight, not the browser's dark default. */
+.lp ::selection {
+  background: rgb(206 130 255 / 0.35);
+  color: inherit;
+}
+.lp a {
+  color: inherit;
+  text-decoration: none;
+}
+.lp h1,
+.lp h2,
+.lp h3,
+.lp p {
+  margin: 0;
+}
+.lp-wrap {
+  width: min(var(--wrap), 100% - var(--gutter) * 2);
+  margin-inline: auto;
+}
+
+/* --------------------------------------------------------------- buttons */
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 22px;
+  border-radius: 16px;
+  background: var(--brand);
+  color: #fff !important;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 0 var(--brand-d);
+  transition: filter 0.15s, transform 0.08s, box-shadow 0.08s;
+  white-space: nowrap;
+}
+.lp-btn:hover {
+  filter: brightness(1.07);
+}
+.lp-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 var(--brand-d);
+}
+.lp-btn:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 3px;
+}
+.lp-btn-sm {
+  padding: 9px 16px;
+  border-radius: 14px;
+  font-size: 14.5px;
+  box-shadow: 0 3px 0 var(--brand-d);
+}
+.lp-btn-sm:active {
+  transform: translateY(3px);
+}
+.lp-btn-lg {
+  padding: 16px 26px;
+  border-radius: 18px;
+  font-size: 17px;
+}
+.lp-btn-ghost {
+  background: var(--night-card);
+  border: 1.5px solid var(--swan);
+  color: var(--eel) !important;
+  box-shadow: 0 4px 0 var(--swan);
+}
+.lp-btn-ghost:active {
+  box-shadow: 0 0 0 var(--swan);
+}
+
+/* A raised card, the way the demo draws them. */
+.lp-card {
+  background: var(--night-card);
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 5px;
+  border-radius: 22px;
+}
+
+/* ------------------------------------------------------------------- nav */
+
+.lp-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--night) 90%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1.5px solid color-mix(in srgb, var(--swan) 45%, transparent);
+  margin-bottom: calc(var(--nav-h) * -1);
+}
+.lp-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: var(--nav-h);
+}
+.lp-logo {
+  color: var(--eel) !important;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+.lp-logo b {
+  font-weight: 900;
+  color: var(--acc);
+}
+.lp-nav-links {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.lp-nav-links a {
+  padding: 8px 14px;
+  border-radius: 12px;
+  color: var(--wolf);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+.lp-nav .lp-btn {
+  letter-spacing: 0.04em;
+}
+.lp-nav-links a:hover {
+  color: var(--eel);
+  background: var(--sel-bg);
+}
+
+/* ------------------------------------------------------------------ hero */
+
+/* The hero is its own dark band on the quiz-night stage from the demo
+   (StageBackdrop), with rounded bottom corners over the white page. */
+.lp-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: calc(var(--nav-h) + clamp(56px, 8vw, 104px)) 0 calc(var(--overlap) + clamp(56px, 7vw, 96px));
+  border-radius: 0 0 clamp(28px, 3.5vw, 40px) clamp(28px, 3.5vw, 40px);
+  background: var(--night);
+  /* Three rings in the stage colors trace the rounded bottom edge like a
+     game-show set, from the frame purple out to pink and gold. */
+  box-shadow:
+    inset 0 -6px 0 var(--acc-d),
+    0 8px 0 var(--acc),
+    0 16px 0 var(--pop-1),
+    0 24px 0 var(--pop-3);
+}
+.lp-hero > .dm-bd {
+  z-index: -1;
+}
+/* The demo sizes the floating icons to its stage; a wide hero would make
+   them huge, so cap them. */
+.lp-hero .dm-quiz {
+  font-size: calc(min(7cqw, 76px) * var(--k));
+}
+.lp-hero .dm-quiz-icon svg {
+  width: calc(min(7cqw, 64px) * var(--k));
+  height: calc(min(7cqw, 64px) * var(--k));
+}
+.lp-hero-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: center;
+  gap: 48px;
+}
+.lp-eyebrow {
+  color: var(--brand-ink);
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.lp-h1 {
+  margin-top: 22px !important;
+  font-size: clamp(42px, 6.2vw, 74px);
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+.lp-h1 em {
+  font-style: normal;
+  color: var(--acc);
+  background: linear-gradient(100deg, var(--acc), var(--pop-1) 60%, var(--pop-3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.lp-lede {
+  margin-top: 20px !important;
+  max-width: 34em;
+  color: var(--wolf);
+  font-size: clamp(17px, 1.6vw, 20px);
+  font-weight: 700;
+  line-height: 1.55;
+}
+.lp-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 16px;
+  margin-top: 32px;
+}
+.lp-fine {
+  margin-top: 18px !important;
+  color: var(--hare);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.lp-hero-art {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  padding-top: 8px;
+}
+.lp-hero-glow {
+  --s: clamp(150px, 17vw, 210px);
+  position: relative;
+  z-index: 2;
+  margin-bottom: -26px;
+  filter: drop-shadow(0 18px 30px rgb(0 0 0 / 0.45));
+}
+.lp-bubble {
+  position: relative;
+  padding: 12px 16px;
+  border-radius: 18px;
+  background: var(--night-card);
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 4px;
+  color: var(--eel);
+  font-weight: 700;
+  font-size: 15.5px;
+  line-height: 1.45;
+}
+.lp-bubble b {
+  color: var(--green);
+  font-weight: 900;
+}
+.lp-bubble-hero {
+  position: absolute;
+  top: 10px;
+  right: -8px;
+  z-index: 3;
+  max-width: 220px;
+  background: #fff;
+  border-color: #fff;
+  border-bottom-color: #d9cdf0;
+  color: #2a1450;
+  rotate: 3deg;
+  transform-origin: 20% 100%;
+  /* Each new line Trivi says pops in; the bubble is re-keyed per step. */
+  animation: lp-bubble-pop 0.42s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+@keyframes lp-bubble-pop {
+  from { opacity: 0; scale: 0.7; }
+}
+.lp-bubble-hero b {
+  color: #3d8a00;
+}
+.lp-bubble-hero::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  bottom: -12px;
+  border: 8px solid transparent;
+  border-top: 10px solid #fff;
+  border-left-width: 2px;
+}
+
+.lp-board {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 380px);
+  /* No card behind the rows: they sit straight on the stage. */
+  padding-top: 14px;
+}
+.lp-board-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 6px 16px !important;
+  color: var(--wolf);
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.lp-board-title svg {
+  color: var(--yellow);
+}
+/* The rows are the demo's leaderboard rows (.dm-row in demo.css and
+   duo.css), a size smaller. They're placed by rank, so a row slides past the
+   others when points land. ROW in Landing.tsx is the row height plus the gap. */
+.lp-board-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dm .lp-board .dm-row {
+  height: 60px;
+  grid-template-columns: 24px 40px minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 0 14px 0 10px;
+  border-radius: 16px;
+}
+.dm .lp-board .dm-rank {
+  font-size: 16px;
+}
+.dm .lp-board .dm-row-lead .dm-rank {
+  color: var(--yellow);
+}
+.dm .lp-board .dm-row-name {
+  font-size: 17px;
+}
+.dm .lp-board .dm-meter {
+  height: 8px;
+}
+.dm .lp-board .dm-score {
+  font-size: 20px;
+}
+.dm .lp-board .dm-flash {
+  top: -12px;
+}
+
+/* -------------------------------------------------------------- sections */
+
+.lp-section {
+  padding: clamp(56px, 8vw, 96px) 0;
+  scroll-margin-top: 60px;
+}
+.lp-head {
+  max-width: 680px;
+  margin: 0 auto clamp(32px, 4vw, 48px);
+  text-align: center;
+}
+.lp-head h2 {
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.lp-head p:last-child {
+  text-wrap: pretty;
+  margin-top: 14px;
+  color: var(--wolf);
+  font-size: 17.5px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+/* ----------------------------------------------------------------- video */
+
+/* The video spans the content column and rises into the hero. */
+.lp-video {
+  position: relative;
+  z-index: 1;
+  margin-top: calc(var(--overlap) * -1);
+  padding-top: 0;
+}
+.dm .lp-frame {
+  min-height: 0;
+}
+/* The demo's frame shadow is built for a dark page; on white it reads too
+   heavy, so keep the pressed edge and soften the drop. */
+.dm[data-skin="duo"] .lp-frame {
+  box-shadow:
+    0 8px 0 var(--acc-d),
+    0 14px 24px rgb(23 10 48 / 0.16),
+    0 30px 60px rgb(23 10 48 / 0.18);
+}
+/* The video screen stays a night stage on the white page. */
+.dm .lp-screen {
+  --night: #170a30;
+  --eel: #f4f0fb;
+  --wolf: #b7aecb;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  background: var(--night);
+  color: var(--eel);
+}
+.lp-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(118deg, transparent 0 90px, rgb(255 255 255 / 0.035) 90px 180px);
+  pointer-events: none;
+}
+.lp-screen iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.lp-poster {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  padding: 20px;
+  text-align: center;
+  background: radial-gradient(ellipse 60% 70% at 50% 40%, color-mix(in srgb, var(--acc) 30%, transparent), transparent 75%);
+}
+.lp-poster-glow {
+  --s: clamp(90px, 16vw, 150px);
+}
+.lp-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 22px 12px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: #2a1450 !important;
+  font: inherit;
+  font-weight: 900;
+  font-size: 16px;
+  box-shadow: 0 4px 0 #c9b9ea;
+  cursor: pointer;
+}
+.lp-play:active {
+  transform: translateY(4px);
+  box-shadow: none;
+}
+.lp-play-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+.lp-play-icon::after {
+  content: "";
+  margin-left: 3px;
+  border: 7px solid transparent;
+  border-left: 11px solid #fff;
+  border-right-width: 0;
+}
+.lp-poster-cap {
+  color: var(--wolf);
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+/* --------------------------------------------------------------- made by */
+
+/* Who made it, with a photo and social links (as on loro.sh). */
+.lp-made {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--wolf);
+  font-size: 15px;
+  font-weight: 700;
+}
+.lp-hero .lp-made {
+  margin-top: 26px;
+}
+.lp-made img {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 1.5px var(--swan);
+}
+.lp-made p a {
+  color: var(--eel);
+  font-weight: 900;
+  text-decoration: underline;
+  text-decoration-color: var(--swan);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.2s;
+}
+.lp-made p a:hover {
+  text-decoration-color: var(--acc);
+}
+.lp-made-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--hare) !important;
+  transition: background 0.2s, color 0.2s;
+}
+.lp-made p + .lp-made-icon {
+  margin-left: 4px;
+}
+.lp-made-icon:hover {
+  background: var(--sel-bg);
+  color: var(--eel) !important;
+}
+
+/* ---------------------------------------------------------------- footer */
+
+/* The footer is a dark band again, a bookend to the hero: rounded top
+   corners with the same three rings, purple, pink, and gold. */
+.lp-footer {
+  margin-top: 32px;
+  padding: clamp(56px, 7vw, 88px) 0 44px;
+  border-radius: clamp(28px, 3.5vw, 40px) clamp(28px, 3.5vw, 40px) 0 0;
+  background:
+    radial-gradient(900px 420px at 50% 0%, color-mix(in srgb, var(--acc) 22%, transparent), transparent 70%),
+    var(--night);
+  box-shadow:
+    0 -8px 0 var(--acc),
+    0 -16px 0 var(--pop-1),
+    0 -24px 0 var(--pop-3);
+}
+/* The last call to play, straight on the footer's night: Trivi, a line, a button. */
+.lp-final {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.lp-final-glow {
+  --s: 120px;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 16px 26px rgb(0 0 0 / 0.45));
+}
+.lp-final h2 {
+  font-size: clamp(32px, 4.4vw, 52px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.lp-final p {
+  color: var(--wolf);
+  font-size: 18px;
+  font-weight: 800;
+}
+.lp-final .lp-btn {
+  margin-top: 18px;
+}
+.lp-foot-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  margin-top: 44px;
+  padding-top: 28px;
+  border-top: 1.5px solid var(--swan);
+}
+.lp-foot-brand {
+  display: grid;
+  gap: 12px;
+}
+.lp-foot-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin-left: auto;
+}
+.lp-foot-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 12px 9px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 4px;
+  color: var(--eel);
+  font-weight: 900;
+  font-size: 14.5px;
+  letter-spacing: 0.02em;
+  transition: border-color 0.2s;
+}
+.lp-foot-links a:hover {
+  border-color: var(--acc);
+}
+.lp-foot-fine a {
+  color: var(--wolf);
+  text-decoration: underline;
+  text-decoration-color: var(--swan);
+  text-underline-offset: 3px;
+}
+.lp-foot-fine a:hover {
+  color: var(--eel);
+}
+.lp-foot-fine {
+  margin-top: 18px !important;
+  color: var(--hare);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* ------------------------------------------------------------ responsive */
+
+@media (max-width: 960px) {
+  .lp-hero-grid {
+    grid-template-columns: 1fr;
+  }
+  .lp-hero-art {
+    max-width: 420px;
+    width: 100%;
+    margin-inline: auto;
+  }
+  /* Five section links don't fit beside the logo and button; the button stays. */
+  .lp-nav-links {
+    display: none;
+  }
+  .lp-nav-row {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 640px) {
+  .lp {
+    --gutter: 16px;
+    --overlap: 6rem;
+    --nav-h: 60px;
+  }
+  .lp-logo {
+    font-size: 18px;
+  }
+  .lp-ctas .lp-btn {
+    width: 100%;
+  }
+  .lp-bubble-hero {
+    right: 0;
+    max-width: 180px;
+    font-size: 14px;
+  }
+  .lp-final .lp-btn {
+    width: 100%;
+  }
+  .lp-foot-links {
+    margin-left: 0;
+  }
+  /* A phone-width 16:9 screen only fits the play button. */
+  .lp-poster-glow,
+  .lp-poster-cap {
+    display: none;
+  }
+  .lp-play {
+    padding: 8px 16px 8px 8px;
+    font-size: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-btn,
+  .lp-play {
+    transition: none;
+  }
+  .lp-bubble-hero {
+    animation: none;
+  }
+}

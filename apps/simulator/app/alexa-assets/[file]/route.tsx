@@ -35,7 +35,7 @@ const C = {
   night2: "#3a3058",
 };
 
-/** The speaker from components/Speaker.tsx with fixed colours, ring lit mint. */
+/** The smart-speaker drawing, with fixed colours, ring lit mint. */
 function speakerSvg(): string {
   const body = "M24 120 C24 52 72 36 140 36 C208 36 256 52 256 120 L256 190 C256 236 214 252 140 252 C66 252 24 236 24 190 Z";
   const ring = "M30 196 C34 234 76 246 140 246 C204 246 246 234 250 196";

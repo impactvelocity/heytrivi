@@ -6,8 +6,10 @@
  * so judges can try a protected spend. Change it on the parent page.
  */
 
-import type { Repo } from "./repo.js";
-import type { Difficulty } from "./types.js";
+import { periodStartFor, type Stake, type Verdict } from "@hey-trivi/core";
+import { ConditionFailedError, type Write } from "./item-store.js";
+import { Repo } from "./repo.js";
+import type { Difficulty, RoundMode } from "./types.js";
 
 export const DEMO_HOUSEHOLD_ID = "demo";
 export const DEMO_PARENT_PHRASE = "purple pancakes";
@@ -69,28 +71,229 @@ export async function createFamily(repo: Repo, input: Parameters<Repo["createHou
   return hh;
 }
 
-/** Create the demo household if it doesn't exist. Safe to call repeatedly. */
-export async function seedDemo(repo: Repo, opts: { householdId?: string; devToken?: string } = {}): Promise<string> {
+const DEMO_FAMILY = {
+  showTitle: "The Jones Family Trivia Night",
+  timeZone: "America/New_York",
+  resetSchedule: "weekly" as const,
+  players: [
+    { playerId: "mom", name: "Mom", role: "parent" as const, balance: 6, lifetime: 11, streak: 1 },
+    { playerId: "dad", name: "Dad", role: "parent" as const, balance: 4, lifetime: 9 },
+    { playerId: "sally", name: "Sally", role: "kid" as const, gradeBand: "3-5" as const, balance: 3, lifetime: 6, streak: 1 },
+    { playerId: "john", name: "John", role: "kid" as const, gradeBand: "6-8" as const, balance: 5, lifetime: 8 },
+  ],
+};
+
+/**
+ * Create the demo household if it doesn't exist. Safe to call repeatedly.
+ * With `history`, the family is made two weeks ago and plays its way to today
+ * (see playDemoHistory), so the parent page has points and questions to show.
+ */
+export async function seedDemo(repo: Repo, opts: { householdId?: string; devToken?: string; history?: boolean } = {}): Promise<string> {
   const hh = opts.householdId ?? DEMO_HOUSEHOLD_ID;
   if (await repo.db.get({ PK: `HH#${hh}`, SK: "META" })) {
     // The family is already there, but a deploy may bring a new token for it.
     if (opts.devToken && (await repo.householdForToken(opts.devToken)) !== hh) await repo.addDevToken(opts.devToken, hh);
     return hh;
   }
-  await repo.createHousehold({
-    householdId: hh,
-    showTitle: "The Jones Family Trivia Night",
-    timeZone: "America/New_York",
-    resetSchedule: "weekly",
-    players: [
-      { playerId: "mom", name: "Mom", role: "parent", balance: 6, lifetime: 11, streak: 1 },
-      { playerId: "dad", name: "Dad", role: "parent", balance: 4, lifetime: 9 },
-      { playerId: "sally", name: "Sally", role: "kid", gradeBand: "3-5", balance: 3, lifetime: 6, streak: 1 },
-      { playerId: "john", name: "John", role: "kid", gradeBand: "6-8", balance: 5, lifetime: 8 },
-    ],
-  });
-  await addStarterPacks(repo, hh);
-  await repo.setPhrase(hh, DEMO_PARENT_PHRASE, "spend");
+  if (opts.history) {
+    await playDemoHistory(repo, hh);
+  } else {
+    await repo.createHousehold({ householdId: hh, ...DEMO_FAMILY });
+    await addStarterPacks(repo, hh);
+    await repo.setPhrase(hh, DEMO_PARENT_PHRASE, "spend");
+  }
   if (opts.devToken) await repo.addDevToken(opts.devToken, hh);
   return hh;
+}
+
+// ---------------------------------------------------------------------------
+// Keeping the shared demo family clean
+// ---------------------------------------------------------------------------
+
+/** The demo family goes back to how it was seeded after this long with no requests. */
+export const DEMO_IDLE_MS = 10 * 60_000;
+/** Or after this long since it last went back, at the first pause between games. */
+export const DEMO_MAX_AGE_MS = 60 * 60_000;
+const DEMO_PAUSE_MS = 2 * 60_000;
+
+/**
+ * Anyone can play the demo family, so anything a visitor adds (a rude name,
+ * a renamed show, a theme) would otherwise stay for everyone after them. Call
+ * this before each request for the demo household: once the family has sat
+ * idle, it is wiped and seeded again. The marker lives outside the family's
+ * partition so the wipe doesn't take it, and claiming the restore is
+ * conditional so two requests at once don't both do it.
+ */
+export async function restoreDemoWhenIdle(
+  repo: Repo,
+  opts: { householdId?: string; history?: boolean; now?: number } = {},
+): Promise<boolean> {
+  const hh = opts.householdId ?? DEMO_HOUSEHOLD_ID;
+  const now = opts.now ?? Date.now();
+  const key = { PK: `DEMO#${hh}`, SK: "STATE" };
+  const mark = await repo.db.get(key);
+  const touchedAt = mark?.touchedAt as number | undefined;
+  const restoredAt = (mark?.restoredAt as number | undefined) ?? now;
+  if (touchedAt === undefined) {
+    await repo.db.transact([{ kind: "put", item: { ...key, type: "demo", touchedAt: now, restoredAt: now } }]);
+    return false;
+  }
+  const idle = now - touchedAt;
+  const due = idle >= DEMO_IDLE_MS || (now - restoredAt >= DEMO_MAX_AGE_MS && idle >= DEMO_PAUSE_MS);
+  if (!due) {
+    // One write a minute is enough to know the family is in use.
+    if (idle >= 60_000) await repo.db.transact([{ kind: "update", key, set: { touchedAt: now } }]);
+    return false;
+  }
+  try {
+    await repo.db.transact([
+      { kind: "update", key, set: { touchedAt: now, restoredAt: now }, conditions: [{ attr: "touchedAt", op: "=", value: touchedAt }] },
+    ]);
+  } catch (err) {
+    if (err instanceof ConditionFailedError) return false;
+    throw err;
+  }
+  const items = await repo.db.query(`HH#${hh}`);
+  for (let i = 0; i < items.length; i += 25) {
+    await repo.db.transact(items.slice(i, i + 25).map((it): Write => ({ kind: "delete", key: { PK: it.PK, SK: it.SK } })));
+  }
+  await seedDemo(repo, { householdId: hh, history: opts.history });
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// Demo history
+// ---------------------------------------------------------------------------
+
+/** Wrong answers the family gives to each starter question. */
+const WRONG: Record<string, [string, string]> = {
+  "How many legs does a spider have?": ["six", "ten"],
+  "What is the largest planet in our solar system?": ["Saturn", "the Sun"],
+  "What gas do plants take in from the air to make their food?": ["oxygen", "air"],
+  "How many sides does a hexagon have?": ["eight", "five"],
+  "Which ocean is the biggest?": ["the Atlantic", "the Indian Ocean"],
+  "What is frozen water called?": ["snow", "hail"],
+  "What is the closest star to Earth?": ["the North Star", "the Moon"],
+  "How many minutes are in two hours?": ["one hundred", "two hundred"],
+  "Which animal is the tallest in the world?": ["the elephant", "the ostrich"],
+  "What do bees make from flower nectar?": ["wax", "pollen"],
+  "What is the hardest natural material on Earth?": ["gold", "steel"],
+  "How many continents are there?": ["six", "eight"],
+  "What part of your body has the smallest bones?": ["the fingers", "the toes"],
+  "Is a tomato a fruit or a vegetable, to a botanist?": ["a vegetable", "both"],
+  "What is the boiling point of water in degrees Celsius at sea level?": ["two hundred twelve", "fifty"],
+  "I have hands but I can't clap. What am I?": ["a statue", "a robot"],
+  "The more of me you take, the more you leave behind. What am I?": ["cookies", "time"],
+  "What gets wetter the more it dries?": ["a sponge", "rain"],
+  "I go up and down but never move from my spot. What am I?": ["an elevator", "a yo-yo"],
+  "What has a neck but no head?": ["a giraffe", "a guitar"],
+  "I have lots of teeth but I never bite. What am I?": ["a shark", "a gear"],
+  "What can you catch but never throw?": ["a ball", "a fish"],
+  "What has one eye but can't see?": ["a pirate", "a potato"],
+  "What belongs to you, but other people say it more than you do?": ["my toys", "my room"],
+  "What has words but never speaks?": ["a sign", "a mime"],
+  "What runs all day but never gets tired?": ["a dog", "a car"],
+  "I'm full of holes but I still hold water. What am I?": ["a net", "a bucket"],
+};
+
+const V: Record<string, Verdict> = { c: "correct", p: "partial", w: "wrong" };
+const ORDER = ["Mom", "Dad", "Sally", "John"];
+
+/**
+ * What the family did, oldest first. `day` counts from this week's Monday
+ * (-7 is last Monday) and `at` is the local hour. Rounds give verdicts in
+ * ORDER: "cwcc" is Mom right, Dad wrong, Sally and John right.
+ */
+type Step = { day: number; at: number } & (
+  | { round: RoundMode; v: string; stake?: Stake; question?: string; answer?: string; guesses?: string[] }
+  | { spend: { player: string; amount: number; reason: string } }
+  | { give: { from: string; to: string; amount: number; reason: string; chore?: string } }
+  | { choreDone: string }
+);
+const HISTORY: Step[] = [
+  { day: -7, at: 19, round: "hosted", v: "ccwc" },
+  { day: -7, at: 19.1, round: "riddle", v: "cwcc" },
+  { day: -5, at: 19, round: "hosted", v: "wwwc", stake: { type: "pick", label: "pick Friday's movie" } },
+  { day: -5, at: 19.1, round: "riddle", v: "cccw" },
+  {
+    day: -4,
+    at: 18.5,
+    round: "family",
+    v: "cwcc",
+    stake: { type: "chore", label: "load the dishwasher" },
+    question: "What was the name of our first goldfish?",
+    answer: "Bubbles",
+    guesses: ["Bubbles", "Goldie", "Bubbles", "Bubbles"],
+  },
+  { day: -3, at: 9, choreDone: "load the dishwasher" },
+  { day: -3, at: 15, spend: { player: "Sally", amount: 2, reason: "fifteen extra minutes of tablet time" } },
+  { day: -2, at: 18.5, round: "hosted", v: "cccc" },
+  { day: -2, at: 18.6, round: "riddle", v: "wccc" },
+  { day: 0, at: 19, round: "hosted", v: "cwcc" },
+  { day: 0, at: 19.1, round: "hosted", v: "cccw", stake: { type: "chore", label: "take out the recycling" } },
+  { day: 1, at: 19, round: "riddle", v: "ccwc" },
+  { day: 1, at: 20, give: { from: "John", to: "Sally", amount: 1, reason: "taking the recycling", chore: "take out the recycling" } },
+  { day: 2, at: 19, round: "hosted", v: "cccw" },
+  {
+    day: 2,
+    at: 19.1,
+    round: "family",
+    v: "wwcw",
+    stake: { type: "pick", label: "choose Saturday's breakfast" },
+    question: "Where did we go camping last summer?",
+    answer: "Lake George",
+    guesses: ["the Adirondacks", "Lake Placid", "Lake George", "the beach"],
+  },
+];
+
+/**
+ * Make the demo family two weeks ago and replay HISTORY through the real
+ * game code, with the clock set back for each step. The weekly reset happens
+ * on the way, the way it would for a real family. Steps that would land after
+ * now are squeezed into the part of this week that has passed.
+ */
+async function playDemoHistory(repo: Repo, hh: string): Promise<void> {
+  const now = Date.now();
+  const monday = Date.parse(`${periodStartFor(new Date(now), "weekly", DEMO_FAMILY.timeZone)}T00:00:00Z`);
+  // Local evening hours, roughly: New York is four or five hours behind UTC.
+  const time = (s: Step) => monday + s.day * 86_400_000 + (s.at + 4) * 3_600_000;
+  const last = Math.max(...HISTORY.map(time));
+  const weekStart = monday + 4 * 3_600_000;
+  const squeeze = last < now ? 1 : (now - 10 * 60_000 - weekStart) / (last - weekStart);
+  const when = (s: Step) => (time(s) < weekStart ? time(s) : weekStart + (time(s) - weekStart) * squeeze);
+
+  let clock = new Date(monday - 7 * 86_400_000 + 21 * 3_600_000);
+  const past = new Repo(repo.db, () => clock);
+  await past.createHousehold({
+    householdId: hh,
+    ...DEMO_FAMILY,
+    players: DEMO_FAMILY.players.map(({ balance: _b, lifetime: _l, streak: _s, ...p }) => p),
+  });
+  await addStarterPacks(past, hh);
+  await past.setPhrase(hh, DEMO_PARENT_PHRASE, "spend");
+
+  for (const step of HISTORY) {
+    clock = new Date(when(step));
+    const state = await past.begin(hh);
+    if ("spend" in step) {
+      await past.spendPoints(hh, state, { ...step.spend, parentPhrase: DEMO_PARENT_PHRASE });
+    } else if ("give" in step) {
+      await past.transferPoints(hh, state, step.give);
+    } else if ("choreDone" in step) {
+      await past.completeChore(hh, state, { label: step.choreDone });
+    } else {
+      const started = await past.startRound(hh, state, { mode: step.round, stake: step.stake });
+      const question = started.question ?? step.question!;
+      const answer = started.answerKey?.answer ?? step.answer!;
+      const wrong = WRONG[question] ?? ["I don't know", "pass"];
+      let misses = 0;
+      const guesses = ORDER.map((player, i) => {
+        const verdict = V[step.v[i]!]!;
+        const guess = step.guesses?.[i] ?? (verdict === "correct" ? answer : wrong[misses++ % 2]!);
+        return { player, guess, verdict };
+      });
+      clock = new Date(clock.getTime() + 2 * 60_000);
+      await past.recordRound(hh, await past.load(hh), { roundId: started.roundId, question, correctAnswer: answer, guesses });
+    }
+  }
 }

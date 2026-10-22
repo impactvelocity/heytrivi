@@ -15,7 +15,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ProtocolRow } from "@/components/ProtocolPanel";
 import { measureMic, stopLevels } from "@/lib/audio-levels";
-import { newLook, SWATCHES, type DemoFamily, type DemoMember, type Look } from "@/lib/demo-data";
+import { lookFor, saveLook, savedLooks, SWATCHES, type DemoFamily, type DemoMember, type Look } from "@/lib/demo-data";
 import { Host } from "@/lib/host";
 import { maskText } from "@/lib/mask";
 import { LoggedMcpClient, type ToolResult } from "@/lib/mcp";
@@ -61,34 +61,6 @@ export interface LiveUi {
   setHeard: (t: string) => void;
   setReply: (t: string) => void;
   setFlash: (f: { id: string; points: number } | null) => void;
-}
-
-/** The same portrait for a name every time. */
-function lookFor(name: string) {
-  let h = 0;
-  for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return newLook(SWATCHES[h % SWATCHES.length]!, h % 97);
-}
-
-/**
- * Portraits are saved on this device only, by player id. The store keeps a
- * player to a first name, a role, and a grade band (packages/core types.ts),
- * and a drawn likeness of a child is more than that.
- */
-const LOOKS_KEY = "heytrivi.looks";
-function savedLooks(): Record<string, Look> {
-  try {
-    return JSON.parse(localStorage.getItem(LOOKS_KEY) ?? "{}") as Record<string, Look>;
-  } catch {
-    return {};
-  }
-}
-function saveLook(playerId: string, look: Look): void {
-  try {
-    localStorage.setItem(LOOKS_KEY, JSON.stringify({ ...savedLooks(), [playerId]: look }));
-  } catch {
-    // Private window: the look lasts until reload.
-  }
 }
 
 /** Who a name is: the player id once the parent API has said, and their portrait. */

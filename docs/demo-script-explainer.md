@@ -66,7 +66,7 @@ A second cut, alongside [demo-script.md](demo-script.md). That one is a story to
 
 *On screen:* "Writing…" then "Double-checking…". The draft appears. One question is flagged: the blind checker gave a different answer, so it's left out. Mom skims and presses Save. The dinosaur theme shows Paused.
 
-**VO:** One model writes the questions. Another answers them without the key, and a third checks the facts. Nothing reaches the kids until a parent saves it.
+**VO:** Parents pick what the kids learn about. Trivi writes the questions and double-checks the answers, and nothing gets asked until Mom or Dad approves it.
 
 **DAD:** Trivi, play the space theme.
 
@@ -100,15 +100,21 @@ A second cut, alongside [demo-script.md](demo-script.md). That one is a story to
 
 *Caption:* MCP 2025-11-25 · Streamable HTTP
 
-**VO:** Hey Trivi is an MCP server running on AWS Lambda. The assistant hosts and calls our tools: start a round, record it, spend, trade. The server applies the rules and keeps the record in DynamoDB, so the model can't invent a score.
+**VO:** Hey Trivi is an MCP server running on AWS Lambda. The assistant hosts and calls our tools: start a round, record it, spend, trade. The server applies the rules and keeps the score in DynamoDB, so nobody can sweet-talk Trivi into a bonus point. John tried.
 
-**VO:** Parents sign in with Amazon Cognito. That same token links the account, so every family uses one URL and gets their own household. The scoreboard ships as an MCP App.
+**VO:** Parents sign in with Amazon Cognito. That same sign-in links the account, so every family uses one URL and gets their own household.
 
-**VO:** Our simulator stands in for Alexa+: Amazon Nova hosts, Amazon Polly speaks. Deployed with CDK, hosted on Amplify, built with Kiro.
+**VO:** Our simulator stands in for Alexa+: Amazon Nova hosts, Amazon Polly speaks. Deployed with CDK and hosted on Amplify.
 
 ## 8. End card (2:55–3:00)
 
-*Title card:* **Hey Trivi.** Settle it with a question. · github.com/… · Built with Kiro on AWS
+**VO:** Hey Trivi. Where everyone learns, and the winner picks what's for dinner.
+
+**SALLY:** It's pizza night!
+
+*On screen:* John and Sally cheer.
+
+*Title card:* **Hey Trivi.** · github.com/… · Built on AWS
 
 ---
 
@@ -120,7 +126,7 @@ Left to right, three columns:
 |---|---|---|
 | Speaker and display (the simulator, standing in for Alexa+) | Amazon Nova 2 Lite: judges guesses, picks tools, speaks only through a `say` tool | MCP server on Lambda (function URL, Streamable HTTP) → DynamoDB single table |
 | Parent page (Amplify) | Ask Trivi and the theme helper: Claude Haiku 5.5 writes and answers blind, Claude Sonnet 5.5 fact-checks | Cognito: parent sign-in, the bearer token, OAuth discovery for account linking |
-| | Amazon Polly: the voice | Scoreboard MCP App (`ui://hey-trivi/scoreboard`) · CDK · Kiro specs and steering |
+| | Amazon Polly: the voice | CDK · Amplify |
 
 Arrows: speaker → host model → `tools/call` → MCP server. Parent page → `/parent` API → same MCP server and table. Keep the nine tool names in small type under the server box: `get_household`, `add_player`, `start_round`, `record_round`, `complete_chore`, `spend_points`, `transfer_points`, `show_scoreboard`, `list_packs`.
 

@@ -11,11 +11,11 @@
  */
 
 import { Hono, type Context } from "hono";
-import { GRADE_BANDS, nextPeriodStart, type GradeBand, type PhraseScope, type ResetSchedule, type Role } from "@hey-trivi/core";
-import { UserError, createFamily, type NewPlayer } from "@hey-trivi/store";
+import { GRADE_BANDS, type GradeBand, type ResetSchedule, type Role } from "@hey-trivi/core";
+import { UserError, createFamily, packDetail as packDetailFor, parentDashboard, type NewPlayer } from "@hey-trivi/store";
 import { z } from "zod";
 import { userForRequest } from "./auth.js";
-import { getRepo } from "./context.js";
+import { getRepo, prepareHousehold } from "./context.js";
 
 type Env = { Variables: { sub: string } };
 
@@ -90,81 +90,8 @@ const toPlayer = (p: { name: string; role: Role; gradeBand?: GradeBand }): NewPl
   gradeBand: p.role === "kid" ? p.gradeBand : undefined,
 });
 
-/** Everything the parent page shows. */
-export async function dashboard(hh: string) {
-  const repo = await getRepo();
-  // begin() applies a due reset first, so the page never shows stale balances.
-  const state = await repo.begin(hh);
-  const [ledger, rounds] = await Promise.all([repo.ledgerFor(hh, 300), repo.roundsFor(hh, 150)]);
-  const { meta } = state;
-  const packTitle = (id?: string) => (id ? state.packs.find((p) => p.packId === id)?.title : undefined);
-  return {
-    household: {
-      householdId: meta.householdId,
-      showTitle: meta.showTitle,
-      timeZone: meta.timeZone,
-      resetSchedule: meta.resetSchedule,
-      periodStart: meta.periodStart ?? null,
-      nextReset: meta.periodStart ? nextPeriodStart(meta.periodStart, meta.resetSchedule) : null,
-      phraseSet: !!meta.phraseHash,
-      phraseRequiredFor: (meta.phraseRequiredFor ?? "spend") as PhraseScope,
-      pointSettings: meta.pointSettings,
-      stage: repo.stageSettings(state),
-    },
-    players: state.players.map((p) => ({
-      playerId: p.playerId,
-      name: p.name,
-      role: p.role,
-      gradeBand: p.gradeBand ?? null,
-      balance: p.balance,
-      lifetime: p.lifetime,
-      streak: p.streak,
-    })),
-    openChores: state.chores.map((c) => ({ choreId: c.choreId, label: c.label, owedBy: c.owedBy })),
-    ledger: ledger.map((e) => ({ playerId: e.playerId, change: e.change, reason: e.reason, roundId: e.roundId ?? null, at: e.at })),
-    rounds: rounds.map((r) => ({ ...r, packTitle: packTitle(r.packId) ?? null })),
-    packs: [...state.packs]
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-      .map((p) => ({
-        packId: p.packId,
-        title: p.title,
-        topic: p.topic,
-        kind: p.kind,
-        status: p.status,
-        failReason: p.failReason ?? null,
-        paused: !!p.paused,
-        questionCount: p.questionCount,
-        remaining: Math.max(0, p.questionCount - p.usedCount),
-        forPlayerId: p.forPlayerId ?? null,
-        createdAt: p.createdAt,
-      })),
-  };
-}
-
-/** One pack with its questions, in order. */
-async function packDetail(hh: string, packId: string) {
-  const found = await (await getRepo()).getPack(hh, packId);
-  if (!found) throw new UserError("That theme doesn't exist.", "unknown_pack");
-  return {
-    packId: found.pack.packId,
-    title: found.pack.title,
-    topic: found.pack.topic,
-    kind: found.pack.kind,
-    forPlayerId: found.pack.forPlayerId ?? null,
-    questions: found.questions
-      .sort((a, b) => a.n - b.n)
-      .map((q) => ({
-        n: q.n,
-        question: q.question,
-        answer: q.answer,
-        accept: q.accept ?? [],
-        explanation: q.explanation ?? "",
-        difficulty: q.difficulty,
-        kind: q.kind ?? (found.pack.kind === "riddle" ? "riddle" : "trivia"),
-        used: !!q.usedAt,
-      })),
-  };
-}
+const dashboard = async (hh: string) => parentDashboard(await getRepo(), hh);
+const packDetail = async (hh: string, packId: string) => packDetailFor(await getRepo(), hh, packId);
 
 export function parentRoutes(): Hono<Env> {
   const app = new Hono<Env>();
@@ -186,11 +113,13 @@ export function parentRoutes(): Hono<Env> {
   async function household(c: Context<Env>): Promise<string> {
     const hh = await (await getRepo()).householdForUser(c.get("sub"));
     if (!hh) throw new UserError("Set up your family first.", "no_household");
+    await prepareHousehold(hh);
     return hh;
   }
 
   app.get("/me", async (c) => {
     const hh = await (await getRepo()).householdForUser(c.get("sub"));
+    if (hh) await prepareHousehold(hh);
     return c.json(hh ? await dashboard(hh) : { household: null });
   });
 
