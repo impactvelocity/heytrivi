@@ -145,6 +145,48 @@
   rotate: 8deg;
 }
 
+/* ------------------------------------------------------------ share card */
+
+/* The thumbnail at the link preview's 1.91:1, drawn at 1920×1008 and saved
+   down to 1200×630. Everything moves in to fit the shorter canvas. */
+.dm.bv.dp.dp-og {
+  height: 1008px;
+}
+.dp-og .dp-top {
+  top: 92px;
+  left: 160px;
+}
+.dp-og .dp-thumb-copy {
+  left: 160px;
+  gap: 28px;
+}
+.dp-og-sub {
+  margin: 0;
+  font-weight: 800;
+  font-size: 44px;
+  color: var(--wolf);
+}
+.dp-og .dp-thumb-art {
+  left: 1060px;
+  top: 110px;
+  width: 700px;
+  height: 790px;
+}
+.dp-og .dp-thumb-guess-a {
+  right: 0;
+  bottom: 70px;
+  scale: 1.1;
+}
+.dp-og .dp-thumb-guess-b {
+  left: -40px;
+  top: 30px;
+}
+.dp-og .dp-thumb-plus {
+  right: 20px;
+  top: 90px;
+  font-size: 48px;
+}
+
 /* ----------------------------------------------------------------- hero */
 
 /* The stage and the leaderboard sit right on the night, with no card around them. */

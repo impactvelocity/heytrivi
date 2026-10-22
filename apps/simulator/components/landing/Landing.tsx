@@ -23,8 +23,8 @@ import { HowBuilt, Repo, Tech } from "./Stack";
 import { WhoFor, Week } from "./WhoFor";
 import { COLORS, DEMO_HREF, FAMILY, HACKATHON_HREF, member } from "./shared";
 
-/** The demo video's embed URL (YouTube or Vimeo). Until it's set, the player links to the scripted demo instead. */
-const VIDEO_EMBED: string = "";
+/** The demo video (https://youtu.be/wvddOl5KWzk), embedded so it plays in the marquee frame. */
+const VIDEO_EMBED = "https://www.youtube.com/embed/wvddOl5KWzk?rel=0";
 
 /** Who made it, as on loro.sh. */
 const MAKER = {
@@ -245,39 +245,19 @@ function Hero() {
 }
 
 function Video() {
-  const [playing, setPlaying] = useState(false);
   return (
     <section className="lp-section lp-video" aria-label="Demo video">
       <div className="lp-wrap">
         <div className="dm-frame lp-frame">
-          <MarqueeLights mode={playing ? "glow" : "chase"} />
+          <MarqueeLights mode="chase" />
           <div className="dm-stage lp-screen">
-            {playing && VIDEO_EMBED ? (
-              <iframe
-                src={`${VIDEO_EMBED}${VIDEO_EMBED.includes("?") ? "&" : "?"}autoplay=1`}
-                title="Hey Trivi demo video"
-                allow="autoplay; encrypted-media; picture-in-picture"
-                allowFullScreen
-              />
-            ) : (
-              <div className="lp-poster">
-                <div className="lp-poster-glow" aria-hidden>
-                  <Glow mood="speaking" color="grape" />
-                </div>
-                {VIDEO_EMBED ? (
-                  <button type="button" className="lp-play" onClick={() => setPlaying(true)}>
-                    <span className="lp-play-icon" aria-hidden />
-                    Play the demo video
-                  </button>
-                ) : (
-                  <a className="lp-play" href={DEMO_HREF}>
-                    <span className="lp-play-icon" aria-hidden />
-                    Video coming soon. Try the live demo
-                  </a>
-                )}
-                <p className="lp-poster-cap">Under 3 minutes</p>
-              </div>
-            )}
+            <iframe
+              src={VIDEO_EMBED}
+              title="Hey Trivi demo video"
+              allow="encrypted-media; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
           </div>
         </div>
       </div>

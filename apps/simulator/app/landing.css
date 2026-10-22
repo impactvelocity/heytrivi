@@ -92,7 +92,6 @@
 }
 /* Buttons, tabs, and nav links read in title case, like the labels. */
 .lp-btn,
-.lp-play,
 .lp-nav-links a,
 .lp-foot-links a,
 .lp-pb-tabs button,
@@ -435,72 +434,12 @@
   background: var(--night);
   color: var(--eel);
 }
-.lp-screen::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(118deg, transparent 0 90px, rgb(255 255 255 / 0.035) 90px 180px);
-  pointer-events: none;
-}
 .lp-screen iframe {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   border: 0;
-}
-.lp-poster {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 18px;
-  padding: 20px;
-  text-align: center;
-  background: radial-gradient(ellipse 60% 70% at 50% 40%, color-mix(in srgb, var(--acc) 30%, transparent), transparent 75%);
-}
-.lp-poster-glow {
-  --s: clamp(90px, 16vw, 150px);
-}
-.lp-play {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 22px 12px 14px;
-  border: 0;
-  border-radius: 999px;
-  background: #fff;
-  color: #2a1450 !important;
-  font: inherit;
-  font-weight: 900;
-  font-size: 16px;
-  box-shadow: 0 4px 0 #c9b9ea;
-  cursor: pointer;
-}
-.lp-play:active {
-  transform: translateY(4px);
-  box-shadow: none;
-}
-.lp-play-icon {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--brand);
-}
-.lp-play-icon::after {
-  content: "";
-  margin-left: 3px;
-  border: 7px solid transparent;
-  border-left: 11px solid #fff;
-  border-right-width: 0;
-}
-.lp-poster-cap {
-  color: var(--wolf);
-  font-size: 13.5px;
-  font-weight: 800;
 }
 
 /* --------------------------------------------------------------- made by */
@@ -692,20 +631,10 @@
   .lp-foot-links {
     margin-left: 0;
   }
-  /* A phone-width 16:9 screen only fits the play button. */
-  .lp-poster-glow,
-  .lp-poster-cap {
-    display: none;
-  }
-  .lp-play {
-    padding: 8px 16px 8px 8px;
-    font-size: 14px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp-btn,
-  .lp-play {
+  .lp-btn {
     transition: none;
   }
   .lp-bubble-hero {

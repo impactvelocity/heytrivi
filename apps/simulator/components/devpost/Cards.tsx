@@ -7,6 +7,8 @@
  * headline, and one picture of the feature happening to the demo family.
  * The hero is the demo stage the moment Sally wins the snail round. The
  * thumbnail (?card=thumb) is the gallery tile: logo, headline and a big Glow.
+ * The share card (?card=og) is the same tile at 1920×1008 (the 1.91:1 link
+ * preview), saved as app/opengraph-image.png.
  */
 
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
@@ -22,7 +24,7 @@ declare global {
   }
 }
 
-export const CARDS = ["thumb", "hero", "round", "bet", "themes", "spend", "built", "tools", "stats"] as const;
+export const CARDS = ["thumb", "og", "hero", "round", "bet", "themes", "spend", "built", "tools", "stats"] as const;
 type Card = (typeof CARDS)[number];
 
 export function DevpostCards() {
@@ -35,7 +37,7 @@ export function DevpostCards() {
     });
   }, []);
   if (!card) return null;
-  const Body = { thumb: Thumb, hero: Hero, round: Round, bet: Bet, themes: Themes, spend: Spend, built: Built, tools: Tools, stats: Stats }[card];
+  const Body = { thumb: Thumb, og: Og, hero: Hero, round: Round, bet: Bet, themes: Themes, spend: Spend, built: Built, tools: Tools, stats: Stats }[card];
   return <Body />;
 }
 
@@ -193,9 +195,14 @@ const Speaker = () => (
 /* ------------------------------------------------------------ thumbnail */
 
 /** The gallery tile, read at a few hundred pixels wide: one headline, one Glow, one winning guess. */
-function Thumb() {
+/** The link preview: the thumbnail, shorter, with a line on what it is. */
+function Og() {
+  return <Thumb og />;
+}
+
+function Thumb({ og }: { og?: boolean }) {
   return (
-    <div className="dm bv dp dp-thumb" data-skin="duo" data-theme="showtime">
+    <div className={og ? "dm bv dp dp-thumb dp-og" : "dm bv dp dp-thumb"} data-skin="duo" data-theme="showtime">
       <div className="bv-bg">
         <span className="dm-rays bv-bg-rays" />
         <span className="bv-bg-quiz dp-quiz">
@@ -216,10 +223,11 @@ function Thumb() {
             that <em>keeps score</em>
           </span>
         </h1>
+        {og && <p className="dp-og-sub">A voice game show for Alexa+</p>}
       </div>
       <div className="dp-thumb-art">
         <span className="dp-thumb-halo" />
-        <GlowBox mood="correct" size={780} />
+        <GlowBox mood="correct" size={og ? 620 : 780} />
         <div className="dp-thumb-guess dp-thumb-guess-a">
           <Guess who="sally" text="10,000" win />
         </div>
