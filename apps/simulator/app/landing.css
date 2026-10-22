@@ -41,6 +41,10 @@
   --lead-bg: var(--acc-l);
   color: var(--eel);
 }
+/* Nav links glide to their section. */
+html:has(.lp) {
+  scroll-behavior: smooth;
+}
 /* Selected text gets a see-through purple highlight, not the browser's dark default. */
 .lp ::selection {
   background: rgb(206 130 255 / 0.35);
@@ -89,15 +93,6 @@
 .lp-btn:focus-visible {
   outline: 3px solid var(--yellow);
   outline-offset: 3px;
-}
-/* Buttons, tabs, and nav links read in title case, like the labels. */
-.lp-btn,
-.lp-nav-links a,
-.lp-foot-links a,
-.lp-pb-tabs button,
-.lp-helper-save,
-.lp-built-cta {
-  text-transform: capitalize;
 }
 .lp-btn-sm {
   padding: 9px 16px;
@@ -162,11 +157,11 @@
 }
 .lp-nav-links {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   margin-left: auto;
 }
 .lp-nav-links a {
-  padding: 8px 14px;
+  padding: 8px 12px;
   border-radius: 12px;
   color: var(--wolf);
   font-weight: 800;
@@ -176,9 +171,116 @@
 .lp-nav .lp-btn {
   letter-spacing: 0.04em;
 }
-.lp-nav-links a:hover {
+.lp-nav-links a:hover,
+.lp-nav-links a[aria-current] {
   color: var(--eel);
   background: var(--sel-bg);
+}
+/* The section on screen keeps its link lit, with a dot under it. */
+.lp-nav-links a[aria-current] {
+  position: relative;
+}
+.lp-nav-links a[aria-current]::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: var(--acc);
+}
+.lp-nav .lp-nav-gh {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  margin-right: -12px;
+  border-radius: 12px;
+  color: var(--wolf);
+  transition: background 0.2s, color 0.2s;
+}
+.lp-nav .lp-nav-gh:hover {
+  background: var(--sel-bg);
+  color: var(--eel);
+}
+/* Under 1100px the section links move into a menu. */
+.lp-menu-btn {
+  display: none;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--eel);
+  cursor: pointer;
+}
+.lp-menu-btn:hover {
+  background: var(--sel-bg);
+}
+.lp-menu-btn span {
+  display: block;
+  width: 18px;
+  height: 2.5px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: translate 0.2s, rotate 0.2s, opacity 0.2s;
+}
+.lp-nav[data-open] .lp-menu-btn span:nth-child(1) {
+  translate: 0 6.5px;
+  rotate: 45deg;
+}
+.lp-nav[data-open] .lp-menu-btn span:nth-child(2) {
+  opacity: 0;
+}
+.lp-nav[data-open] .lp-menu-btn span:nth-child(3) {
+  translate: 0 -6.5px;
+  rotate: -45deg;
+}
+/* The menu drops over the page from under the bar. It's solid: a backdrop
+   filter inside the bar's own would only blur the bar. */
+.lp-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--night);
+  border-bottom: 1.5px solid color-mix(in srgb, var(--swan) 45%, transparent);
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.35);
+}
+.lp-menu .lp-wrap {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 14px 0 18px;
+}
+.lp-menu a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.05);
+  border: 1.5px solid color-mix(in srgb, var(--swan) 45%, transparent);
+  color: var(--eel);
+  font-size: 16px;
+  font-weight: 900;
+  animation: lp-menu-in 0.25s both;
+}
+.lp-menu a[aria-current] {
+  background: var(--sel-bg);
+  border-color: var(--acc);
+}
+@keyframes lp-menu-in {
+  from { opacity: 0; translate: 0 -6px; }
 }
 
 /* ------------------------------------------------------------------ hero */
@@ -219,12 +321,42 @@
   align-items: center;
   gap: 48px;
 }
+/* The hackathon, as a badge that links to it. */
 .lp-eyebrow {
-  color: var(--brand-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 12px 5px 5px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.07);
+  border: 1.5px solid rgb(255 255 255 / 0.14);
   font-weight: 900;
   font-size: 14px;
   letter-spacing: 0.01em;
-  text-transform: capitalize;
+  transition: background 0.2s, border-color 0.2s;
+}
+.lp-eyebrow:hover {
+  background: rgb(255 255 255 / 0.12);
+  border-color: var(--acc);
+}
+.lp-eyebrow-badge {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--yellow);
+  box-shadow: 0 2px 0 var(--yellow-d);
+  color: #6b4b00;
+}
+.lp-eyebrow > svg {
+  margin-left: -4px;
+  color: var(--wolf);
+  transition: translate 0.2s;
+}
+.lp-eyebrow:hover > svg {
+  translate: 3px 0;
 }
 .lp-h1 {
   margin-top: 22px !important;
@@ -338,7 +470,6 @@
   font-weight: 900;
   font-size: 13px;
   letter-spacing: 0.01em;
-  text-transform: capitalize;
 }
 .lp-board-title svg {
   color: var(--yellow);
@@ -381,7 +512,8 @@
 
 .lp-section {
   padding: clamp(56px, 8vw, 96px) 0;
-  scroll-margin-top: 60px;
+  /* A nav link lands the section's kicker just under the sticky nav. */
+  scroll-margin-top: calc(var(--nav-h) + 28px - clamp(56px, 8vw, 96px));
 }
 .lp-head {
   max-width: 680px;
@@ -412,6 +544,7 @@
   z-index: 1;
   margin-top: calc(var(--overlap) * -1);
   padding-top: 0;
+  padding-bottom: clamp(24px, 3vw, 40px);
 }
 .dm .lp-frame {
   min-height: 0;
@@ -440,6 +573,59 @@
   width: 100%;
   height: 100%;
   border: 0;
+}
+
+/* The AWS services in a row under the video, each a link to its card. */
+.lp-powered {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 24px;
+  margin-top: 44px;
+}
+.lp-powered p {
+  color: var(--wolf);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+.lp-powered ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-powered a {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: 92px;
+  padding: 10px 4px 8px;
+  border-radius: 16px;
+  color: var(--wolf);
+  font-size: 12.5px;
+  font-weight: 800;
+  text-align: center;
+  transition: background 0.2s, color 0.2s;
+}
+.lp-powered a:hover {
+  background: var(--polar);
+  color: var(--eel);
+}
+.lp-powered .lp-aws-icon {
+  box-shadow: 0 3px 0 rgb(0 0 0 / 0.16);
+  transition: translate 0.3s cubic-bezier(0.3, 1.6, 0.5, 1), rotate 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.lp-powered a:hover .lp-aws-icon {
+  translate: 0 -5px;
+  rotate: -8deg;
+}
+.lp-powered li:nth-child(even) a:hover .lp-aws-icon {
+  rotate: 8deg;
 }
 
 /* --------------------------------------------------------------- made by */
@@ -551,7 +737,7 @@
 .lp-foot-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 20px;
+  gap: 10px;
   margin-left: auto;
 }
 .lp-foot-links a {
@@ -570,6 +756,17 @@
 }
 .lp-foot-links a:hover {
   border-color: var(--acc);
+}
+.lp-foot-links a > svg:first-child {
+  margin-right: 4px;
+}
+.lp-foot-links .lp-foot-top {
+  border-color: transparent;
+  color: var(--wolf);
+}
+.lp-foot-links .lp-foot-top:hover {
+  border-color: transparent;
+  color: var(--eel);
 }
 .lp-foot-fine a {
   color: var(--wolf);
@@ -590,6 +787,27 @@
 
 /* ------------------------------------------------------------ responsive */
 
+@media (max-width: 1100px) {
+  .lp-nav-links {
+    display: none;
+  }
+  .lp-nav-row {
+    gap: 10px;
+  }
+  .lp-logo {
+    margin-right: auto;
+  }
+  .lp-nav .lp-nav-gh {
+    margin-right: 0;
+  }
+  .lp-menu-btn {
+    display: grid;
+  }
+  .lp-menu:not([hidden]) {
+    display: block;
+  }
+}
+
 @media (max-width: 960px) {
   .lp-hero-grid {
     grid-template-columns: 1fr;
@@ -598,13 +816,6 @@
     max-width: 420px;
     width: 100%;
     margin-inline: auto;
-  }
-  /* Five section links don't fit beside the logo and button; the button stays. */
-  .lp-nav-links {
-    display: none;
-  }
-  .lp-nav-row {
-    justify-content: space-between;
   }
 }
 
@@ -616,6 +827,16 @@
   }
   .lp-logo {
     font-size: 18px;
+  }
+  .lp-nav .lp-nav-gh {
+    display: none;
+  }
+  .lp-eyebrow {
+    font-size: 13px;
+  }
+  /* Two rows of four. */
+  .lp-powered a {
+    width: 80px;
   }
   .lp-ctas .lp-btn {
     width: 100%;
@@ -634,6 +855,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html:has(.lp) {
+    scroll-behavior: auto;
+  }
   .lp-btn {
     transition: none;
   }

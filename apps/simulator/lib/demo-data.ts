@@ -12,6 +12,8 @@ export interface Look {
   hair: HairStyle;
   hairColor: string;
   shirt: string;
+  /** The avatar shape picked with New look; without one, the player's place in the family picks it. */
+  shape?: number;
 }
 
 export interface DemoMember {

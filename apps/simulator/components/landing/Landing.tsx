@@ -12,28 +12,19 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Glow, type Mood } from "@/components/avatars/Glow";
 import { Avatar } from "@/components/demo/Avatar";
-import { ChevronRight, Crown, Mic, Trophy } from "@/components/demo/icons";
+import { ChevronDown, ChevronRight, Crown, Mic, Trophy } from "@/components/demo/icons";
 import { MarqueeLights } from "@/components/demo/MarqueeLights";
 import { StageBackdrop } from "@/components/demo/StageBackdrop";
 import { Bento } from "./Bento";
 import { Faq } from "./Faq";
 import { Parents } from "./Parents";
 import { Playbook } from "./Playbook";
-import { HowBuilt, Repo, Tech } from "./Stack";
+import { HowBuilt, PoweredBy, Repo, Tech } from "./Stack";
 import { WhoFor, Week } from "./WhoFor";
-import { COLORS, DEMO_HREF, FAMILY, HACKATHON_HREF, member } from "./shared";
+import { COLORS, DEMO_HREF, FAMILY, GitHubMark, HACKATHON_HREF, MAKER, PARENT_HREF, REPO_HREF, member } from "./shared";
 
 /** The demo video (https://youtu.be/wvddOl5KWzk), embedded so it plays in the marquee frame. */
 const VIDEO_EMBED = "https://www.youtube.com/embed/wvddOl5KWzk?rel=0";
-
-/** Who made it, as on loro.sh. */
-const MAKER = {
-  name: "Dylan Jones",
-  href: "https://hidylanjones.com",
-  photo: "/dylan.png",
-  linkedin: "https://www.linkedin.com/in/hidylanjones",
-  x: "https://twitter.com/hidylanjones",
-};
 
 const nameOf = (id: string) => member(id).name;
 
@@ -116,22 +107,96 @@ function Logo() {
   );
 }
 
+/** The nav's sections, in page order. */
+const SECTIONS = [
+  { id: "features", label: "Features" },
+  { id: "who", label: "Who It's For" },
+  { id: "play", label: "See It Play" },
+  { id: "parents", label: "Parents" },
+  { id: "how", label: "How It Works" },
+  { id: "tech", label: "Built on AWS" },
+];
+/** Sections the nav doesn't name: the week belongs to "Who It's For", and the rest light up nothing. */
+const BELONGS: Record<string, string | null> = { top: null, week: "who", built: null, faq: null };
+
+/** The id of the nav section in the middle of the screen, or null. */
+function useActiveSection() {
+  const [active, setActive] = useState<string | null>(null);
+  useEffect(() => {
+    const ids = [...SECTIONS.map((s) => s.id), ...Object.keys(BELONGS)];
+    // The sections crossing a thin band at mid-screen; none in the video or the footer.
+    const inBand = new Set<string>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) inBand.add(e.target.id);
+          else inBand.delete(e.target.id);
+        }
+        const id = ids.find((i) => inBand.has(i));
+        setActive(id === undefined ? null : id in BELONGS ? (BELONGS[id] ?? null) : id);
+      },
+      { rootMargin: "-45% 0px -50% 0px" },
+    );
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el) io.observe(el);
+    }
+    return () => io.disconnect();
+  }, []);
+  return active;
+}
+
 function Nav() {
+  const active = useActiveSection();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  const links = SECTIONS.map((s) => (
+    <a key={s.id} href={`#${s.id}`} aria-current={active === s.id ? "true" : undefined} onClick={() => setOpen(false)}>
+      {s.label}
+    </a>
+  ));
+
   return (
-    <header className="lp-nav">
+    <header className="lp-nav" data-open={open || undefined}>
       <div className="lp-wrap lp-nav-row">
         <Logo />
         <nav className="lp-nav-links" aria-label="Sections">
-          <a href="#features">Features</a>
-          <a href="#who">Who it's for</a>
-          <a href="#play">See it play</a>
-          <a href="#how">How it works</a>
-          <a href="#tech">Tech</a>
+          {links}
         </nav>
-        <a className="lp-btn lp-btn-sm" href={DEMO_HREF}>
-          Try the demo
+        <a className="lp-nav-gh" href={REPO_HREF} target="_blank" rel="noreferrer" aria-label="Hey Trivi on GitHub" title="Hey Trivi on GitHub">
+          <GitHubMark size={20} />
         </a>
+        <a className="lp-btn lp-btn-sm" href={DEMO_HREF}>
+          Try the Demo
+        </a>
+        <button
+          type="button"
+          className="lp-menu-btn"
+          aria-expanded={open}
+          aria-controls="lp-menu"
+          aria-label={open ? "Close the menu" : "Open the menu"}
+          onClick={() => setOpen((o) => !o)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
       </div>
+      <nav id="lp-menu" className="lp-menu" aria-label="Menu" hidden={!open}>
+        <div className="lp-wrap">
+          {links}
+          <a href={REPO_HREF} target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>
+            <GitHubMark size={18} /> GitHub
+          </a>
+        </div>
+      </nav>
     </header>
   );
 }
@@ -177,7 +242,13 @@ function Hero() {
       <StageBackdrop kind="quiz" />
       <div className="lp-wrap lp-hero-grid">
         <div className="lp-hero-copy">
-          <p className="lp-eyebrow">Built for the Build, Ship, Shape hackathon</p>
+          <a className="lp-eyebrow" href={HACKATHON_HREF} target="_blank" rel="noreferrer">
+            <span className="lp-eyebrow-badge">
+              <Trophy width={14} height={14} />
+            </span>
+            Built for the Build, Ship, Shape Hackathon
+            <ChevronRight width={16} height={16} />
+          </a>
           <h1 className="lp-h1">
             The family game show that <em>keeps score</em>
           </h1>
@@ -188,11 +259,11 @@ function Hero() {
           <div className="lp-ctas">
             <a className="lp-btn lp-btn-lg" href={DEMO_HREF}>
               <Mic width={20} height={20} />
-              Try the scripted demo
+              Try the Scripted Demo
             </a>
-            <a className="lp-btn lp-btn-lg lp-btn-ghost" href={HACKATHON_HREF} target="_blank" rel="noreferrer">
-              See the hackathon
-              <ChevronRight width={18} height={18} />
+            <a className="lp-btn lp-btn-lg lp-btn-ghost" href="#tech">
+              See How It's Built
+              <ChevronDown width={18} height={18} />
             </a>
           </div>
           <p className="lp-fine">Runs in Chrome with no sign-up. Alexa+ simulator. Not an Amazon product.</p>
@@ -208,7 +279,7 @@ function Hero() {
           </div>
           <div className="lp-board">
             <p className="lp-board-title">
-              <Trophy width={16} height={16} /> This week
+              <Trophy width={16} height={16} /> This Week
             </p>
             <ol className="dm-board-list lp-board-list" style={{ height: FAMILY.length * ROW - (ROW - 60) }}>
               {FAMILY.map((m, shape) => {
@@ -260,6 +331,7 @@ function Video() {
             />
           </div>
         </div>
+        <PoweredBy />
       </div>
     </section>
   );
@@ -303,7 +375,7 @@ function Footer() {
           <p>Pick a family, tap the mic, and answer out loud.</p>
           <a className="lp-btn lp-btn-lg" href={DEMO_HREF}>
             <Mic width={20} height={20} />
-            Try the scripted demo
+            Try the Scripted Demo
           </a>
         </div>
         <div className="lp-foot-row">
@@ -312,9 +384,17 @@ function Footer() {
             <MadeBy />
           </div>
           <nav className="lp-foot-links" aria-label="More">
+            <a href={PARENT_HREF}>Parent Page</a>
+            <a href={REPO_HREF} target="_blank" rel="noreferrer">
+              <GitHubMark size={16} />
+              GitHub
+            </a>
             <a href={HACKATHON_HREF} target="_blank" rel="noreferrer">
               Hackathon
               <ChevronRight width={16} height={16} />
+            </a>
+            <a href="#top" className="lp-foot-top">
+              Back to the Stage ↑
             </a>
           </nav>
         </div>

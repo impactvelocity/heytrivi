@@ -11,9 +11,9 @@
  */
 
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
-import { PACKS, SWATCHES, THEMES, newLook, type DemoFamily, type DemoMember, type DemoPack, type Skin, type ThemeId } from "@/lib/demo-data";
+import { PACKS, SWATCHES, THEMES, newLook, type DemoFamily, type DemoMember, type DemoPack, type Look, type Skin, type ThemeId } from "@/lib/demo-data";
 import { PACK_KIND_LABEL, type Draft } from "@/lib/parent";
-import { Avatar, familyColors } from "./Avatar";
+import { AVATAR_SHAPES, Avatar, familyColors, freeColors } from "./Avatar";
 import { Cards, Check, ChevronDown, Close, Palette, Plus, Send, Shuffle, Sparkle, Trash, Users } from "./icons";
 import type { LiveSettings } from "./useLiveGame";
 
@@ -126,11 +126,8 @@ export function SettingsDrawer(props: Props) {
     <>
       <div className="dm-scrim" data-open={open} onClick={onClose} aria-hidden />
       <aside className="dm-drawer" data-open={open} role="dialog" aria-modal="true" aria-labelledby="dm-drawer-title" inert={!open}>
-        <header className="dm-drawer-head">
-          <div>
-            <span className="dm-eyebrow">{family.name}</span>
-            <h2 id="dm-drawer-title">Settings</h2>
-          </div>
+        <header className="dm-drawer-head dm-drawer-head-plain">
+          <h2 id="dm-drawer-title">Settings</h2>
           <button ref={closeRef} type="button" className="dm-close" onClick={onClose} aria-label="Close settings">
             <Close />
           </button>
@@ -226,9 +223,23 @@ function PlayersTab({
   const [role, setRole] = useState<DemoMember["role"]>("kid");
   const [color, setColor] = useState(SWATCHES[0]!);
   const [variant, setVariant] = useState(family.members.length);
+  /** The shape New look picked; null keeps the one their place in the family gives. */
+  const [shape, setShape] = useState<number | null>(null);
   const [title, setTitle] = useState(family.name);
   const [saving, setSaving] = useState(false);
-  const look = newLook(color, variant);
+  const look: Look = shape === null ? newLook(color, variant) : { ...newLook(color, variant), shape };
+
+  /**
+   * New look: a different shape, and a different color at random. The color
+   * comes from the ones still free in the family, so the preview shows it
+   * (familyColors swaps out a color too close to someone else's).
+   */
+  const shuffle = () => {
+    const other = (n: number, of: number) => (n + 1 + Math.floor(Math.random() * (of - 1))) % of;
+    setShape(other(shape ?? family.members.length % AVATAR_SHAPES, AVATAR_SHAPES));
+    const colors = freeColors(family.members).filter((c) => c !== color);
+    if (colors.length) setColor(colors[Math.floor(Math.random() * colors.length)]!);
+  };
 
   // The name can change elsewhere (Ask Trivi, the parent page).
   useEffect(() => setTitle(family.name), [family.name]);
@@ -246,6 +257,7 @@ function PlayersTab({
     }
     setName("");
     setVariant((v) => v + 1);
+    setShape(null);
   };
 
   const remove = (m: DemoMember) => {
@@ -324,7 +336,7 @@ function PlayersTab({
               <button key={c} type="button" className="dm-swatch" style={{ background: c }} aria-pressed={c === color} aria-label={`Color ${c}`} onClick={() => setColor(c)} />
             ))}
           </div>
-          <button type="button" className="dm-btn dm-btn-ghost dm-btn-sm" onClick={() => setVariant((v) => v + 1)}>
+          <button type="button" className="dm-btn dm-btn-ghost dm-btn-sm" onClick={shuffle}>
             <Shuffle width={16} height={16} /> New look
           </button>
         </div>

@@ -41,6 +41,34 @@
   100% { box-shadow: 0 0 0 9px transparent; }
 }
 
+/* The section's short name, as the nav says it, in the section's tone. */
+.lp-kicker {
+  --t: var(--acc);
+  --t-l: var(--acc-l);
+  --t-ink: var(--acc-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 13px 5px 10px;
+  border-radius: 999px;
+  background: var(--t-l);
+  border: 1.5px solid color-mix(in srgb, var(--t) 40%, #fff);
+  color: var(--t-ink);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+.lp-head .lp-kicker {
+  margin-bottom: 16px;
+}
+.lp-kicker::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--t);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--t) 25%, transparent);
+}
 .lp-head-left {
   margin: 0 0 28px;
   max-width: none;
@@ -146,7 +174,6 @@
   color: var(--t-ink);
   font-size: 11.5px;
   letter-spacing: 0.01em;
-  text-transform: capitalize;
 }
 .lp-pv-said {
   display: flex;
@@ -422,7 +449,6 @@
   color: var(--green-d);
   font-size: 12px;
   font-weight: 900;
-  text-transform: capitalize;
   rotate: -8deg;
   opacity: 0;
 }
@@ -1063,7 +1089,6 @@
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.01em;
-  text-transform: capitalize;
 }
 .lp-day[data-now] .lp-day-name {
   background: var(--t);
@@ -1214,12 +1239,9 @@
   font-size: 12.5px;
   font-weight: 900;
   letter-spacing: 0.01em;
-  text-transform: capitalize;
 }
 .lp-pb-log .lp-pane-head {
   color: #9d91b8;
-  /* An HTTP path, not a label: "/mcp" stays as written. */
-  text-transform: none;
 }
 .lp-live-dot,
 .lp-log-dot {
@@ -1397,7 +1419,6 @@
   font-size: 12.5px;
   font-weight: 900;
   letter-spacing: 0.01em;
-  text-transform: capitalize;
 }
 .lp-helper-prompt {
   min-height: 78px;
@@ -1603,7 +1624,6 @@
   font-size: 12.5px;
   font-weight: 900;
   letter-spacing: 0.01em;
-  text-transform: capitalize;
 }
 .lp-half[data-main] .lp-half-kicker {
   color: var(--yellow);
@@ -1644,32 +1664,43 @@
 .lp-half-foot {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
   padding-top: 14px;
   border-top: 1.5px dashed var(--swan);
+}
+.lp-half-foot small {
+  flex-basis: 100%;
   color: var(--wolf);
-  font-size: 13.5px;
-  font-weight: 800;
+  font-size: 12.5px;
+  font-weight: 900;
 }
 .lp-half[data-main] .lp-half-foot {
   border-top-color: rgb(255 255 255 / 0.2);
 }
-.lp-half-foot span {
-  padding: 4px 10px;
-  border-radius: 9px;
-  background: #ff9600;
-  box-shadow: 0 3px 0 #e08400;
-  color: #fff;
-  font-size: 12.5px;
+/* An AWS service by name, with its icon. */
+.lp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 11px 4px 4px;
+  border-radius: 11px;
+  background: #fff;
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 3px;
+  color: var(--eel);
+  font-size: 13px;
   font-weight: 900;
+  white-space: nowrap;
 }
-.lp-half-foot span:nth-child(2) {
-  background: #1cb0f6;
-  box-shadow: 0 3px 0 #1899d6;
+.lp-chip .lp-aws-icon {
+  border-radius: 6px;
 }
-.lp-half-foot span:nth-child(3) {
-  background: #ff5fd2;
-  box-shadow: 0 3px 0 #d63fae;
+.lp-half[data-main] .lp-chip {
+  background: rgb(255 255 255 / 0.1);
+  border-color: rgb(255 255 255 / 0.18);
+  border-bottom-color: rgb(0 0 0 / 0.35);
+  color: #fff;
 }
 .lp-split-wire {
   display: grid;
@@ -1682,7 +1713,6 @@
   font-size: 11.5px;
   font-weight: 900;
   letter-spacing: 0.01em;
-  text-transform: capitalize;
 }
 .lp-split-track {
   position: relative;
@@ -1736,6 +1766,121 @@
 
 /* ------------------------------------------------------------------ tech */
 
+/* The architecture: an SVG laid out like an AWS diagram (clients, then the
+   AWS Cloud group), drawn in the page's style. Wires flow, and dots ride
+   them under the cards. Narrow screens scroll it sideways. */
+.lp-arch {
+  margin: 0 0 22px;
+  padding: 16px 16px 14px;
+  border-radius: 28px;
+  background: #fff;
+  border: 1.5px solid var(--swan);
+  border-bottom-width: 6px;
+}
+.lp-arch-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.lp-arch svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--font-friendly);
+}
+.lp-arch-cloud {
+  fill: #fafafc;
+  stroke: #232f3e;
+  stroke-width: 1.5;
+}
+.lp-arch-group {
+  fill: #232f3e;
+  font-size: 14px;
+  font-weight: 900;
+}
+.lp-arch-group tspan {
+  fill: var(--wolf);
+  font-weight: 800;
+}
+.lp-arch-wire {
+  fill: none;
+  stroke: color-mix(in srgb, var(--acc) 75%, #fff);
+  stroke-width: 2.5;
+  stroke-dasharray: 3 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: lp-flow 0.9s linear infinite;
+}
+@keyframes lp-flow {
+  to { stroke-dashoffset: -10; }
+}
+.lp-arch-joint {
+  fill: var(--acc);
+}
+.lp-arch-packet {
+  fill: var(--yellow);
+  stroke: #fff;
+  stroke-width: 2.5;
+}
+.lp-arch-label {
+  fill: var(--acc-ink);
+  font-size: 12px;
+  font-weight: 900;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #fafafc;
+  stroke-width: 6px;
+  stroke-linejoin: round;
+}
+.lp-arch-card {
+  fill: #fff;
+  stroke: var(--swan);
+  stroke-width: 1.5;
+}
+.lp-arch-ledge {
+  fill: var(--swan);
+}
+.lp-arch-node[data-main] .lp-arch-card {
+  stroke: var(--acc);
+}
+.lp-arch-node[data-main] .lp-arch-ledge {
+  fill: var(--acc-d);
+}
+.lp-arch-node > g {
+  transition: translate 0.2s;
+}
+.lp-arch-node:hover > g {
+  translate: 0 -3px;
+}
+.lp-arch-title {
+  fill: var(--eel);
+  font-size: 15px;
+  font-weight: 900;
+}
+.lp-arch-sub {
+  fill: var(--wolf);
+  font-size: 12px;
+  font-weight: 700;
+}
+.lp-arch-infra {
+  fill: var(--polar);
+}
+.lp-arch-infra-text {
+  fill: var(--eel);
+  font-size: 12.5px;
+  font-weight: 800;
+}
+.lp-arch figcaption {
+  margin-top: 10px;
+  color: var(--wolf);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: center;
+  text-wrap: balance;
+}
+.lp-arch-swipe {
+  display: none;
+}
+
 .lp-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1745,7 +1890,8 @@
 .lp-stats div {
   display: flex;
   flex-direction: column-reverse;
-  gap: 4px;
+  justify-content: flex-end;
+  gap: 6px;
   padding: 18px 20px;
   border-radius: 20px;
   background: var(--acc-l);
@@ -1774,7 +1920,7 @@
 .lp-aws-card {
   display: grid;
   align-content: start;
-  gap: 5px;
+  gap: 6px;
   padding: 18px;
   border-radius: 20px;
   background: #fff;
@@ -1784,21 +1930,38 @@
 }
 .lp-aws-card:hover {
   translate: 0 -3px;
-  border-color: #ffb547;
+  border-color: color-mix(in srgb, var(--svc) 55%, #fff);
+  border-bottom-color: var(--svc);
+}
+.lp-aws-icon {
+  display: block;
+  flex: none;
+  border-radius: 10px;
+}
+.lp-aws-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.lp-aws-card .lp-aws-icon {
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--svc) 65%, #000);
+  transition: rotate 0.3s cubic-bezier(0.3, 1.6, 0.5, 1), scale 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.lp-aws-card:hover .lp-aws-icon {
+  rotate: -8deg;
+  scale: 1.08;
 }
 .lp-aws-tag {
-  justify-self: start;
-  padding: 2px 8px;
-  border-radius: 7px;
-  background: #fff3e2;
-  color: #c86f00;
+  padding: 3px 9px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--svc) 11%, #fff);
+  color: color-mix(in srgb, var(--svc) 78%, #000);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.01em;
-  text-transform: capitalize;
 }
 .lp-aws-card b {
-  margin-top: 4px;
   font-size: 16.5px;
   font-weight: 900;
 }
@@ -1917,6 +2080,18 @@
   background: var(--polar);
   color: var(--wolf);
 }
+.lp-built-icon:has(.lp-aws-icon) {
+  background: none;
+}
+.lp-built-icon .lp-aws-icon {
+  border-radius: 12px;
+  box-shadow: 0 3px 0 rgb(0 0 0 / 0.16);
+}
+.lp-built-card:not([data-live]) .lp-built-icon:not(:has(.lp-aws-icon)) {
+  background: var(--yellow);
+  box-shadow: 0 3px 0 var(--yellow-d);
+  color: #fff;
+}
 .lp-built-card[data-live] .lp-built-icon {
   background: var(--acc);
   box-shadow: 0 3px 0 var(--acc-d);
@@ -1941,6 +2116,12 @@
   color: var(--acc-ink);
   font-size: 14px;
   font-weight: 900;
+}
+
+.lp-built-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
 }
 
 /* ------------------------------------------------------------------- faq */
@@ -2087,9 +2268,24 @@
   .lp-tools ul {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .lp-arch {
+    padding: 12px 0 12px 12px;
+  }
+  .lp-arch svg {
+    min-width: 880px;
+  }
+  .lp-arch figcaption {
+    padding-right: 12px;
+  }
+  .lp-arch-swipe {
+    display: inline;
+  }
 }
 
 @media (max-width: 640px) {
+  .lp-br {
+    display: none;
+  }
   .lp-bento {
     grid-template-columns: 1fr;
   }
@@ -2131,6 +2327,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .lp-arch-packets {
+    display: none;
+  }
   .lp-light *,
   .lp-light *::before,
   .lp-light *::after {

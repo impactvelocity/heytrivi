@@ -18,7 +18,7 @@ type Event = { who: Speaker; text: ReactNode } | { tool: string; args: string; r
 
 const SCENES: { label: string; events: Event[] }[] = [
   {
-    label: "Ask anything",
+    label: "Ask Anything",
     events: [
       { who: "dad", text: "Trivi, which planet has the most moons? Mom says Jupiter, I say Saturn, Billy says Saturn, and Sally says Uranus." },
       {
@@ -36,7 +36,7 @@ const SCENES: { label: string; events: Event[] }[] = [
     ],
   },
   {
-    label: "For the garbage",
+    label: "For the Garbage",
     events: [
       { who: "dad", text: "Trivi, ask us one for the garbage." },
       { tool: "start_round", args: `{ mode: "hosted",\n  stake: { type: "chore", label: "take out the garbage" } }`, result: "roundId r_81 · a history question for everyone" },
@@ -51,7 +51,7 @@ const SCENES: { label: string; events: Event[] }[] = [
     ],
   },
   {
-    label: "Movie night",
+    label: "Movie Night",
     events: [
       { who: "dad", text: "Sally's spending 50 points to pick the movie." },
       { tool: "spend_points", args: `{ player: "Sally", amount: 50,\n  reason: "pick the movie" }`, result: "Needs the parent phrase" },
@@ -66,7 +66,7 @@ const SCENES: { label: string; events: Event[] }[] = [
     ],
   },
   {
-    label: "The deal",
+    label: "The Deal",
     events: [
       { who: "dad", text: "Billy will give Sally 20 points to take out the garbage for him." },
       { who: "trivi", text: "Sally, is it a deal?" },
@@ -80,7 +80,7 @@ const SCENES: { label: string; events: Event[] }[] = [
     ],
   },
   {
-    label: "Theme week",
+    label: "Theme Week",
     events: [
       { who: "dad", text: "Trivi, give us a riddle from dinosaur week." },
       { tool: "start_round", args: `{ mode: "riddle", pack: "Dinosaur week" }`, result: "roundId r_90 · a riddle from Dinosaur week" },
@@ -110,7 +110,17 @@ export function Playbook() {
   return (
     <section className="lp-section" id="play" aria-labelledby="lp-pb-title">
       <div className="lp-wrap">
-        <SectionHead title="What Trivi hears, and what the server does" id="lp-pb-title">
+        <SectionHead
+          kicker="See It Play"
+          tone="green"
+          title={
+            <>
+              What Trivi hears, <br className="lp-br" />
+              and what the server does
+            </>
+          }
+          id="lp-pb-title"
+        >
           Pick a moment. The conversation is on the left. On the right are the MCP calls the host makes to Hey Trivi's server, and what
           comes back.
         </SectionHead>
@@ -125,7 +135,7 @@ export function Playbook() {
           <div className="lp-pb-panes" role="tabpanel" aria-live="polite">
             <div className="lp-pb-chat">
               <p className="lp-pane-head">
-                <span className="lp-live-dot" aria-hidden /> At the table
+                <span className="lp-live-dot" aria-hidden /> At the Table
               </p>
               {shown.map((e, i) =>
                 "who" in e ? (

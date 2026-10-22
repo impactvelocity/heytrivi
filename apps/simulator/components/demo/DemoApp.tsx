@@ -15,7 +15,9 @@
  * voice state (idle, listening, thinking, speaking) and 5 to 8 hold Glow's
  * game moments (right, wrong, winner, asleep) for design review.
  * `skin` picks the look: Duo (duo.css on top of demo.css), or the original
- * dark game show (demo.css alone).
+ * dark game show (demo.css alone). Beside the logo, How this demo works
+ * (HowItWorks) explains the script and the real loop to judges, and Music
+ * plays the theme (MusicButton). Scripted, Next question skips ahead.
  */
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
@@ -25,9 +27,11 @@ import { FAMILIES, ROUNDS, THEMES, type DemoMember, type Skin, type ThemeId } fr
 import type { StageSettings } from "@/lib/parent";
 import { Avatar, familyColors } from "./Avatar";
 import { FamilyPicker } from "./FamilyPicker";
-import { ChevronRight, Mic, Send, Sliders, Stop } from "./icons";
+import { HowItWorks } from "./HowItWorks";
+import { ChevronRight, Info, Mic, Send, Sliders, Stop } from "./icons";
 import { Leaderboard } from "./Leaderboard";
 import { MarqueeLights, type LightsMode } from "./MarqueeLights";
+import { MusicButton } from "./MusicButton";
 import { SettingsDrawer } from "./SettingsDrawer";
 import { StageBackdrop, type BackdropId } from "./StageBackdrop";
 import { UnlockDialog } from "./UnlockDialog";
@@ -73,6 +77,7 @@ export function DemoApp({ className = "", skin = "duo" }: { className?: string; 
   const [cheer, setCheer] = useState(false);
   const [held, setHeld] = useState<Mood | null>(null);
   const [unlockOpen, setUnlockOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const logoTaps = useRef<number[]>([]);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -178,6 +183,12 @@ export function DemoApp({ className = "", skin = "duo" }: { className?: string; 
     else reset();
   };
 
+  /** Scripted only: skip to the next question, with no answer or points. */
+  const nextQuestion = () => {
+    reset();
+    setRoundNo((n) => n + 1);
+  };
+
   const onType = (e: FormEvent) => {
     e.preventDefault();
     if (!typed.trim()) return;
@@ -197,12 +208,14 @@ export function DemoApp({ className = "", skin = "duo" }: { className?: string; 
     setFamilies((fs) => fs.map((f) => (f.id === family.id ? { ...f, members: fn(f.members) } : f)));
 
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+  const closeGuide = useCallback(() => setGuideOpen(false), []);
+  const anyDrawer = drawerOpen || guideOpen;
 
   // Hold a voice state or one of Glow's moments for design review.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement;
-      if (drawerOpen || e.metaKey || e.ctrlKey || el.closest("input, textarea, select")) return;
+      if (anyDrawer || e.metaKey || e.ctrlKey || el.closest("input, textarea, select")) return;
       const moment = MOOD_KEYS[e.key];
       if (moment) {
         clearTimers();
@@ -221,7 +234,7 @@ export function DemoApp({ className = "", skin = "duo" }: { className?: string; 
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [drawerOpen, clearTimers, round, answerer?.name]);
+  }, [anyDrawer, clearTimers, round, answerer?.name]);
 
   // The hidden way into live play: five quick clicks on the logo, or ?unlock.
   useEffect(() => {
@@ -236,10 +249,10 @@ export function DemoApp({ className = "", skin = "duo" }: { className?: string; 
     }
   };
 
-  // The page behind the drawer shouldn't scroll.
+  // The page behind a drawer shouldn't scroll.
   useEffect(() => {
-    document.documentElement.style.overflow = drawerOpen ? "hidden" : "";
-  }, [drawerOpen]);
+    document.documentElement.style.overflow = anyDrawer ? "hidden" : "";
+  }, [anyDrawer]);
 
   const caption = reply || chips.question || "Say “Hey Trivi, let's play” to start a game.";
   // Celebrating is a setting: on, the lights celebrate while points land; off, they never do.
@@ -251,6 +264,7 @@ export function DemoApp({ className = "", skin = "duo" }: { className?: string; 
         ? "chase"
         : LIGHTS[voice];
   const idleHint = !live ? "Tap the mic and answer out loud" : game.canListen ? "Tap the mic and talk to Trivi" : "Voice needs Chrome. Type below instead.";
+  const micDisabled = game.status === "connecting" || (live && !game.canListen && voice === "idle");
   const mcpLabel =
     game.status === "connecting"
       ? "Connecting…"
@@ -264,13 +278,21 @@ export function DemoApp({ className = "", skin = "duo" }: { className?: string; 
 
   return (
     <div className={`dm ${className}`} data-skin={skin} data-theme={theme}>
-      <div className="dm-page" inert={drawerOpen}>
+      <div className="dm-page" inert={anyDrawer}>
         <header className="dm-header">
           <div className="dm-header-stage">
-            <div className="dm-logo" onClick={onLogo}>
-              <span>
-                Hey<b>Trivi</b>
-              </span>
+            <div className="dm-header-brand">
+              <div className="dm-logo" onClick={onLogo}>
+                <span>
+                  Hey<b>Trivi</b>
+                </span>
+              </div>
+              <button type="button" className="dm-guide-btn" aria-expanded={guideOpen} aria-controls="dm-guide" onClick={() => setGuideOpen(true)}>
+                <Info width={17} height={17} />
+                <span className="dm-guide-btn-long">How this demo works</span>
+                <span className="dm-guide-btn-short">How it works</span>
+              </button>
+              <MusicButton duck={voice !== "idle"} />
             </div>
             <p className="dm-event">Alexa+ Hackathon Demo</p>
           </div>
@@ -300,6 +322,13 @@ export function DemoApp({ className = "", skin = "duo" }: { className?: string; 
                 <span className="dm-floor" />
                 <StageBackdrop kind={BACKDROP} />
               </div>
+
+              {!live && (
+                <button type="button" className="dm-next" onClick={nextQuestion}>
+                  Next question
+                  <ChevronRight width={16} height={16} />
+                </button>
+              )}
 
               {/* Round, pack, and stake chips, hidden for now. To bring them back,
                   uncomment this and add Trophy back to the icons import.
@@ -373,7 +402,7 @@ export function DemoApp({ className = "", skin = "duo" }: { className?: string; 
                   data-active={voice !== "idle"}
                   onClick={onMic}
                   aria-label={voice === "idle" ? "Tap to talk" : "Stop"}
-                  disabled={game.status === "connecting" || (live && !game.canListen && voice === "idle")}
+                  disabled={micDisabled}
                 >
                   {voice === "idle" ? <Mic width={26} height={26} /> : <Stop width={24} height={24} />}
                 </button>
@@ -438,6 +467,26 @@ export function DemoApp({ className = "", skin = "duo" }: { className?: string; 
         onReadTwice={stageSetter("readTwice", setReadTwice)}
         live={settings}
         liveNote={game.live ? game.settingsNote : ""}
+      />
+
+      <HowItWorks
+        open={guideOpen}
+        onClose={closeGuide}
+        live={live}
+        onStart={() => {
+          setGuideOpen(false);
+          // A round already playing keeps going; the mic would stop it.
+          if (voice === "idle") onMic();
+        }}
+        canStart={!micDisabled}
+        onUnlock={
+          game.config?.lockable
+            ? () => {
+                setGuideOpen(false);
+                setUnlockOpen(true);
+              }
+            : undefined
+        }
       />
     </div>
   );

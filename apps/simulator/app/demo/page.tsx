@@ -3,6 +3,7 @@ import { DemoApp } from "@/components/demo/DemoApp";
 import "./demo.css";
 import "./duo.css";
 import "./live.css";
+import "./guide.css";
 import "../avatars/glow.css";
 
 export const metadata: Metadata = {

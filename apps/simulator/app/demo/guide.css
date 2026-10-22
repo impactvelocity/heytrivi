@@ -1,0 +1,421 @@
+/*
+ * The demo extras on the /demo stage: How this demo works beside the logo
+ * and the drawer it opens from the left (HowItWorks.tsx), the music button
+ * (MusicButton.tsx), Next question on the scripted stage, and the settings
+ * drawer's plain header.
+ */
+
+/* ------------------------------------------------------------ header bits */
+
+.dm-header-brand {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  min-width: 0;
+}
+.dm-header-brand .dm-logo {
+  margin-right: 4px;
+}
+.dm-guide-btn,
+.dm-music {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 999px;
+  border: 1px solid var(--field-line);
+  background: var(--field);
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.dm-guide-btn:hover,
+.dm-music:hover {
+  border-color: var(--ink-faint);
+}
+.dm-guide-btn:focus-visible,
+.dm-music:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.dm-guide-btn {
+  padding: 7px 14px 7px 10px;
+  /* A few soft pulses after the page loads, so a judge spots it. */
+  animation: dm-guide-hint 2.2s ease-out 1.2s 3;
+}
+.dm-guide-btn svg {
+  color: var(--brand-ink, var(--hi));
+}
+.dm-guide-btn-short {
+  display: none;
+}
+@keyframes dm-guide-hint {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand, var(--hi)) 60%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 12px transparent;
+  }
+}
+
+.dm-music {
+  padding: 4px 14px 4px 4px;
+}
+.dm-music-icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--hi);
+  color: var(--hi-ink);
+}
+.dm[data-skin="duo"] .dm-music-icon {
+  background: var(--brand);
+  color: #fff;
+}
+.dm-music[data-on="true"] {
+  border-color: color-mix(in srgb, var(--brand, var(--hi)) 70%, transparent);
+}
+.dm-music-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+  color: var(--brand-ink, var(--hi));
+}
+.dm-music-bars i {
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background: currentColor;
+  transform-origin: bottom;
+  animation: dm-music-bar 0.9s ease-in-out infinite;
+}
+.dm-music-bars i:nth-child(2) {
+  animation-delay: -0.3s;
+}
+.dm-music-bars i:nth-child(3) {
+  animation-delay: -0.6s;
+}
+@keyframes dm-music-bar {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .dm-header-stage {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  /* Logo, How it works, and the music button share one row. */
+  .dm-header-brand .dm-logo {
+    margin-right: 0;
+  }
+  .dm-guide-btn {
+    padding: 6px 11px 6px 8px;
+    font-size: 13px;
+  }
+  .dm-guide-btn-long {
+    display: none;
+  }
+  .dm-guide-btn-short {
+    display: inline;
+  }
+  .dm-music {
+    padding: 3px;
+  }
+  .dm-music-label,
+  .dm-music-bars {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------- next question */
+
+/* Scripted only: top right of the stage, skips to the next question. */
+.dm-next {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px 8px 16px;
+  border-radius: 999px;
+  border: 1.5px solid rgb(255 255 255 / 0.2);
+  background: rgb(255 255 255 / 0.1);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.dm .dm-next:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.18);
+}
+.dm-next:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .dm-next {
+    top: 12px;
+    right: 12px;
+    padding: 6px 8px 6px 12px;
+    font-size: 13px;
+  }
+}
+
+/* --------------------------------------------------------------- drawers */
+
+/* Settings: just the title and the close button, centered on one line. */
+.dm-drawer-head-plain {
+  align-items: center;
+}
+
+/* The settings drawer's look, mirrored to come in from the left. */
+.dm-drawer.dm-guide {
+  left: 0;
+  right: auto;
+  border-left: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0 28px 28px 0;
+  box-shadow: 30px 0 60px rgb(0 0 0 / 0.35);
+  transform: translateX(-105%);
+}
+.dm-drawer.dm-guide[data-open="true"] {
+  transform: none;
+}
+.dm[data-skin="duo"] .dm-drawer.dm-guide {
+  border-left: 0;
+  border-right: 1.5px solid var(--swan);
+  border-radius: 0 24px 24px 0;
+  box-shadow: 20px 0 50px rgb(0 0 0 / 0.45);
+}
+@media (max-width: 640px) {
+  .dm[data-skin="duo"] .dm-drawer.dm-guide,
+  .dm-drawer.dm-guide {
+    border-radius: 0;
+  }
+}
+
+.dm-guide .dm-notice {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+.dm-guide .dm-notice[data-kind="script"] {
+  background: var(--sel-bg, var(--field));
+  border-color: var(--sel-line, var(--field-line));
+}
+.dm-guide .dm-notice[data-kind="live"] {
+  background: color-mix(in srgb, #3ee0c5 14%, transparent);
+  border-color: color-mix(in srgb, #3ee0c5 45%, transparent);
+}
+.dm-guide .dm-help {
+  margin: 0;
+  line-height: 1.45;
+}
+.dm-guide-link {
+  padding: 0;
+  background: none;
+  color: var(--brand-ink, var(--hi));
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Numbered steps: how to play, and one live turn. */
+.dm-guide-steps,
+.dm-guide-loop {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.dm-guide-steps {
+  gap: 12px;
+}
+.dm-guide-steps li,
+.dm-guide-loop li {
+  position: relative;
+  padding-left: 40px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  counter-increment: step;
+}
+.dm-guide-steps b,
+.dm-guide-loop b {
+  color: var(--ink);
+  font-weight: 800;
+}
+.dm-guide-steps li::before,
+.dm-guide-loop li::before {
+  content: counter(step);
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sel-bg, var(--field));
+  border: 1.5px solid var(--sel-line, var(--field-line));
+  color: var(--ink);
+  font-weight: 900;
+  font-size: 14px;
+}
+/* The live turn is a chain: each step joined to the next. */
+.dm-guide-loop li {
+  padding-bottom: 18px;
+}
+.dm-guide-loop li:last-child {
+  padding-bottom: 0;
+}
+.dm-guide-loop li::before {
+  background: var(--brand, var(--hi));
+  border-color: transparent;
+  color: #fff;
+}
+.dm-guide-loop li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 30px;
+  bottom: 2px;
+  left: 13px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--line);
+}
+
+.dm-guide-start {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 4px;
+}
+.dm-guide-start .dm-help {
+  font-size: 13px;
+}
+
+/* The scripted page beside the live game, one part per row. */
+.dm-guide-parts {
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.dm-guide-part {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 16px;
+  padding: 11px 14px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.dm-guide-part > b {
+  grid-column: 1 / -1;
+  font-size: 11.5px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.dm-guide-part > span {
+  color: var(--ink-soft);
+}
+.dm-guide-part > span:last-child {
+  color: var(--ink);
+  font-weight: 700;
+}
+.dm-guide-part-head {
+  border-top: 0;
+  background: var(--field);
+}
+.dm-guide-part-head > span,
+.dm-guide-part-head > span:last-child {
+  color: var(--ink);
+  font-weight: 900;
+  font-size: 13px;
+}
+
+/* The ask: how a judge gets live play. */
+.dm-guide-ask {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 20px;
+  background: var(--sel-bg, var(--field));
+  border: 1.5px solid var(--sel-line, var(--field-line));
+  border-bottom-width: 4px;
+}
+.dm-guide-ask h3 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1.2;
+}
+.dm-guide-ask p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+/* The MCP tools: name, and something a family says that calls it. */
+.dm-guide-tools {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.dm-guide-tools li {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.dm-guide-tools li:first-child {
+  border-top: 0;
+}
+.dm-guide-tools code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--brand-ink, var(--hi));
+}
+.dm-guide-tools span {
+  color: var(--ink-soft);
+}
+@media (max-width: 480px) {
+  .dm-guide-tools li {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}

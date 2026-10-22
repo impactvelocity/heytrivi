@@ -2,7 +2,8 @@
  * A player as a little cousin of Trivi: a flat shape in a bright version of
  * their color with a white face. Each player keeps their own shape (circle,
  * blob, rounded square, triangle, pill or flower) from their place in the
- * family, and familyColors gives everyone in a family a different color.
+ * family, unless they picked one with New look (look.shape), and
+ * familyColors gives everyone in a family a different color.
  * On the leaderboard the face follows their place, from a big grin in first
  * to a worried look in last; everywhere else they smile. It breathes slowly
  * (demo.css), each player on their own beat.
@@ -98,6 +99,9 @@ const SHAPES: { body: (fill: string) => ReactNode; face?: string }[] = [
   },
 ];
 
+/** How many shapes there are to pick from. */
+export const AVATAR_SHAPES = SHAPES.length;
+
 /** A color's hue (0 to 360), saturation and lightness (0 to 1). */
 function toHsl(hex: string) {
   const m = /^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(hex);
@@ -127,19 +131,17 @@ function vivid(hex: string) {
 const PALETTE = ["#ff3d7f", "#ff8a1f", "#f5b400", "#1fc46e", "#16b8d4", "#2f7dff", "#8b5cff", "#e04fd8", "#ff5a4f"];
 
 const hueGap = (a: number, b: number) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
+/** How far apart (in hue) two players' colors must be to both keep them. */
+const MIN_GAP = 28;
 
-/**
- * One color per player, all different. Each player keeps a bright version of
- * their own color unless someone earlier in the family already has a color
- * close to it; then they get the palette color furthest from the ones taken.
- */
-export function familyColors(members: { id: string; look: Look }[]) {
+/** Everyone's color, and the hues they took. */
+function assign(members: { id: string; look: Look }[]) {
   const taken: number[] = [];
   const colors = new Map<string, string>();
   const free = (h: number) => Math.min(360, ...taken.map((t) => hueGap(h, t)));
   for (const m of members) {
     const own = toHsl(m.look.bg);
-    if (own && free(own.h) >= 28) {
+    if (own && free(own.h) >= MIN_GAP) {
       taken.push(own.h);
       colors.set(m.id, vivid(m.look.bg));
       continue;
@@ -148,7 +150,20 @@ export function familyColors(members: { id: string; look: Look }[]) {
     taken.push(pick.h);
     colors.set(m.id, pick.hex);
   }
-  return colors;
+  return { colors, taken };
+}
+
+/**
+ * One color per player, all different. Each player keeps a bright version of
+ * their own color unless someone earlier in the family already has a color
+ * close to it; then they get the palette color furthest from the ones taken.
+ */
+export const familyColors = (members: { id: string; look: Look }[]) => assign(members).colors;
+
+/** The palette colors a new player would keep: far enough from everyone already in the family. */
+export function freeColors(members: { id: string; look: Look }[]) {
+  const { taken } = assign(members);
+  return PALETTE.filter((hex) => taken.every((t) => hueGap(toHsl(hex)!.h, t) >= MIN_GAP));
 }
 
 /** A small stable number from a player's look, for a beat and a fallback shape. */
@@ -169,7 +184,7 @@ export function Avatar({
 }: {
   look: Look;
   size?: number;
-  /** The player's place in their family; picks the shape. */
+  /** The player's place in their family; picks the shape unless the look has one. */
   shape?: number;
   /** Their color in the family, from familyColors; defaults to their own. */
   color?: string;
@@ -178,7 +193,7 @@ export function Avatar({
 }) {
   const h = hash(look);
   const fill = color ?? vivid(look.bg);
-  const shape = SHAPES[(n !== undefined && n >= 0 ? n : h) % SHAPES.length]!;
+  const shape = SHAPES[(look.shape ?? (n !== undefined && n >= 0 ? n : h)) % SHAPES.length]!;
   const face = rank === undefined ? "smile" : faceFor(rank, of);
   return (
     <svg

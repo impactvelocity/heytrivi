@@ -43,7 +43,7 @@ export function WhoFor() {
   return (
     <section className="lp-section" id="who" aria-labelledby="lp-who-title">
       <div className="lp-wrap">
-        <SectionHead title="Made for any house with a rivalry" id="lp-who-title">
+        <SectionHead kicker="Who It's For" tone="pink" title="Made for any house with a rivalry" id="lp-who-title">
           If the people at your table argue about who's right, Hey Trivi gives them a scoreboard and something to play for.
         </SectionHead>
         <div className="lp-houses">
@@ -124,9 +124,9 @@ function DayBadge({ shape, icon }: { shape: Shape; icon: ReactNode }) {
 export function Week() {
   const { ref, step } = useLoop<HTMLOListElement>(DAYS.length, 2400);
   return (
-    <section className="lp-section lp-week-section" aria-labelledby="lp-week-title">
+    <section className="lp-section lp-week-section" id="week" aria-labelledby="lp-week-title">
       <div className="lp-wrap">
-        <SectionHead title="A week with Trivi" id="lp-week-title">
+        <SectionHead kicker="Day by Day" tone="yellow" title="A week with Trivi" id="lp-week-title">
           The server remembers between conversations, so a point won on Tuesday still counts on Friday.
         </SectionHead>
         <ol ref={ref} className="lp-week" style={{ "--day": step, "--days": DAYS.length } as CSSProperties}>

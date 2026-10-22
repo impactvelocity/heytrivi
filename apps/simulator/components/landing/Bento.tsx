@@ -17,7 +17,7 @@ export function Bento() {
   return (
     <section className="lp-section" id="features" aria-labelledby="lp-features-title">
       <div className="lp-wrap">
-        <SectionHead title="Settle it with a quiz" id="lp-features-title">
+        <SectionHead kicker="Features" tone="purple" title="Settle it with a quiz" id="lp-features-title">
           Every family argues about something. Hey Trivi turns the argument into a round of trivia, keeps track of who won, and remembers
           it tomorrow.
         </SectionHead>
@@ -93,7 +93,7 @@ function GuessPreview() {
   return (
     <div ref={ref} className="lp-pv-guess">
       <div className="lp-pv-q">
-        <span className="lp-pv-q-tag">Trivi asks</span>
+        <span className="lp-pv-q-tag">Trivi Asks</span>
         Which planet has the most moons?
       </div>
       <div className="lp-pv-said" data-on={step >= 1 || undefined}>
@@ -186,7 +186,7 @@ function SpendPreview() {
           <b>Pick movie night</b>
           <small>50 points</small>
         </span>
-        <span className="lp-pv-stamp">Sally picks!</span>
+        <span className="lp-pv-stamp">Sally Picks!</span>
       </div>
       <div className="lp-pv-spend-row">
         <Face id="sally" size={30} />

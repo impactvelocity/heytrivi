@@ -31,7 +31,18 @@ export function Parents() {
     <section className="lp-section" id="parents" aria-labelledby="lp-parents-title">
       <div className="lp-wrap lp-parents">
         <div className="lp-parents-copy">
-          <SectionHead title="Parents set it up, kids just play" id="lp-parents-title" className="lp-head-left">
+          <SectionHead
+            kicker="For Parents"
+            tone="mint"
+            title={
+              <>
+                Parents set it up, <br className="lp-br" />
+                kids just play
+              </>
+            }
+            id="lp-parents-title"
+            className="lp-head-left"
+          >
             The parent page uses the same login as Alexa+ and changes the same household the family plays. Nothing a helper writes
             reaches the kids until a parent saves it.
           </SectionHead>
@@ -47,7 +58,7 @@ export function Parents() {
             ))}
           </ul>
           <a className="lp-btn lp-btn-ghost" href={PARENT_HREF}>
-            Open the parent page
+            Open the Parent Page
             <ChevronRight width={18} height={18} />
           </a>
         </div>
@@ -60,7 +71,7 @@ export function Parents() {
             <span>Parent page · Themes</span>
           </div>
           <div className="lp-window-body">
-            <p className="lp-helper-label">Describe a theme</p>
+            <p className="lp-helper-label">Describe a Theme</p>
             <p key={step === 0 ? "typing" : "typed"} className="lp-helper-prompt" data-typing={step === 0 || undefined}>
               {PROMPT.split(" ").map((w, i) => (
                 <span key={i} style={{ "--w": i } as CSSProperties}>
@@ -93,8 +104,8 @@ export function Parents() {
               ))}
             </ol>
             <div className="lp-helper-save" data-saved={step >= 4 || undefined}>
-              <span>{step >= 4 ? "Saved: Dinosaur week" : "Review, then save"}</span>
-              <b>{step >= 4 ? <Check width={16} height={16} /> : "Save theme"}</b>
+              <span>{step >= 4 ? "Saved: Dinosaur Week" : "Review, then save"}</span>
+              <b>{step >= 4 ? <Check width={16} height={16} /> : "Save Theme"}</b>
             </div>
           </div>
         </div>
