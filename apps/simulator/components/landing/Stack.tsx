@@ -100,7 +100,7 @@ export function HowBuilt() {
 const STATS = [
   { value: "9", label: "MCP tools" },
   { value: "125 ms", label: "Slowest tool's p95, 50 calls each" },
-  { value: "114", label: "Tests passing" },
+  { value: "117", label: "Tests passing" },
   { value: "1", label: "CDK stack to deploy or tear down" },
 ];
 
@@ -108,7 +108,7 @@ const AWS: { name: string; role: string; tag: string }[] = [
   { name: "AWS Lambda", role: "Runs the MCP server on Node 22 and ARM. A function URL is the HTTPS endpoint, with no API Gateway.", tag: "Compute" },
   { name: "Amazon DynamoDB", role: "One on-demand table for households, players, rounds, chores, the points ledger, and themes.", tag: "Data" },
   { name: "Amazon Cognito", role: "Parent sign-up and managed login. Its access tokens are the bearer tokens the MCP server checks.", tag: "Accounts" },
-  { name: "Amazon Bedrock", role: "Runs Amazon Nova 2 Lite, the game show's host model, which judges guesses and picks tools.", tag: "AI" },
+  { name: "Amazon Bedrock", role: "The direct path to Amazon Nova 2 Lite, the game show's host. It's behind a flag while this account's Bedrock quota is 0, so the same model runs through the Vercel AI Gateway.", tag: "AI" },
   { name: "Amazon Polly", role: "Trivi's speaking voice in the game show.", tag: "Voice" },
   { name: "AWS Amplify Hosting", role: "Hosts the Next.js app: the game show, the parent page, and this page.", tag: "Web" },
   { name: "AWS CDK", role: "One CloudFormation stack creates everything, and one command tears it down.", tag: "Infra" },

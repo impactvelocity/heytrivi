@@ -1,14 +1,14 @@
-# HeyTrivi
+# Hey Trivi
 
 **Family trivia that keeps score.**
 
-![HeyTrivi, family trivia that keeps score: the demo stage as Sally wins a round, with the leaderboard and the live MCP server connection beside it, above three features: Alexa+ Hosts, Score That Lasts, and Learning Kids Can Win.](https://www.heytrivi.app/devpost/01-hero.png)
+![Hey Trivi, family trivia that keeps score: the demo stage as Sally wins a round, with the leaderboard and the live MCP server connection beside it, above three features: Alexa+ Hosts, Score That Lasts, and Learning Kids Can Win.](https://www.heytrivi.app/devpost/01-hero.png)
 
 **[Live site](https://heytrivi.app)** · **[Try the demo](https://heytrivi.app/demo)** · **[Parent page](https://heytrivi.app/parent)** · **[Code](https://github.com/impactvelocity/heytrivi)**
 
 The demo runs in Chrome with no sign-up. It's an Alexa+ simulator, not an Amazon product.
 
-The public demo plays a scripted game, so it doesn't call the live MCP server, the model, or the voice. Live play runs the same page against the real server on AWS. The video shows it working, and the README runs the whole game locally, with no AWS account needed.
+The public demo plays a scripted game, so it doesn't call the live MCP server, the model, or the voice. Live play runs the same page against the real server on AWS, and on the public site it's behind an unlock code to keep model costs down. The video shows it working, and the README runs the live game locally, or the whole game with no AWS account at all.
 
 ## Inspiration
 
@@ -18,7 +18,7 @@ Alexa+ is already in the room when those debates start. Everyone can talk to it 
 
 ## What it does
 
-HeyTrivi turns those debates into rounds of trivia and riddles. Alexa+ is the host, called Trivi. It asks a question, the whole table answers in one breath ("I say zero, Mom says ten, John says a hundred"), and Trivi judges every guess, explains the answer, and hands out points.
+Hey Trivi turns those debates into rounds of trivia and riddles. Alexa+ is the host, called Trivi. It asks a question, the whole table answers in one breath ("I say zero, Mom says ten, John says a hundred"), and Trivi judges every guess, explains the answer, and hands out points.
 
 ![Everyone guesses, Trivi hands out points: Dad asks how many teeth a snail has, each person's guess appears as a chat bubble under their name, and Sally's 10,000 wins the point.](https://www.heytrivi.app/devpost/02-round.png)
 
@@ -36,7 +36,7 @@ HeyTrivi turns those debates into rounds of trivia and riddles. Alexa+ is the ho
 
 ![Win points, cash them in: Sally picks movie night for 5 points, a parent says the magic words, and it's movie night.](https://www.heytrivi.app/devpost/05-spend.png)
 
-**The score lasts.** Balances reset weekly or monthly (the parent chooses), and lifetime totals never go down, so there's always a record of who's right most often.
+**The score lasts.** The server keeps the family's state between conversations, so a point won on Tuesday still counts on Friday. Balances reset weekly or monthly (the parent chooses), and lifetime totals never go down, so there's always a record of who's right most often.
 
 **It knows very little about kids.** Trivi keeps a first name and a grade band. No birthdays, no voice recordings, no notes about a child.
 
@@ -44,11 +44,11 @@ The parent page also shows every point earned, spent, traded, or reset, and ever
 
 ## How I built it
 
-The design rests on one split. Alexa+ runs the conversation and decides who's right. The HeyTrivi MCP server stores what happened and applies the rules. Scores never come from a model's memory, so nobody can sweet-talk Trivi into a bonus point.
+The design rests on one split. Alexa+ runs the conversation and decides who's right. The Hey Trivi MCP server stores what happened and applies the rules. Scores never come from a model's memory, so nobody can sweet-talk Trivi into a bonus point.
 
 ![Alexa+ hosts, the server keeps score: the family talks to Alexa+, which calls the MCP server on AWS Lambda, which keeps score in DynamoDB. Parents sign in with Amazon Cognito.](https://www.heytrivi.app/devpost/06-built.png)
 
-**The MCP server** is TypeScript, using the MCP TypeScript SDK and Hono on AWS Lambda. A Lambda function URL serves Streamable HTTP (protocol 2025-11-25), with no API Gateway. It has nine tools: `get_household`, `start_round`, `record_round`, `complete_chore`, `spend_points`, `transfer_points`, `show_scoreboard`, `add_player`, and `list_packs`. None of them call a model. The game rules (verdicts, points, stakes, tiebreaks, trades, resets) are pure functions in their own package, and everything is stored in one on-demand DynamoDB table. `show_scoreboard` returns the scoreboard as an MCP App.
+**The MCP server** is TypeScript, using the MCP TypeScript SDK and Hono on AWS Lambda. A Lambda function URL serves Streamable HTTP (protocol 2025-11-25), with no API Gateway. It has nine tools: `get_household`, `start_round`, `record_round`, `complete_chore`, `spend_points`, `transfer_points`, `show_scoreboard`, `add_player`, and `list_packs`. None of them call a model. The game rules (verdicts, points, stakes, tiebreaks, trades, resets) are pure functions in their own package, and everything is stored in one on-demand DynamoDB table. `show_scoreboard` and `record_round` return the scoreboard as an MCP App (`ui://hey-trivi/scoreboard`), so a host with a screen can show it.
 
 **Accounts.** Parents sign up with Amazon Cognito, and Cognito's access tokens are the bearer tokens the server checks. The server publishes the OAuth discovery documents so Alexa+ can link a parent's account. Every family uses the same server URL, and the parent's login decides which household loads.
 
@@ -62,7 +62,7 @@ The design rests on one split. Alexa+ runs the conversation and decides who's ri
 
 ## Challenges I ran into
 
-**There's no Alexa+ to test against.** That's why the simulator exists. I mapped every Alexa+ requirement to how the server meets it, but the docs disagreed in places: whether account linking needs a client secret, and which protocol version Alexa+ sends (2025-03-26 on one page, 2025-11-25 on another). The server handles both.
+**There's no Alexa+ to test against.** That's why the simulator exists. I mapped every Alexa+ requirement to how the server meets it, but the docs disagreed in places: whether account linking needs a client secret, and which protocol version Alexa+ sends (2025-03-26 on one page, 2025-11-25 on another). The server implements 2025-11-25 and also accepts clients that open with 2025-03-26.
 
 **My new AWS account had zero Bedrock quota.** Every Nova model had a daily token quota of 0, and Bedrock reported it as "Too many tokens per day, please wait." Waiting never helped, and the quota can't be raised from the console. I built in mock mode until I moved the host to the same Nova 2 Lite model through the Vercel AI Gateway. The direct Bedrock path is still there behind a flag.
 
@@ -89,3 +89,13 @@ Let the model judge and let the server count. A model is good at hearing four gu
 In a voice app, the only safe text is the text you chose to speak. Routing speech through a `say` tool is what stopped Trivi from giving away answers.
 
 And voice changes the design of every tool. A family answers all at once, so `record_round` takes everyone's guesses in one call. A bet, a trade, or a spend has to be said out loud and confirmed out loud, because there's no button to press.
+
+## What's next for Hey Trivi
+
+**Put it on real Alexa+.** The server is built as an Alexa+ add-on: OAuth account linking through Cognito, a family created on first link so nobody has to open a web page, the store listing in `alexa/addon-package/addon.json`, and the `alexa-ai` registration steps in `docs/alexa-plus.md`. When add-on tools open to more developers, the first job is checking the short list of things I couldn't verify without Alexa+.
+
+**Themes by voice.** Today a parent describes a theme on the parent page. Next is "Trivi, make a fractions theme for Sally": the same write, answer-blind, and fact-check steps running in the background, with the draft still waiting for a parent's OK before the kids hear it.
+
+**All on AWS.** The host model already has a Bedrock path behind a flag. Once the account's Nova quota is raised, the host and the theme helper move off the gateway and onto Bedrock.
+
+**Beyond one kitchen.** Families are the first audience, but the same scoreboard already works for couples settling who was right and housemates trading chore nights.
