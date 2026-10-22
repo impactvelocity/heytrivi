@@ -20,11 +20,12 @@ const SPEED = 1.2 / 1.1;
 
 /**
  * Voiceover sections: the transcript time each starts at, where it was cut in
- * the 1.1x voiceover (always inside a pause), and the beat added after it.
+ * the 1.1x voiceover (always inside true silence), and the beat added after
+ * it. A gap of 0 means the voiceover runs straight on, uncut.
  */
 export const SEGS = [
-  { from: 0, cut: 0, gap: 0.4 }, // hook
-  { from: 8.88, cut: 9.62, gap: 1.2 }, // reveal
+  { from: 0, cut: 0, gap: 0.7 }, // hook
+  { from: 8.88, cut: 9.62, gap: 0 }, // reveal (runs straight on: no cut through Dad's chuckle)
   { from: 15.46, cut: 16.93, gap: 0.9 }, // snail round
   { from: 32.44, cut: 35.41, gap: 0.3 }, // three parts
   { from: 46.42, cut: 50.57, gap: 0.8 }, // guessing first
@@ -58,6 +59,9 @@ export const easeOut = (x: number) => 1 - (1 - x) ** 3;
 export const easeIn = (x: number) => x ** 3;
 export const easeInOut = (x: number) => (x < 0.5 ? 4 * x ** 3 : 1 - (-2 * x + 2) ** 3 / 2);
 export const backOut = (x: number, s = 1.6) => 1 + (s + 1) * (x - 1) ** 3 + s * (x - 1) ** 2;
+
+/** A CSS custom property as a style entry, for values the stylesheet reads with var(). */
+export const cssVar = (name: string, value: number) => ({ [name]: value }) as CSSProperties;
 
 /** In over `inDur` from `at`, out over `outDur` ending at `end`. */
 export function life(t: number, at: number, end = Infinity, inDur = 0.5, outDur = 0.45) {
@@ -105,13 +109,22 @@ export function stepTo(t: number, steps: [number, number][], dur = 0.8) {
 }
 
 /**
- * Centers of fixed-width slots that arrive one at a time (at `times`), kept
- * centered as a group: each new arrival slides the others over.
+ * Centers of slots that arrive one at a time (at `times`), kept centered as a
+ * group: each new arrival slides the others over. `w` is one width for all,
+ * or each slot's own width so the gaps stay even.
  */
-export function centered(t: number, times: number[], w: number, gap: number, dur = 0.7) {
-  const k = Math.max(1, times.reduce((n, a) => n + easeInOut(ramp(t, a, dur)), 0));
-  const span = k * (w + gap) - gap;
-  return times.map((_, i) => i * (w + gap) + w / 2 - span / 2);
+export function centered(t: number, times: number[], w: number | number[], gap: number, dur = 0.7) {
+  const ws = times.map((_, i) => (Array.isArray(w) ? w[i]! : w));
+  const shown = times.map((a) => easeInOut(ramp(t, a, dur)));
+  // The group's width: whole slots that have arrived, plus part of the one arriving.
+  let span = 0;
+  shown.forEach((p, i) => (span += i === 0 ? ws[0]! : p * (ws[i]! + gap)));
+  let x = -span / 2;
+  return ws.map((wi, i) => {
+    const c = x + wi / 2;
+    x += wi + gap;
+    return c;
+  });
 }
 
 /**

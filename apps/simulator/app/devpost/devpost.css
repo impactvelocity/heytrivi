@@ -52,45 +52,231 @@
   text-wrap: balance;
 }
 
+/* ------------------------------------------------------------ thumbnail */
+
+/* Read small in the gallery, so the type is big. The logo, headline and Glow
+   sit as one group with a wide margin; the logo lines up with the headline. */
+.dp-thumb .dp-top {
+  top: 110px;
+  left: 180px;
+}
+.dm[data-skin="duo"].dp-thumb .dp-logo {
+  font-size: 64px;
+}
+.dp-thumb-copy {
+  position: absolute;
+  left: 180px;
+  top: 0;
+  bottom: 0;
+  width: 860px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 34px;
+}
+/* Two whole lines, "Family trivia / that keeps score", never broken mid-phrase. */
+.dp-thumb-h1.bv-h1 {
+  font-size: 112px;
+  line-height: 1.04;
+  text-align: left;
+}
+.dp-thumb-h1 > span {
+  display: block;
+  white-space: nowrap;
+}
+.dp-thumb-art {
+  position: absolute;
+  left: 980px;
+  top: 200px;
+  width: 780px;
+  height: 880px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+}
+.dp-thumb-halo {
+  position: absolute;
+  inset: 0 -40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--acc) 45%, transparent), transparent 62%);
+}
+/* A still frame: the hop and the pop would land at a random point in a screenshot. */
+.dp-thumb .av-glow[data-mood] :is(.gl-pop, .gl-body, .gl-squish) {
+  animation: none;
+}
+.dp-thumb .gl-sparkles path {
+  animation: none;
+  scale: 1;
+}
+.dp-thumb .av.av-glow .av-confetti {
+  display: none;
+}
+.dp-thumb-guess {
+  position: absolute;
+}
+.dp-thumb-guess .dp-guess .bv-guess-text strong {
+  font-size: 54px;
+}
+.dp-thumb-guess-a {
+  right: 30px;
+  bottom: 80px;
+  rotate: -4deg;
+  scale: 1.25;
+}
+.dp-thumb-guess-b {
+  left: -10px;
+  top: 40px;
+  rotate: 5deg;
+  opacity: 0.6;
+}
+.dp-thumb-plus {
+  position: absolute;
+  right: 40px;
+  top: 120px;
+  padding: 10px 28px 14px;
+  border-radius: 999px;
+  background: var(--yellow);
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--yellow) 60%, #000), 0 20px 40px rgb(0 0 0 / 0.35);
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 56px;
+  color: #3b2300;
+  rotate: 8deg;
+}
+
 /* ----------------------------------------------------------------- hero */
 
-.dp-hero-shot {
+/* The stage and the leaderboard sit right on the night, with no card around them. */
+.dm[data-skin="duo"] .dp-hero-frame {
+  --frame: 30px;
+  --frame-radius: 46px;
+  --bulb-size: 14px;
+  --bulb-gap: 34px;
   position: absolute;
-  left: 210px;
-  top: 270px;
-  width: 1500px;
-  height: 800px;
-  overflow: hidden;
-  border-radius: 34px;
-  background: radial-gradient(ellipse 70% 62% at 50% 40%, color-mix(in srgb, var(--night-hi) 85%, var(--night)), var(--night) 80%);
-  border: 2px solid var(--night-line);
-  box-shadow: 0 0 0 8px rgb(255 255 255 / 0.04), 0 40px 90px rgb(0 0 0 / 0.55), 0 0 120px color-mix(in srgb, var(--acc) 22%, transparent);
+  left: 150px;
+  top: 300px;
+  width: 1080px;
+  height: 720px;
+  margin: 0;
 }
-/* The stage page drawn at 1500px wide, with only the stage and the leaderboard showing. */
-.dp-hero-cam {
+.dp-hero-frame .dm-stage {
+  align-items: center;
+  justify-content: center;
+}
+.dp-hero-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+}
+.dp-hero-guesses {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.dp-hero-guesses .dp-guess .bv-guess-in {
+  min-width: 0;
+  padding: 10px 24px 12px 10px;
+}
+.dp-hero-guesses .dp-guess .bv-guess-text strong {
+  font-size: 38px;
+}
+.dp-hero-guesses .dp-guess:not([data-win]) .bv-guess-in {
+  opacity: 0.6;
+}
+.dp-hero-guesses .dp-guess[data-win] .bv-guess-in {
+  scale: 1.12;
+}
+.dp-hero-stage .dp-trivi {
+  max-width: none;
+  text-align: center;
+}
+.dp-hero-stage .dp-trivi p {
+  font-size: 38px;
+}
+.dm .dp-hero-board {
   position: absolute;
-  left: -6px;
-  top: -22px;
-  width: 1920px;
-  height: 1080px;
-  transform: scale(0.79);
-  transform-origin: 0 0;
+  left: 1290px;
+  top: 300px;
+  width: 480px;
 }
-.dp-hero-cam :is(.dm-header, .dm-family, .dm-settings, .dm-dock, .bv-toast) {
-  display: none !important;
+.dp-hero-board .dm-board-head {
+  margin-top: 0;
+}
+.dp-hero-mcp {
+  position: absolute;
+  left: 1290px;
+  top: 790px;
+  width: 480px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 22px 20px;
+  border-radius: 26px;
+  background: rgb(12 5 24 / 0.6);
+  border: 1.5px solid color-mix(in srgb, #3ee0c5 45%, var(--night-line));
+}
+.dp-hero-mcp-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dp-hero-mcp-head strong {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 24px;
+  color: #fff;
+}
+.dp-hero-mcp-head small {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgb(62 224 197 / 0.15);
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #3ee0c5;
+}
+.dp-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #3ee0c5;
+  box-shadow: 0 0 12px #3ee0c5;
+}
+.dp-hero-mcp .dp-toast {
+  padding: 14px 18px;
+  font-size: 20px;
+  box-shadow: none;
+}
+.dp-hero-mcp p {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--wolf);
+}
+.dp-hero-board .dm-board-head h2 {
+  font-size: 26px;
+}
+.dp-hero-board .dm-row[data-lit] {
+  box-shadow: 0 0 0 3px var(--yellow), 0 0 34px rgb(255 200 0 / 0.5);
 }
 .dp-usps {
   position: absolute;
-  left: 210px;
-  right: 210px;
-  top: 1104px;
+  left: 150px;
+  right: 150px;
+  top: 1090px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
 }
 .dp-usp {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 18px;
   padding: 20px 24px;
   border-radius: 26px;
@@ -102,11 +288,8 @@
   flex: none;
   display: grid;
   place-items: center;
-  width: 66px;
-  height: 66px;
-  border-radius: 20px;
-  background: var(--night);
-  border: 1.5px solid var(--night-line);
+  width: 44px;
+  height: 40px;
   color: var(--yellow);
 }
 .dp-usp > span:last-child {
@@ -180,7 +363,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 340px;
+  top: 450px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -190,7 +373,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 820px;
+  top: 830px;
   display: flex;
   justify-content: center;
   align-items: flex-end;
@@ -200,7 +383,24 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
+  gap: 10px;
+}
+.dp-say > .av,
+.dp-say > svg {
+  margin-top: 44px;
+}
+/* The speaker's name above the bubble, as in a group text. */
+.dp-say-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--wolf);
+}
+.dp-say[data-win] .dp-say-name {
+  color: var(--yellow);
 }
 .dp-say p {
   position: relative;
@@ -233,13 +433,6 @@
   background: inherit;
   box-shadow: 6px 6px 0 #d9cdee;
 }
-.dp-say small {
-  font-size: 17px;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--acc-ink);
-}
 .dp-say[data-win] p {
   background: var(--yellow);
   color: #3a2300;
@@ -248,9 +441,6 @@
 }
 .dp-say[data-win] p::after {
   box-shadow: 6px 6px 0 var(--yellow-d);
-}
-.dp-say[data-win] small {
-  color: #7a5200;
 }
 .dp-say[data-win] > svg,
 .dp-say[data-win] > .av {
@@ -270,15 +460,13 @@
   box-shadow: 0 4px 0 var(--green-d);
 }
 .dp-say-plus {
-  position: absolute;
-  top: -22px;
-  left: -22px;
-  padding: 4px 16px;
+  padding: 2px 12px;
   border-radius: 999px;
   background: var(--acc);
   color: #fff;
-  font-size: 26px;
-  box-shadow: 0 4px 0 var(--acc-d);
+  font-size: 20px;
+  font-weight: 900;
+  box-shadow: 0 3px 0 var(--acc-d);
 }
 
 /* ---------------------------------------------------------------- steps */
@@ -505,7 +693,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 290px;
+  top: 400px;
   display: flex;
   justify-content: center;
   align-items: flex-end;
@@ -536,7 +724,7 @@
   position: absolute;
   left: 230px;
   right: 230px;
-  top: 470px;
+  top: 560px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 26px;
@@ -559,14 +747,9 @@
 }
 .dp-theme-icon {
   flex: none;
-  display: grid;
-  place-items: center;
-  width: 92px;
-  height: 92px;
-  border-radius: 26px;
-  background: color-mix(in srgb, var(--tone) 30%, var(--night));
-  border: 2px solid color-mix(in srgb, var(--tone) 60%, transparent);
-  font-size: 54px;
+  width: 72px;
+  text-align: center;
+  font-size: 60px;
   line-height: 1;
 }
 .dp-theme-text {
@@ -604,63 +787,6 @@
   text-transform: uppercase;
   box-shadow: 0 4px 0 var(--yellow-d);
 }
-.dp-how {
-  position: absolute;
-  left: 230px;
-  right: 230px;
-  top: 920px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
-  padding: 26px 30px 30px;
-  border-radius: 30px;
-  background: rgb(12 5 24 / 0.55);
-  border: 1.5px solid var(--night-line);
-}
-.dp-how-h {
-  font-size: 18px;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--hare);
-}
-.dp-how-row {
-  display: flex;
-  justify-content: center;
-  gap: 54px;
-  width: 100%;
-}
-.dp-how-step {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.dp-how-step:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  right: -34px;
-  top: 50%;
-  width: 14px;
-  height: 14px;
-  translate: 0 -50%;
-  border-top: 4px solid var(--acc);
-  border-right: 4px solid var(--acc);
-  rotate: 45deg;
-}
-.dp-how-step b {
-  display: block;
-  font-family: var(--display);
-  font-size: 26px;
-  font-weight: 900;
-  color: #fff;
-}
-.dp-how-step small {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--wolf);
-}
 .dp-tick {
   flex: none;
   display: grid;
@@ -679,7 +805,9 @@
   height: 1280px;
 }
 .dp-wires text {
-  font-size: 21px;
+  font-size: 22px;
+  font-weight: 900;
+  fill: #fff;
 }
 .dp-box-c {
   align-items: center;
@@ -701,7 +829,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 270px;
+  top: 300px;
   bottom: 40px;
   display: flex;
   flex-direction: column;
@@ -718,16 +846,6 @@
   display: grid;
   grid-template-columns: 600px 130px 560px;
   align-items: center;
-}
-.dp-calls-h span {
-  font-size: 20px;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--hare);
-}
-.dp-calls-h span:first-child {
-  padding-left: 72px;
 }
 .dp-call .dp-said p {
   flex: 1;
@@ -811,18 +929,13 @@
   stroke-width: 2;
   stroke-dasharray: 2 10;
 }
-.dp-peak {
-  position: absolute;
-  left: 1640px;
-  top: 742px;
-}
 .dp-stats {
   position: absolute;
-  left: 180px;
-  right: 180px;
-  top: 340px;
+  left: 360px;
+  right: 360px;
+  top: 530px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
 }
 .dp-stat {
   display: flex;
@@ -857,7 +970,7 @@
   position: absolute;
   left: 260px;
   right: 260px;
-  top: 640px;
+  top: 800px;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -871,4 +984,140 @@
   font-weight: 900;
   font-size: 25px;
   color: #fff;
+}
+
+/* Both cards beside Glow share one width, so Glow stays centered. */
+.dp-round .dp-trivi {
+  box-sizing: border-box;
+  width: 440px;
+}
+
+/* Steps without any card: each picture and its title, with a thin line between steps. */
+.dp-steps[data-bare] {
+  top: 420px;
+  gap: 40px;
+}
+.dp-steps[data-bare] .bv-part.dp-step {
+  width: 520px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.dp-steps[data-bare] .dp-step::after {
+  content: none;
+}
+.dp-steps[data-bare] .bv-part-art.dp-step-art {
+  height: 500px;
+  padding: 0 28px;
+  border-radius: 32px;
+  background: rgb(255 255 255 / 0.035);
+  border: 1.5px solid rgb(255 255 255 / 0.08);
+}
+/* The step names live in the progress track above, not under each step. */
+.dp-steps[data-bare] .dp-step h3 {
+  display: none;
+}
+.dp-track {
+  position: absolute;
+  left: 400px;
+  right: 400px;
+  top: 1010px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.dp-track::before {
+  content: "";
+  position: absolute;
+  left: 60px;
+  right: 60px;
+  top: 50%;
+  height: 5px;
+  translate: 0 -50%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--acc), var(--pop-1) 50%, var(--acc));
+}
+.dp-track-step {
+  position: relative;
+  width: 0;
+  display: flex;
+  justify-content: center;
+}
+.dp-track-step b {
+  flex: none;
+  padding: 14px 30px 16px;
+  border-radius: 999px;
+  background: var(--night-card);
+  border: 2.5px solid var(--acc);
+  border-bottom-width: 6px;
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 34px;
+  white-space: nowrap;
+  color: #fff;
+  box-shadow: 0 14px 30px rgb(0 0 0 / 0.35);
+}
+.dp-track-step[data-last] b {
+  background: var(--acc);
+  border-color: var(--acc-d);
+  color: #fff;
+  box-shadow: 0 0 40px color-mix(in srgb, var(--acc) 45%, transparent);
+}
+
+.dp-point {
+  padding: 10px 24px;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: #3a2300;
+  font-weight: 900;
+  font-size: 26px;
+  box-shadow: 0 5px 0 var(--yellow-d), 0 12px 28px rgb(255 200 0 / 0.25);
+}
+.dp-nowrap {
+  white-space: nowrap;
+}
+.dp-emojis {
+  font-size: 0.82em;
+  letter-spacing: -0.04em;
+}
+/* Trivi "typing": three dots, like a chat app while the answer comes. */
+.dp-track-step b.dp-typing {
+  display: flex;
+  gap: 12px;
+  padding: 26px 34px 28px;
+}
+.dp-typing i {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+}
+.dp-typing i:nth-child(2) {
+  opacity: 0.7;
+  translate: 0 -5px;
+}
+.dp-typing i:nth-child(3) {
+  opacity: 0.45;
+}
+/* The stake reads as a quiet note under the debate, not a callout. */
+.dp-bet-talk .dp-stake {
+  margin-top: 4px;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--wolf);
+}
+.dp-bet-talk .dp-stake svg {
+  color: var(--yellow);
+}
+/* Secondary detail, as quiet text rather than a callout. */
+.dp-note {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--wolf);
 }

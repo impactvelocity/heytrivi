@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 28 160 160">
+  <!-- Glow, Trivi's avatar (components/avatars/Glow.tsx), in grape and
+       simplified for tab size: no grain or shadow, a bolder face. -->
+  <defs>
+    <linearGradient id="f" x1="0.15" y1="0.1" x2="0.9" y2="0.95">
+      <stop offset="0" stop-color="#6a2ad6" />
+      <stop offset="0.5" stop-color="#8f45f5" />
+      <stop offset="1" stop-color="#f07ad4" />
+    </linearGradient>
+    <radialGradient id="h" cx="0.4" cy="0.28" r="0.8">
+      <stop offset="0" stop-color="#e6d1ff" stop-opacity="0.4" />
+      <stop offset="0.5" stop-color="#e6d1ff" stop-opacity="0" />
+      <stop offset="0.82" stop-color="#45169e" stop-opacity="0" />
+      <stop offset="1" stop-color="#45169e" stop-opacity="0.35" />
+    </radialGradient>
+  </defs>
+  <ellipse cx="100" cy="109" rx="78" ry="76" fill="url(#f)" />
+  <ellipse cx="100" cy="109" rx="78" ry="76" fill="url(#h)" />
+  <ellipse cx="70" cy="64" rx="22" ry="11" transform="rotate(-32 70 64)" fill="#fff" opacity="0.22" />
+  <g fill="#ff4f8b" opacity="0.55">
+    <ellipse cx="56" cy="124" rx="11" ry="6.5" />
+    <ellipse cx="144" cy="124" rx="11" ry="6.5" />
+  </g>
+  <g fill="#fff">
+    <ellipse cx="70" cy="98" rx="11" ry="16" />
+    <ellipse cx="130" cy="98" rx="11" ry="16" />
+  </g>
+  <path d="M78 124Q100 146 122 124" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" />
+</svg>

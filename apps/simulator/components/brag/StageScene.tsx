@@ -12,7 +12,7 @@ import { FamilyPicker } from "@/components/demo/FamilyPicker";
 import { Broom, Cards, Check, ChevronRight, Close, Crown, Mic, Palette, Send, Sliders, Sparkle, Stop, Users } from "@/components/demo/icons";
 import { MarqueeLights, type LightsMode } from "@/components/demo/MarqueeLights";
 import { StageBackdrop } from "@/components/demo/StageBackdrop";
-import { at, centered, easeInOut, easeOut, keyed, lerp, life, pause, pop, ramp, SCENES, typed, v } from "./anim";
+import { at, backOut, centered, cssVar, easeIn, easeInOut, easeOut, keyed, lerp, life, pause, pop, ramp, SCENES, v } from "./anim";
 import { FAMILY, Face, NAME, type Who } from "./family";
 
 /* ------------------------------------------------------------- timeline */
@@ -59,11 +59,17 @@ const LIGHTS: [number, LightsMode][] = [
   [v(95.5), "chase"],
 ];
 
-/** What the stage hears, word by word: who, the words, and when (transcript times). */
-const HEARD: { who: Who; text?: ReactNode; words: string; from: number; to: number; end: number }[] = [
+/** When the sharks chatter bubbles start to leave. */
+const CHATTER_OUT = v(52.3);
+
+/**
+ * What the stage hears, word by word: who, the words, and when (transcript
+ * times). `wait` holds a pill back (video time) until the stage is clear.
+ */
+const HEARD: { who: Who; text?: ReactNode; words: string; from: number; to: number; end: number; wait?: number }[] = [
   { who: "dad", words: "Trivi, how many teeth does a snail have?", from: 15.46, to: 17.3, end: 17.95 },
   { who: "dad", words: "I say zero, Mom says 10, John says 100, Sally says 10,000", from: 18.02, to: 22.6, end: 23.6 },
-  { who: "dad", words: "Trivi, let's settle it", from: 52.36, to: 53.3, end: 53.7 },
+  { who: "dad", words: "Trivi, let's settle it", from: 52.36, to: 53.3, end: 53.7, wait: CHATTER_OUT + 0.4 },
   { who: "dad", words: "Which came first, sharks or trees?", from: 53.76, to: 55.4, end: 56.1 },
   { who: "dad", words: "I say sharks, Sally says trees", from: 56.16, to: 57.8, end: 58.55 },
   { who: "dad", words: "Trivi, let's learn about space", from: 79.34, to: 80.7, end: 81.3 },
@@ -92,13 +98,14 @@ const CAPTIONS: [number, { label: string; text: ReactNode }][] = [
   [92.96, { label: "Trivi", text: <>Done! Sally picks tonight's movie</> }],
 ];
 
-const ROUNDS: { items: { who: Who; text: string; at: number }[]; win: Who; result: number; drum?: number; end: number }[] = [
+/** Each guess card's own width (measured), so the row keeps even gaps. */
+const ROUNDS: { items: { who: Who; text: string; at: number; w: number }[]; win: Who; result: number; drum?: number; end: number }[] = [
   {
     items: [
-      { who: "dad", text: "0", at: 18.3 },
-      { who: "mom", text: "10", at: 19.6 },
-      { who: "john", text: "100", at: 21.05 },
-      { who: "sally", text: "10,000", at: 22.4 },
+      { who: "dad", text: "0", at: 18.3, w: 135 },
+      { who: "mom", text: "10", at: 19.6, w: 143 },
+      { who: "john", text: "100", at: 21.05, w: 163 },
+      { who: "sally", text: "10,000", at: 22.4, w: 213 },
     ],
     win: "sally",
     result: 28.36,
@@ -107,8 +114,8 @@ const ROUNDS: { items: { who: Who; text: string; at: number }[]; win: Who; resul
   },
   {
     items: [
-      { who: "dad", text: "Sharks", at: 56.3 },
-      { who: "sally", text: "Trees", at: 57.7 },
+      { who: "dad", text: "Sharks", at: 56.3, w: 210 },
+      { who: "sally", text: "Trees", at: 57.7, w: 187 },
     ],
     win: "dad",
     result: 58.6,
@@ -145,26 +152,87 @@ function scores(t: number): Record<Who, number> {
 
 /* ---------------------------------------------------------------- parts */
 
-function Heard({ t }: { t: number }) {
-  const line = HEARD.find((h) => t >= v(h.from) - 0.05 && t < v(h.end) + 0.45);
-  if (!line) return <p className="dm-status bv-status-empty" />;
-  const words = line.text ?? `“${typed(t, line.words, line.from, line.to)}”`;
+/** Trivi as a tiny Glow, wherever the app would show its ring mark. */
+function Mini({ size }: { size: number }) {
   return (
-    <p className="dm-status dm-status-heard bv-heard" style={pop(t, v(line.from) - 0.05, v(line.end) + 0.45, { y: 10, s: 0.94, dur: 0.45 })}>
-      <Face who={line.who} size={36} />
-      <b>{NAME[line.who]}</b>
-      {words}
-    </p>
+    <span className="bv-mini" style={{ "--s": `${size}px` } as CSSProperties}>
+      <Glow mood="idle" color="grape" />
+    </span>
   );
 }
 
-const SLOT = 216;
+/** Width of the pill's text in its own font (800 25px Nunito), measured once per string. */
+const widths = new Map<string, number>();
+let ctx: CanvasRenderingContext2D | null = null;
+function textWidth(text: string) {
+  const hit = widths.get(text);
+  if (hit !== undefined) return hit;
+  if (typeof document === "undefined") return text.length * 13;
+  ctx ??= document.createElement("canvas").getContext("2d");
+  if (!ctx) return text.length * 13;
+  ctx.font = `800 25px ${getComputedStyle(document.documentElement).getPropertyValue("--font-friendly") || "Nunito"}`;
+  const w = ctx.measureText(text).width;
+  widths.set(text, w);
+  return w;
+}
+
+/**
+ * What the stage hears, as speech turning into words: each word bounces up
+ * into place while the pill eases wider to make room, and a little sound
+ * wave bounces at the end until the sentence is done.
+ */
+function Heard({ t }: { t: number }) {
+  const line = HEARD.find((h) => t >= v(h.from) - 0.05 && t < v(h.end) + 0.45);
+  if (!line) return <p className="dm-status bv-status-empty" />;
+  // Dad starts asking while the page is still settling; his pill waits until it has.
+  const at = Math.max(v(line.from) - 0.05, SETTLE_AT + 0.85, line.wait ?? 0);
+  const style = pop(t, at, v(line.end) + 0.45, { y: 10, s: 0.94, dur: 0.45 });
+  if (line.text)
+    return (
+      <p className="dm-status dm-status-heard bv-heard" style={style}>
+        <Face who={line.who} size={36} />
+        <b>{NAME[line.who]}</b>
+        {line.text}
+      </p>
+    );
+  const parts = line.words.split(" ");
+  const tokens = parts.map((w, i) => (i === 0 ? "“" : "") + w + (i === parts.length - 1 ? "”" : " "));
+  const start = Math.max(v(line.from), at);
+  const step = (v(line.to) - v(line.from)) / parts.length;
+  const ins = tokens.map((_, i) => ramp(t, start + i * step, 0.38));
+  const width = tokens.reduce((sum, tok, i) => sum + easeInOut(ins[i]!) * textWidth(tok), 0);
+  // The sound wave: lively while words are coming in, tucked away once they're all there.
+  const wave = Math.min(ramp(t, start - 0.1, 0.25), 1 - ramp(t, start + parts.length * step + 0.15, 0.35));
+  return (
+    <p className="dm-status dm-status-heard bv-heard" style={style}>
+      <Face who={line.who} size={36} />
+      <b>{NAME[line.who]}</b>
+      <span className="bv-words" style={{ width }}>
+        {tokens.map((tok, i) => {
+          const q = ins[i]!;
+          return (
+            <span key={i} style={{ opacity: easeOut(Math.min(1, q * 1.6)), transform: `translateY(${(1 - backOut(q, 2.4)) * 14}px) scale(${lerp(0.85, 1, backOut(q, 2.4))})` }}>
+              {tok}
+            </span>
+          );
+        })}
+      </span>
+      <span className="bv-wave" style={{ width: 34 * wave, opacity: wave }}>
+        {[0, 1, 2, 3].map((i) => (
+          <i key={i} style={{ height: `${30 + 70 * Math.abs(Math.sin(t * 9 + i * 1.3))}%` }} />
+        ))}
+      </span>
+    </p>
+  );
+}
 
 function Guesses({ t }: { t: number }) {
   const round = ROUNDS.find((r) => t >= v(r.items[0]!.at) - 0.1 && t < v(r.end));
   if (!round) return <div className="bv-guesses" />;
   const decided = t >= v(round.result);
-  const xs = centered(t, round.items.map((g) => v(g.at)), SLOT, 16);
+  const reveal = easeOut(ramp(t, v(round.result), 0.45));
+  const ws = round.items.map((g) => g.w);
+  const xs = centered(t, round.items.map((g) => v(g.at)), ws, 22);
   return (
     <div className="bv-guesses">
       {round.items.map((g, i) => {
@@ -173,8 +241,16 @@ function Guesses({ t }: { t: number }) {
         const shake = drum ? Math.sin((t - v(round.drum!)) * 20 + i * 1.7) * 2.2 : 0;
         const k = win ? 1 + 0.1 * easeOut(ramp(t, v(round.result), 0.45)) : 1;
         return (
-          <div key={g.who} className="bv-slot" style={{ left: `calc(50% + ${xs[i]! - SLOT / 2}px)`, width: SLOT }}>
-            <div className="bv-guess" data-win={win || undefined} data-lose={(decided && !win) || undefined} style={pop(t, v(g.at), Infinity, { y: 30, s: 0.6 })}>
+          <div key={g.who} className="bv-slot" style={{ left: `calc(50% + ${xs[i]! - ws[i]! / 2}px)`, width: ws[i] }}>
+            <div
+              className="bv-guess"
+              style={{
+                ...pop(t, v(g.at), Infinity, { y: 30, s: 0.6 }),
+                // The winner warms to gold and the others dim, eased in rather than switched.
+                ...cssVar("--win", g.who === round.win ? reveal : 0),
+                ...cssVar("--lose", g.who === round.win ? 0 : reveal),
+              }}
+            >
               <div className="bv-guess-in" style={{ transform: `rotate(${shake}deg) scale(${k})` }}>
                 <Face who={g.who} size={46} />
                 <span className="bv-guess-text">
@@ -206,7 +282,7 @@ function Board({ t }: { t: number }) {
       at: v(64.56),
       node: (
         <>
-          <Broom width={14} height={14} /> Owes: dishes tonight
+          <Broom width={14} height={14} /> Owes: Dishes Tonight
         </>
       ),
     };
@@ -215,7 +291,7 @@ function Board({ t }: { t: number }) {
       at: v(92.96),
       node: (
         <>
-          <Sparkle width={14} height={14} /> Picks tonight's movie
+          <Sparkle width={14} height={14} /> Picks Tonight's Movie
         </>
       ),
     };
@@ -307,41 +383,46 @@ function McpToast({ t }: { t: number }) {
 
 /** Family chatter before anyone asks Trivi: speech bubbles over the stage. */
 function Chatter({ t }: { t: number }) {
-  const lines: { who: Who; text: string; at: number; end: number; side: "l" | "r" }[] = [
-    { who: "dad", text: "Sharks are older than trees", at: 49.68, end: 52.3, side: "l" },
-    { who: "sally", text: "No way", at: 51.46, end: 52.3, side: "r" },
+  const lines: { who: Who; text: string; at: number; side: "l" | "r" }[] = [
+    { who: "dad", text: "Sharks are older than trees", at: 49.68, side: "l" },
+    { who: "sally", text: "No way", at: 51.46, side: "r" },
   ];
+  // Both bubbles float up and away together, clearing the stage before Dad talks to Trivi.
+  const away = easeIn(ramp(t, CHATTER_OUT, 0.35));
   return (
     <>
       {lines.map((l) => {
         const a = Math.max(v(l.at), SCENES.stage2[0] + 0.55);
-        return t >= a - 0.1 && t < v(l.end) + 0.5 ? (
-          <div key={l.text} className="bv-chat" data-side={l.side} style={pop(t, a, v(l.end) + 0.5, { y: 20, s: 0.75 })}>
+        if (t < a - 0.1 || away >= 1) return null;
+        const inn = pop(t, a, Infinity, { y: 20, s: 0.75 });
+        const style = { ...inn, opacity: (inn.opacity as number) * (1 - away), transform: `${inn.transform} translateY(${-30 * away}px) scale(${1 - 0.15 * away})` };
+        return (
+          <div key={l.text} className="bv-chat" data-side={l.side} style={style}>
             <Face who={l.who} size={56} />
             <p>
               <small>{NAME[l.who]}</small>
               {l.text}
             </p>
           </div>
-        ) : null;
+        );
       })}
     </>
   );
 }
-
-const REVEAL_SLOT = 300;
 
 /** Scene 2: the reveal, inside the frame before the page settles around it. */
 function Reveal({ t }: { t: number }) {
   // Gone before the page settles around the frame.
   const end = pause(1).from - 0.05;
   if (t < v(8.7) || t > end + 0.1) return null;
-  const chips: { at: number; label: ReactNode; tone: string }[] = [
-    { at: 11.34, label: <>Everyone guesses</>, tone: "a" },
-    { at: 12.19, label: <>Trivi judges</>, tone: "b" },
-    { at: 13.87, label: <>Score kept day to day</>, tone: "c" },
+  // Each chip's own width (measured), so the gaps between them stay even.
+  const chips: { at: number; label: ReactNode; tone: string; w: number }[] = [
+    { at: 11.34, label: <>Everyone Guesses</>, tone: "a", w: 301 },
+    { at: 12.19, label: <>Trivi Judges</>, tone: "b", w: 193 },
+    { at: 13.05, label: <>Score Kept Day to Day</>, tone: "c", w: 292 },
   ];
-  const xs = centered(t, chips.map((c) => v(c.at)), REVEAL_SLOT, 14);
+  const ws = chips.map((c) => c.w);
+  const xs = centered(t, chips.map((c) => v(c.at)), ws, 16);
   return (
     <div className="bv-reveal">
       <div className="bv-reveal-logo dm-logo" style={pop(t, v(8.88), end, { y: -20, s: 0.7 })}>
@@ -354,7 +435,7 @@ function Reveal({ t }: { t: number }) {
       </h2>
       <div className="bv-reveal-chips">
         {chips.map((c, i) => (
-          <div key={c.tone} className="bv-slot" style={{ left: `calc(50% + ${xs[i]! - REVEAL_SLOT / 2}px)`, width: REVEAL_SLOT }}>
+          <div key={c.tone} className="bv-slot" style={{ left: `calc(50% + ${xs[i]! - ws[i]! / 2}px)`, width: ws[i] }}>
             <span className="bv-rchip" data-tone={c.tone} style={pop(t, v(c.at), end, { y: 30, s: 0.6 })}>
               {c.tone === "a" && (
                 <span className="dm-stack">
@@ -365,7 +446,7 @@ function Reveal({ t }: { t: number }) {
                   ))}
                 </span>
               )}
-              {c.tone === "b" && <span className="dm-mark dm-mark-sm" />}
+              {c.tone === "b" && <Mini size={34} />}
               {c.tone === "c" && <Crown width={24} height={24} />}
               {c.label}
             </span>
@@ -422,7 +503,7 @@ function Drawer({ t }: { t: number }) {
         <div className="dm-drawer-body bv-drawer-body">
           <div className="dm-chat">
             <div className="dm-msg">
-              <span className="dm-mark dm-mark-sm" />
+              <Mini size={34} />
               <div className="dm-bubble">
                 <p>Hi! I can write themes, add players, or change the house rules. What should we set up?</p>
               </div>
@@ -434,7 +515,7 @@ function Drawer({ t }: { t: number }) {
             )}
             {t >= v(73.2) && (
               <div className="dm-msg" style={pop(t, v(73.2), Infinity, { y: 20, s: 0.92, dur: 0.5 })}>
-                <span className="dm-mark dm-mark-sm" />
+                <Mini size={34} />
                 <div className="dm-bubble">
                   {!checking && <p className="dm-thinking">Writing the questions{dots}</p>}
                   {checking && (
@@ -463,10 +544,10 @@ function Drawer({ t }: { t: number }) {
                                 <Check width={14} height={14} /> Saved
                               </>
                             ) : (
-                              "Save theme"
+                              "Save Theme"
                             )}
                           </span>
-                          <span className="dm-btn dm-btn-ghost dm-btn-sm">Make it easier</span>
+                          <span className="dm-btn dm-btn-ghost dm-btn-sm">Make It Easier</span>
                         </div>
                       </div>
                     </>
@@ -476,7 +557,7 @@ function Drawer({ t }: { t: number }) {
             )}
             {saved && (
               <div className="dm-msg" style={pop(t, v(78.75), Infinity, { y: 16, s: 0.92, dur: 0.5 })}>
-                <span className="dm-mark dm-mark-sm" />
+                <Mini size={34} />
                 <div className="dm-bubble">
                   <p>
                     Saved Space Explorers. <b>Dinosaur Detectives</b> is paused
@@ -507,7 +588,14 @@ function DrawerNarration({ t }: { t: number }) {
   const end = pause(6).from - 0.05;
   if (t < start || t > end) return null;
   const lines: [number, ReactNode][] = [
-    [72.84, <>Parents pick what the kids learn about</>],
+    [
+      72.84,
+      <>
+        Parents pick what
+        <br />
+        the kids learn about
+      </>,
+    ],
     [74.54, <>Trivi writes the questions and <em>double-checks</em> the answers,</>],
     [76.92, <>and nothing gets asked until Mom or Dad <em>approves it</em></>],
   ];
@@ -518,7 +606,9 @@ function DrawerNarration({ t }: { t: number }) {
           <Face who="mom" size={120} />
           <p>
             <small>Settings · Ask Trivi</small>
-            Mom asks Trivi for a space theme
+            Mom asks Trivi
+            <br />
+            for a space theme
           </p>
         </div>
       )}
@@ -539,6 +629,8 @@ function DrawerNarration({ t }: { t: number }) {
 
 /** The frame's center on the page, and the zoom that fits it to the screen for the reveal. */
 const FRAME = { x: 564, y: 471, s: 1.1 };
+/** When the page starts settling around the reveal frame. */
+const SETTLE_AT = pause(1).from - 0.1;
 
 export function StageScene({ t, level }: { t: number; level: number }) {
   const mood = at(t, MOODS, "idle");
@@ -547,7 +639,7 @@ export function StageScene({ t, level }: { t: number; level: number }) {
   const caption = CAPTIONS[capIdx]![1];
 
   // The reveal shows the frame alone, centered; then the page settles in around it, once.
-  const settleAt = pause(1).from - 0.1;
+  const settleAt = SETTLE_AT;
   const settle = easeInOut(ramp(t, settleAt, 1.2));
   const inReveal = t < settleAt + 0.85;
   // Room under Glow for the heard pill and guesses opens as the page settles, so Glow glides up.
@@ -627,7 +719,7 @@ export function StageScene({ t, level }: { t: number; level: number }) {
 
               <div className="dm-caption" style={{ opacity: ui, transform: `translateY(${(1 - ui) * 30}px)` }}>
                 <span className="dm-caption-label">
-                  <span className="dm-mark dm-mark-xs" />
+                  <Mini size={20} />
                   {caption.label}
                 </span>
                 <p key={capIdx} className="dm-caption-text">

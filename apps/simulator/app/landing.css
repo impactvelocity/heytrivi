@@ -90,6 +90,16 @@
   outline: 3px solid var(--yellow);
   outline-offset: 3px;
 }
+/* Buttons, tabs, and nav links read in title case, like the labels. */
+.lp-btn,
+.lp-play,
+.lp-nav-links a,
+.lp-foot-links a,
+.lp-pb-tabs button,
+.lp-helper-save,
+.lp-built-cta {
+  text-transform: capitalize;
+}
 .lp-btn-sm {
   padding: 9px 16px;
   border-radius: 14px;
@@ -214,8 +224,8 @@
   color: var(--brand-ink);
   font-weight: 900;
   font-size: 14px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: capitalize;
 }
 .lp-h1 {
   margin-top: 22px !important;
@@ -328,8 +338,8 @@
   color: var(--wolf);
   font-weight: 900;
   font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: capitalize;
 }
 .lp-board-title svg {
   color: var(--yellow);

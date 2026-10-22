@@ -23,8 +23,12 @@ export const COLORS = familyColors(FAMILY.members);
 export const NAME: Record<Who, string> = { mom: "Mom", dad: "Dad", john: "John", sally: "Sally" };
 const SHAPE: Record<Who, number> = { mom: 0, dad: 1, john: 2, sally: 3 };
 
-/** A family member's avatar; `mood` picks the leaderboard face (0 = grin, 3 = worried). */
+/**
+ * A family member's avatar. Everyone stays happy in the video: `mood` picks
+ * one of the cheerful faces (0 grin, 1 happy, 2 smile, 3 wink), never the
+ * worried one the leaderboard gives last place.
+ */
 export function Face({ who, size = 40, mood }: { who: Who; size?: number; mood?: 0 | 1 | 2 | 3 }) {
   const m = FAMILY.members.find((x) => x.id === who)!;
-  return <Avatar look={m.look} size={size} shape={SHAPE[who]} color={COLORS.get(who)} rank={mood} of={4} />;
+  return <Avatar look={m.look} size={size} shape={SHAPE[who]} color={COLORS.get(who)} rank={mood} of={0} />;
 }

@@ -5,15 +5,15 @@
  * 1920×1280 (3:2) in the demo video's Duo / Showtime look. Every card shares
  * one frame: the logo top left, the hackathon line top right, a short
  * headline, and one picture of the feature happening to the demo family.
- * The hero reuses the video's stage at the moment Sally wins the snail round.
+ * The hero is the demo stage the moment Sally wins the snail round. The
+ * thumbnail (?card=thumb) is the gallery tile: logo, headline and a big Glow.
  */
 
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { Glow, type Mood } from "@/components/avatars/Glow";
-import { v } from "@/components/brag/anim";
 import { Face, NAME, type Who } from "@/components/brag/family";
-import { StageScene } from "@/components/brag/StageScene";
 import { Check, Crown, Sparkle, Trophy } from "@/components/demo/icons";
+import { MarqueeLights } from "@/components/demo/MarqueeLights";
 import { StageBackdrop } from "@/components/demo/StageBackdrop";
 
 declare global {
@@ -22,7 +22,7 @@ declare global {
   }
 }
 
-export const CARDS = ["hero", "round", "bet", "themes", "spend", "built", "tools", "stats"] as const;
+export const CARDS = ["thumb", "hero", "round", "bet", "themes", "spend", "built", "tools", "stats"] as const;
 type Card = (typeof CARDS)[number];
 
 export function DevpostCards() {
@@ -35,13 +35,14 @@ export function DevpostCards() {
     });
   }, []);
   if (!card) return null;
-  const Body = { hero: Hero, round: Round, bet: Bet, themes: Themes, spend: Spend, built: Built, tools: Tools, stats: Stats }[card];
+  const Body = { thumb: Thumb, hero: Hero, round: Round, bet: Bet, themes: Themes, spend: Spend, built: Built, tools: Tools, stats: Stats }[card];
   return <Body />;
 }
 
 /* ---------------------------------------------------------------- frame */
 
-function Frame({ title, children, quiet }: { title: ReactNode; children: ReactNode; quiet?: boolean }) {
+/** `headTop` moves the headline down on cards whose picture sits low. */
+function Frame({ title, children, quiet, headTop }: { title: ReactNode; children: ReactNode; quiet?: boolean; headTop?: number }) {
   return (
     <div className="dm bv dp" data-skin="duo" data-theme="showtime">
       <div className="bv-bg">
@@ -63,7 +64,7 @@ function Frame({ title, children, quiet }: { title: ReactNode; children: ReactNo
           Built for Alexa+ Hackathon
         </span>
       </header>
-      <div className="dp-head">
+      <div className="dp-head" style={headTop ? { top: headTop } : undefined}>
         <h1 className="bv-h1 dp-h1">{title}</h1>
       </div>
       {children}
@@ -91,8 +92,34 @@ function Step({ title, art, tone }: { title: string; art: ReactNode; tone?: stri
   );
 }
 
-function Steps({ children }: { children: ReactNode }) {
-  return <div className="dp-steps">{children}</div>;
+/** `bare` drops the card around each step and the chevrons between them. */
+function Steps({ children, bare }: { children: ReactNode; bare?: boolean }) {
+  return (
+    <div className="dp-steps" data-bare={bare || undefined}>
+      {children}
+    </div>
+  );
+}
+
+/** Badges joined by a line, showing the steps in order. A "…" step is Trivi typing. */
+function Track({ steps, top, inset = 400 }: { steps: string[]; top: number; inset?: number }) {
+  return (
+    <div className="dp-track" style={{ top, left: inset, right: inset }}>
+      {steps.map((t, i) => (
+        <span key={t} className="dp-track-step" data-last={i === steps.length - 1 || undefined}>
+          {t === "…" ? (
+            <b className="dp-typing" aria-label="Trivi is thinking">
+              <i />
+              <i />
+              <i />
+            </b>
+          ) : (
+            <b>{t}</b>
+          )}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 /** A white speech bubble with the speaker's face, as the video's family chatter. */
@@ -163,6 +190,48 @@ const Speaker = () => (
   </svg>
 );
 
+/* ------------------------------------------------------------ thumbnail */
+
+/** The gallery tile, read at a few hundred pixels wide: one headline, one Glow, one winning guess. */
+function Thumb() {
+  return (
+    <div className="dm bv dp dp-thumb" data-skin="duo" data-theme="showtime">
+      <div className="bv-bg">
+        <span className="dm-rays bv-bg-rays" />
+        <span className="bv-bg-quiz dp-quiz">
+          <StageBackdrop kind="quiz" />
+        </span>
+      </div>
+      <header className="dp-top">
+        <div className="dm-logo dp-logo">
+          <span>
+            Hey<b>Trivi</b>
+          </span>
+        </div>
+      </header>
+      <div className="dp-thumb-copy">
+        <h1 className="bv-h1 dp-thumb-h1">
+          <span>Family trivia</span>
+          <span>
+            that <em>keeps score</em>
+          </span>
+        </h1>
+      </div>
+      <div className="dp-thumb-art">
+        <span className="dp-thumb-halo" />
+        <GlowBox mood="correct" size={780} />
+        <div className="dp-thumb-guess dp-thumb-guess-a">
+          <Guess who="sally" text="10,000" win />
+        </div>
+        <div className="dp-thumb-guess dp-thumb-guess-b">
+          <Guess who="dad" text="0" />
+        </div>
+        <span className="dp-thumb-plus">+1</span>
+      </div>
+    </div>
+  );
+}
+
 /* ----------------------------------------------------------------- hero */
 
 const USPS: { icon: ReactNode; title: string; body: string }[] = [
@@ -171,14 +240,94 @@ const USPS: { icon: ReactNode; title: string; body: string }[] = [
   { icon: <Sparkle width={32} height={32} />, title: "Learning Kids Can Win", body: "Themes parents approve" },
 ];
 
+const GUESSES: { who: Who; text: string; win?: boolean }[] = [
+  { who: "dad", text: "0" },
+  { who: "mom", text: "10" },
+  { who: "john", text: "100" },
+  { who: "sally", text: "10,000", win: true },
+];
+
+/** The leaderboard right after the snail round: Sally's point puts her in the lead. */
+const BOARD: { who: Who; pts: number }[] = [
+  { who: "sally", pts: 7 },
+  { who: "john", pts: 6 },
+  { who: "mom", pts: 5 },
+  { who: "dad", pts: 3 },
+];
+
 function Hero() {
+  const top = BOARD[0]!.pts;
   return (
-    <Frame quiet title={<>The family game show that <em>keeps score</em></>}>
-      <div className="dp-hero-shot">
-        <div className="dp-hero-cam">
-          <StageScene t={v(29.95) + 0.9} level={0} />
+    <Frame quiet title={<>Family trivia that <em>keeps score</em></>}>
+      <section className="dm-frame dp-hero-frame">
+        <MarqueeLights mode="celebrate" />
+        <div className="dm-stage">
+          <div className="dm-stage-bg">
+            <span className="dm-rays" />
+            <span className="dm-floor" />
+            <StageBackdrop kind="quiz" />
+          </div>
+          <div className="dp-hero-stage">
+            <GlowBox mood="celebrating" size={250} />
+            <div className="dp-hero-guesses">
+              {GUESSES.map((g) => (
+                <Guess key={g.who} who={g.who} text={g.text} win={g.win} />
+              ))}
+            </div>
+            <TriviSays>
+              About <b>14,000</b> teeth! Sally wins
+            </TriviSays>
+          </div>
         </div>
-      </div>
+      </section>
+      <section className="dm-board dp-hero-board">
+        <div className="dm-board-head">
+          <h2>Leaderboard</h2>
+          <div className="dm-seg">
+            <button type="button" aria-pressed>
+              This week
+            </button>
+            <button type="button" aria-pressed={false}>
+              All time
+            </button>
+          </div>
+        </div>
+        <ol className="dm-board-list" style={{ height: BOARD.length * 82 - 10 }}>
+          {BOARD.map((b, i) => (
+            <li key={b.who} className={`dm-row${i === 0 ? " dm-row-lead" : ""}`} style={{ transform: `translateY(${i * 82}px)` }} data-lit={i === 0 || undefined}>
+              <span className="dm-rank">{i === 0 ? <Crown width={22} height={22} /> : i + 1}</span>
+              <Face who={b.who} size={48} mood={i as 0 | 1 | 2 | 3} />
+              <span className="dm-row-main">
+                <span className="dm-row-name">{NAME[b.who]}</span>
+                <span className="dm-meter">
+                  <span style={{ width: `${(b.pts / top) * 100}%` }} />
+                </span>
+              </span>
+              <span className="dm-score">
+                {b.pts}
+                <small>pts</small>
+              </span>
+              {i === 0 && <span className="dm-flash bv-flash">+1</span>}
+            </li>
+          ))}
+        </ol>
+      </section>
+      <section className="dp-hero-mcp">
+        <div className="dp-hero-mcp-head">
+          <span className="dp-dot" />
+          <strong>MCP server</strong>
+          <small>Connected</small>
+        </div>
+        <div className="dp-toast">
+          <span>
+            <i>→</i> <b>record_round</b>
+          </span>
+          <span>
+            <i>←</i> Sally +1 · takes the lead
+          </span>
+        </div>
+        <p>AWS Lambda · Streamable HTTP · DynamoDB</p>
+      </section>
       <div className="dp-usps">
         {USPS.map((u) => (
           <div key={u.title} className="dp-usp">
@@ -196,35 +345,32 @@ function Hero() {
 
 /* ---------------------------------------------------------------- round */
 
-const GUESSES: { who: Who; text: string; win?: boolean }[] = [
-  { who: "dad", text: "0" },
-  { who: "mom", text: "10" },
-  { who: "john", text: "100" },
-  { who: "sally", text: "10,000", win: true },
-];
-
 function Round() {
   return (
-    <Frame title={<>Everyone guesses, <em>Trivi judges</em></>}>
+    <Frame headTop={250} title={<>Everyone guesses, <em>Trivi hands out points</em></>}>
       <div className="dp-round">
         <TriviSays label="Dad asks">How many teeth does a snail have?</TriviSays>
         <GlowBox mood="correct" size={300} />
         <TriviSays>
-          About <b>14,000!</b> Sally wins
+          About <b>14,000!</b>
+          <br />
+          Sally wins
         </TriviSays>
       </div>
       <div className="dp-says">
         {GUESSES.map((g) => (
           <div key={g.who} className="dp-say" data-win={g.win || undefined}>
+            <span className="dp-say-name">
+              {NAME[g.who]}
+              {g.win && <span className="dp-say-plus">+1</span>}
+            </span>
             <p>
-              <small>{NAME[g.who]} says</small>
               {g.text}
               {g.win && (
                 <>
                   <span className="dp-say-check">
                     <Check width={22} height={22} strokeWidth={3.5} />
                   </span>
-                  <span className="dp-say-plus">+1</span>
                 </>
               )}
             </p>
@@ -240,10 +386,10 @@ function Round() {
 
 function Bet() {
   return (
-    <Frame title={<>Settle a bet, <em>winner picks dinner</em></>}>
-      <Steps>
+    <Frame headTop={240} title={<>Got a debate? <em>Trivi settles it</em></>}>
+      <Steps bare>
         <Step
-          title="Make the Bet"
+          title="Sharks or Trees?"
           art={
             <div className="dp-bet-talk">
               <Said who="sally" size={58}>
@@ -259,7 +405,7 @@ function Bet() {
           }
         />
         <Step
-          title="Trivi Rules"
+          title="Drumroll…"
           art={
             <div className="dp-col">
               <GlowBox mood="correct" size={140} />
@@ -271,29 +417,21 @@ function Bet() {
           }
         />
         <Step
-          title="Winner Picks Dinner"
-          tone="warm"
+          title="Pizza Night!"
           art={
             <div className="dp-col">
-              <span className="dp-emoji">🍕</span>
+              <GlowBox mood="celebrating" size={140} />
               <Said who="sally" size={58}>
-                Pizza night!
+                <span className="dp-nowrap">
+                  Pizza night! <span className="dp-emojis">🍕🍕🍕🍕</span>
+                </span>
               </Said>
-              <Row
-                who="sally"
-                rank={1}
-                pts={7}
-                flash="+1"
-                note={
-                  <>
-                    <Sparkle width={14} height={14} /> Picks dinner
-                  </>
-                }
-              />
+              <span className="dp-point">+1 point for Sally</span>
             </div>
           }
         />
       </Steps>
+      <Track steps={["Sharks or Trees?", "…", "Pizza Night!"]} top={1010} />
     </Frame>
   );
 }
@@ -309,16 +447,9 @@ const THEMES: { icon: string; name: string; who: string; tone: string; isNew?: b
   { icon: "🌎", name: "World Capitals", who: "Grown-ups", tone: "#ff4b8b" },
 ];
 
-const HOW: { label: string; by: string }[] = [
-  { label: "Trivi Writes", by: "Claude Haiku 5.5" },
-  { label: "Answers Blind", by: "Claude Haiku 5.5" },
-  { label: "Fact-Checks", by: "Claude Sonnet 5.5" },
-  { label: "Parent Approves", by: "Before anyone plays" },
-];
-
 function Themes() {
   return (
-    <Frame title={<>Questions that match <em>what they're learning</em></>}>
+    <Frame headTop={260} title={<>Today's lesson, <em>tonight's trivia</em></>}>
       <div className="dp-ask">
         <Face who="mom" size={76} />
         <p>
@@ -338,22 +469,7 @@ function Themes() {
           </div>
         ))}
       </div>
-      <div className="dp-how">
-        <span className="dp-how-h">How it works</span>
-        <div className="dp-how-row">
-          {HOW.map((h) => (
-            <div key={h.label} className="dp-how-step">
-              <span className="dp-tick">
-                <Check width={18} height={18} strokeWidth={3.5} />
-              </span>
-              <span>
-                <b>{h.label}</b>
-                <small>{h.by}</small>
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <Track steps={["Trivi Writes", "Answers Blind", "Fact-Checks", "Parent Approves"]} top={950} inset={360} />
     </Frame>
   );
 }
@@ -362,10 +478,10 @@ function Themes() {
 
 function Spend() {
   return (
-    <Frame title={<>Points buy <em>the fun stuff</em></>}>
-      <Steps>
+    <Frame headTop={240} title={<>Win points, <em>cash them in</em></>}>
+      <Steps bare>
         <Step
-          title="Spend Points"
+          title="Pick a Prize"
           art={
             <div className="dp-col">
               <div className="dp-ticket" data-on>
@@ -392,7 +508,7 @@ function Spend() {
           }
         />
         <Step
-          title="A Parent Says Yes"
+          title="The Magic Words"
           art={
             <div className="dp-col">
               <span className="dp-lock">
@@ -405,25 +521,26 @@ function Spend() {
               <span className="dp-ok">
                 <Check width={20} height={20} strokeWidth={3.5} /> Parent OK
               </span>
+              <span className="dp-note">Only a parent knows the phrase</span>
             </div>
           }
         />
         <Step
           title="Movie Night!"
-          tone="warm"
           art={
             <div className="dp-col">
-              <div className="dp-party">
-                <span className="dp-emoji">🍿</span>
-                <GlowBox mood="celebrating" size={170} />
-              </div>
+              <GlowBox mood="celebrating" size={150} />
               <Said who="sally" size={58}>
-                I pick the movie!
+                <span className="dp-nowrap">
+                  Movie night! <span className="dp-emojis">🍿🍿🍿🍿</span>
+                </span>
               </Said>
+              <span className="dp-note">5 points spent</span>
             </div>
           }
         />
       </Steps>
+      <Track steps={["Pick a Prize", "The Magic Words", "Movie Night!"]} top={1010} />
     </Frame>
   );
 }
@@ -431,8 +548,8 @@ function Spend() {
 /* -------------------------------------------------------- how it's built */
 
 type Box = { x: number; y: number; w: number; h: number };
-const ROW1 = 640;
-const ROW2 = 1040;
+const ROW1 = 600;
+const ROW2 = 990;
 const BOX: Record<"family" | "host" | "mcp" | "db" | "parent" | "cognito", Box> = {
   family: { x: 255, y: ROW1, w: 230, h: 240 },
   host: { x: 670, y: ROW1, w: 300, h: 240 },
@@ -466,7 +583,7 @@ function Link({ from, to, y, label }: { from: Box; to: Box; y: number; label: st
 
 function Built() {
   return (
-    <Frame quiet title={<>Alexa+ judges, <em>the server keeps score</em></>}>
+    <Frame quiet headTop={220} title={<>Alexa+ hosts, <em>the server keeps score</em></>}>
       <svg className="bv-wires dp-wires" viewBox="0 0 1920 1280">
         <Link from={BOX.family} to={BOX.host} y={ROW1} label="talks" />
         <Link from={BOX.host} to={BOX.mcp} y={ROW1} label="tools/call" />
@@ -538,14 +655,9 @@ const CALLS: { who: Who; said: string; tool: string; back: string; warn?: boolea
 
 function Tools() {
   return (
-    <Frame quiet title={<>Every move is an <em>MCP tool call</em></>}>
+    <Frame quiet headTop={220} title={<>You talk, <em>Trivi calls MCP tools</em></>}>
       <div className="dp-calls-wrap">
         <div className="dp-calls">
-          <div className="dp-call dp-calls-h">
-            <span>The family says</span>
-            <span />
-            <span>Trivi calls</span>
-          </div>
           {CALLS.map((c) => (
             <div key={c.tool} className="dp-call">
               <Said who={c.who} size={60}>
@@ -577,61 +689,35 @@ function Tools() {
 
 const STATS: { value: string; unit?: string; label: string }[] = [
   { value: "9", label: "MCP Tools" },
-  { value: "125", unit: "ms", label: "p95 Response" },
   { value: "117", label: "Tests Passing" },
   { value: "1", label: "CDK Stack" },
 ];
 
 const AWS = ["AWS Lambda", "Amazon DynamoDB", "Amazon Cognito", "Amazon Bedrock", "Amazon Nova 2 Lite", "Amazon Polly", "AWS Amplify", "AWS CDK"];
 
-/** A rising line across the bottom of the card, drawn as a smooth curve through these points. */
-const CURVE: [number, number][] = [
-  [0, 1250],
-  [260, 1215],
-  [520, 1185],
-  [760, 1130],
-  [1000, 1095],
-  [1240, 1020],
-  [1480, 965],
-  [1660, 880],
-  [1920, 800],
-];
-
-function smooth(pts: [number, number][]) {
-  let d = `M${pts[0]![0]} ${pts[0]![1]}`;
-  for (let i = 1; i < pts.length; i++) {
-    const [x0, y0] = pts[i - 1]!;
-    const [x1, y1] = pts[i]!;
-    const mx = (x0 + x1) / 2;
-    d += ` C${mx} ${y0}, ${mx} ${y1}, ${x1} ${y1}`;
-  }
-  return d;
-}
+/** A rising curve behind the card, from the bottom left up to the top right corner. */
+const LINE = "M0 1250 C 900 1210, 1480 1010, 1920 40";
 
 function Stats() {
-  const line = smooth(CURVE);
   return (
-    <Frame quiet title={<>Fast, tested, and <em>built on AWS</em></>}>
+    <Frame quiet headTop={360} title={<>Fast, tested, <em>and built on AWS</em></>}>
       <svg className="dp-chart" viewBox="0 0 1920 1280">
         <defs>
           <linearGradient id="dp-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#ce82ff" stopOpacity="0.3" />
+            <stop offset="0" stopColor="#ce82ff" stopOpacity="0.18" />
             <stop offset="1" stopColor="#ce82ff" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="dp-line" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stopColor="#ce82ff" stopOpacity="0.1" />
-            <stop offset="1" stopColor="#ff5fd2" stopOpacity="0.85" />
+            <stop offset="1" stopColor="#ff5fd2" stopOpacity="0.35" />
           </linearGradient>
         </defs>
-        {[860, 980, 1100, 1220].map((y) => (
+        {[260, 500, 740, 980, 1220].map((y) => (
           <line key={y} x1="0" x2="1920" y1={y} y2={y} className="dp-chart-grid" />
         ))}
-        <path d={`${line} L1920 1280 L0 1280 Z`} fill="url(#dp-fill)" />
-        <path d={line} fill="none" stroke="url(#dp-line)" strokeWidth="5" strokeLinecap="round" />
+        <path d={`${LINE} L1920 1280 L0 1280 Z`} fill="url(#dp-fill)" />
+        <path d={LINE} fill="none" stroke="url(#dp-line)" strokeWidth="5" strokeLinecap="round" />
       </svg>
-      <div className="dp-peak">
-        <GlowBox mood="celebrating" size={130} />
-      </div>
       <div className="dp-stats">
         {STATS.map((s) => (
           <div key={s.label} className="dp-stat">

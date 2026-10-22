@@ -145,8 +145,8 @@
 .lp-pv-q-tag {
   color: var(--t-ink);
   font-size: 11.5px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: capitalize;
 }
 .lp-pv-said {
   display: flex;
@@ -422,7 +422,7 @@
   color: var(--green-d);
   font-size: 12px;
   font-weight: 900;
-  text-transform: uppercase;
+  text-transform: capitalize;
   rotate: -8deg;
   opacity: 0;
 }
@@ -1062,8 +1062,8 @@
   color: var(--t-ink);
   font-size: 12px;
   font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: capitalize;
 }
 .lp-day[data-now] .lp-day-name {
   background: var(--t);
@@ -1213,11 +1213,13 @@
   font-family: var(--font-friendly);
   font-size: 12.5px;
   font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: capitalize;
 }
 .lp-pb-log .lp-pane-head {
   color: #9d91b8;
+  /* An HTTP path, not a label: "/mcp" stays as written. */
+  text-transform: none;
 }
 .lp-live-dot,
 .lp-log-dot {
@@ -1394,8 +1396,8 @@
   color: var(--wolf);
   font-size: 12.5px;
   font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: capitalize;
 }
 .lp-helper-prompt {
   min-height: 78px;
@@ -1600,8 +1602,8 @@
   color: var(--acc-ink);
   font-size: 12.5px;
   font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: capitalize;
 }
 .lp-half[data-main] .lp-half-kicker {
   color: var(--yellow);
@@ -1679,8 +1681,8 @@
   color: var(--acc-ink);
   font-size: 11.5px;
   font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: capitalize;
 }
 .lp-split-track {
   position: relative;
@@ -1792,8 +1794,8 @@
   color: #c86f00;
   font-size: 11px;
   font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: capitalize;
 }
 .lp-aws-card b {
   margin-top: 4px;

@@ -177,7 +177,7 @@ function Hero() {
       <StageBackdrop kind="quiz" />
       <div className="lp-wrap lp-hero-grid">
         <div className="lp-hero-copy">
-          <p className="lp-eyebrow">Alexa+ Hackathon entry · MCP server</p>
+          <p className="lp-eyebrow">Built for the Build, Ship, Shape hackathon</p>
           <h1 className="lp-h1">
             The family game show that <em>keeps score</em>
           </h1>
